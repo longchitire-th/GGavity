@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ระบบจัดการสั่งซื้อยางประจำวัน (Daily Tire Purchasing App)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Prevent iOS auto-zoom on inputs */
+    @media screen and (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-24 sm:pb-16 antialiased">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14 sm:h-16">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-200 flex-shrink-0">
+            <i data-lucide="disc" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-1.5">
+              <h1 class="text-sm sm:text-lg font-bold text-slate-900 truncate">ระบบสั่งซื้อยางประจำวัน</h1>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-semibold bg-blue-100 text-blue-800 flex-shrink-0">
+                08.30-12.00
+              </span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-500 truncate flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3 text-amber-500 flex-shrink-0"></i>
+              <span>ตัดรอบ 12.00 น. (เมื่อวาน) - 08.00 น. (วันนี้)</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Right Quick Actions -->
+        <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+          <!-- Mobile QR Code (Desktop only) -->
+          <button id="btnOpenQr" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition" title="เปิดบนมือถือเพื่อถ่ายสลิป">
+            <i data-lucide="smartphone" class="w-4 h-4 text-blue-600"></i>
+            <span>เปิดบนมือถือ</span>
+          </button>
+
+          <!-- Fetch BigSeller Button -->
+          <button id="btnFetchBigSeller" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 sm:w-4 sm:h-4" id="fetchIcon"></i>
+            <span class="hidden xs:inline">ดึงออเดอร์</span>
+          </button>
+
+          <!-- Sync to Google Sheets Button -->
+          <button id="btnSyncSheets" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg shadow-sm transition">
+            <i data-lucide="sheet" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600"></i>
+            <span class="hidden sm:inline">ลง Sheet</span>
+          </button>
+
+          <!-- Export CSV -->
+          <a href="/api/sheets/export-csv" class="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title="ดาวน์โหลดไฟล์ตาราง">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>CSV</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-4 sm:mt-6">
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
+      <!-- Card 1: Total Tires -->
+      <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="package-search" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate">ยางที่ต้องสั่งรอบนี้</p>
+          <div class="flex items-baseline space-x-1">
+            <span class="text-lg sm:text-2xl font-bold text-slate-900" id="statTiresCount">0</span>
+            <span class="text-[11px] sm:text-xs text-slate-500">เส้น</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Total Cost -->
+      <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="wallet" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate">ยอดรวมจ่ายค่ายาง</p>
+          <div class="flex items-baseline space-x-1">
+            <span class="text-lg sm:text-2xl font-bold text-emerald-600 truncate" id="statTotalExpense">฿0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Ready to ship -->
+      <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="check-circle-2" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate">สินค้าที่ส่งได้</p>
+          <div class="flex items-baseline space-x-1">
+            <span class="text-lg sm:text-2xl font-bold text-green-700" id="statReadyCount">0</span>
+            <span class="text-[11px] sm:text-xs text-slate-500">รายการ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Out of stock -->
+      <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate">สินค้าขาดตลาด</p>
+          <div class="flex items-baseline space-x-1">
+            <span class="text-lg sm:text-2xl font-bold text-rose-600" id="statOutOfStockCount">0</span>
+            <span class="text-[11px] sm:text-xs text-slate-500">รายการ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: Slip Attached -->
+      <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3 col-span-2 lg:col-span-1">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="receipt" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate">สลิปโอนเงิน</p>
+          <div class="flex items-baseline space-x-1">
+            <span class="text-lg sm:text-2xl font-bold text-purple-700" id="statSlipsCount">0</span>
+            <span class="text-[11px] sm:text-xs text-slate-500" id="statSlipsTotal">/ 0 รายการ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TABS NAVIGATION ================= -->
+    <div class="flex border-b border-slate-200 mb-4 sm:mb-6 overflow-x-auto no-scrollbar space-x-1 sm:space-x-2 bg-white px-2 rounded-xl shadow-sm">
+      <button class="tab-btn px-3 sm:px-4 py-3 font-semibold text-xs sm:text-sm border-b-2 border-blue-600 text-blue-600 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-orders">
+        <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+        <span>ออเดอร์ประจำวัน</span>
+        <span class="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-blue-100 text-blue-700 font-bold" id="badgeOrderCount">0</span>
+      </button>
+
+      <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-memory">
+        <i data-lucide="brain-circuit" class="w-4 h-4"></i>
+        <span>ระบบจำคู่ค้า & ราคา</span>
+      </button>
+
+      <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-analytics">
+        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+        <span>สถิติ & รายจ่าย</span>
+      </button>
+
+      <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-settings">
+        <i data-lucide="settings" class="w-4 h-4"></i>
+        <span>ตั้งค่า & BigSeller</span>
+      </button>
+    </div>
+
+    <!-- ================= TAB CONTENT 1: ORDERS ================= -->
+    <section id="tab-orders" class="tab-pane block">
+      
+      <!-- Filter Bar -->
+      <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+          <!-- Search & Filter Controls -->
+          <div class="flex flex-wrap items-center gap-2 flex-1">
+            <div class="relative flex-1 min-w-[150px]">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+              <input type="text" id="searchInput" placeholder="ค้นหายาง, เลขออเดอร์, ซับ..." class="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+            </div>
+
+            <!-- Filter Status -->
+            <select id="filterStatus" class="text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">สถานะทั้งหมด</option>
+              <option value="รอสั่ง">รอสั่ง</option>
+              <option value="สั่งแล้ว (ส่งได้)">พร้อมส่ง</option>
+              <option value="สินค้าขาดตลาด (ส่งไม่ได้)">ขาดตลาด</option>
+            </select>
+
+            <!-- Filter Platform -->
+            <select id="filterPlatform" class="text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">ทุกช่องทาง</option>
+              <option value="Shopee">Shopee</option>
+              <option value="Lazada">Lazada</option>
+            </select>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-1.5 self-end sm:self-auto">
+            <button id="btnSeedSample" class="text-xs px-2.5 py-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition" title="โหลดข้อมูลจำลอง Shopee/Lazada เพื่อทดสอบ">
+              <i data-lucide="database" class="w-3.5 h-3.5 inline mr-1 text-slate-500"></i>จำลองข้อมูล
+            </button>
+            <button id="btnAddManualOrder" class="text-xs px-3 py-1.5 text-white bg-slate-800 hover:bg-slate-900 rounded-lg font-medium transition">
+              <i data-lucide="plus" class="w-3.5 h-3.5 inline mr-1"></i>เพิ่มรายการ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 📱 MOBILE VIEW: RESPONSIVE CARDS (< lg) ================= -->
+      <div id="ordersCardsContainer" class="block lg:hidden space-y-3">
+        <!-- Rendered by JS for Mobile -->
+        <div class="py-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200 p-6">
+          <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-blue-500"></i>
+          กำลังโหลดข้อมูล...
+        </div>
+      </div>
+
+      <!-- ================= 💻 DESKTOP VIEW: SPREADSHEET TABLE (>= lg) ================= -->
+      <div class="hidden lg:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs">
+                <th class="py-3 px-3 w-32">สถานะ</th>
+                <th class="py-3 px-3 w-40">ร้านค้า / ช่องทาง</th>
+                <th class="py-3 px-3 w-36">เลขออเดอร์</th>
+                <th class="py-3 px-3 min-w-[260px]">รายการสินค้า (ขนาดยาง / รุ่น)</th>
+                <th class="py-3 px-2 text-center w-16">จำนวน</th>
+                <th class="py-3 px-3 min-w-[160px]">ซับ (Supplier)</th>
+                <th class="py-3 px-3 w-24">ราคา/เส้น</th>
+                <th class="py-3 px-2 w-20">ค่าส่ง</th>
+                <th class="py-3 px-3 w-28 text-right font-bold text-slate-800">ยอดรวมจ่าย</th>
+                <th class="py-3 px-3 text-center w-28">สลิปโอนเงิน</th>
+                <th class="py-3 px-2 text-center w-16">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered by JS for Desktop -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= TAB CONTENT 2: SUPPLIER & PRICE MAPPING ================= -->
+    <section id="tab-memory" class="tab-pane hidden space-y-4 sm:space-y-6">
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="brain-circuit" class="w-5 h-5 text-blue-600"></i>
+              ระบบจำคู่ค้า & ราคายาง (Supplier & Price Memory)
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">
+              ระบบจะจดจำว่าขนาดยางหรือรุ่นใดเคยสั่งกับซับไหนในราคาเท่าไหร่ และช่วยนำมาแนะนำ (Auto-fill) ให้อัตโนมัติ
+            </p>
+          </div>
+          <button id="btnNewMapping" class="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition self-start sm:self-auto">
+            <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>เพิ่มคู่มือจับคู่
+          </button>
+        </div>
+
+        <!-- Mappings Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                <th class="py-2.5 px-3">ขนาดยาง / คำค้นรุ่น</th>
+                <th class="py-2.5 px-3">ซับเริ่มต้น (Supplier)</th>
+                <th class="py-2.5 px-3">ราคาต้นทุน/เส้น</th>
+                <th class="py-2.5 px-3">ค่าจัดส่ง</th>
+                <th class="py-2.5 px-3">หมายเหตุ</th>
+                <th class="py-2.5 px-3 text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="mappingsTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Suppliers Master List -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="store" class="w-5 h-5 text-slate-700"></i>
+              รายชื่อร้านซับ (Suppliers List)
+            </h3>
+            <p class="text-xs text-slate-500">จัดการร้านค้าคู่ค้าที่สั่งยางเป็นประจำ</p>
+          </div>
+          <button id="btnAddSupplier" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+            <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>เพิ่มร้านซับ
+          </button>
+        </div>
+        <div id="suppliersContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB CONTENT 3: ANALYTICS ================= -->
+    <section id="tab-analytics" class="tab-pane hidden space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <!-- 1. Best Sellers -->
+        <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+              <i data-lucide="flame" class="w-5 h-5 text-amber-500"></i>
+              สินค้าขายดี (Top Best Sellers)
+            </h3>
+            <span class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium">ยอดสั่งซื้อสูงสุด</span>
+          </div>
+          <div id="bestSellersList" class="space-y-2.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 2. Frequently Out of Stock -->
+        <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+              <i data-lucide="alert-octagon" class="w-5 h-5 text-red-500"></i>
+              สินค้าที่ขาดตลาดบ่อย ๆ (Out-of-Stock)
+            </h3>
+            <span class="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded font-medium">ไม่มีของส่ง</span>
+          </div>
+          <div id="outOfStockList" class="space-y-2.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Supplier Expense Breakdown -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base border-b border-slate-100 pb-3 mb-4">
+          <i data-lucide="pie-chart" class="w-5 h-5 text-blue-600"></i>
+          สรุปยอดค่าใช้จ่ายแยกตามซับ (Supplier Expenses)
+        </h3>
+        <div id="supplierExpenseList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Slip Gallery -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base border-b border-slate-100 pb-3 mb-4">
+          <i data-lucide="images" class="w-5 h-5 text-purple-600"></i>
+          แกลเลอรีสลิปโอนเงินค่ายางประจำวัน
+        </h3>
+        <div id="slipGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB CONTENT 4: SETTINGS ================= -->
+    <section id="tab-settings" class="tab-pane hidden space-y-4 sm:space-y-6">
+      
+      <!-- Cloudflare & Always-On Status Card -->
+      <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-4 sm:p-6 rounded-xl border border-orange-200 shadow-sm">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2 text-base border-b border-orange-200 pb-3 mb-3">
+          <i data-lucide="cloud" class="w-5 h-5 text-orange-600"></i>
+          การฝากขึ้น Cloudflare & ใช้งานออนไลน์ 24 ชั่วโมง
+        </h3>
+        <div class="space-y-3 text-xs sm:text-sm text-slate-700">
+          <p>
+            ระบบนี้รองรับการเชื่อมต่อผ่าน <strong>Cloudflare Tunnel</strong> เพื่อให้คุณเปิดใช้งานผ่านมือถือนอกบ้านได้ทันที โดยไม่ต้องตั้งค่า Router หรือเปิดพอร์ตใดๆ
+          </p>
+          <div class="bg-white/80 p-3 rounded-xl border border-orange-200">
+            <p class="font-semibold text-slate-800 text-xs mb-1">💡 ทางเลือกในการใช้งานโดยไม่ต้องเปิดคอมตลอดเวลา:</p>
+            <ul class="list-disc list-inside space-y-1 text-xs text-slate-600">
+              <li><strong>เปิดคอมเฉพาะช่วงเวลาทำงาน (08.00 - 12.00 น.):</strong> สั่งของเสร็จแล้วสามารถปิดคอมได้เลย ข้อมูลทั้งหมดจะบันทึกอยู่ใน Google Sheets และเครื่องของคุณเรียบร้อย</li>
+              <li><strong>รัน Cloudflare Tunnel:</strong> ดับเบิลคลิกไฟล์ <code>start_cloudflare.bat</code> จะได้รับลิงก์ Cloudflare HTTPS ถาวรเปิดจากมือถือที่ไหนก็ได้ในโลก</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- BigSeller Settings Card -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2 text-base border-b border-slate-100 pb-3 mb-4">
+          <i data-lucide="link-2" class="w-5 h-5 text-blue-600"></i>
+          การเชื่อมต่อ BigSeller (Playwright Bot)
+        </h3>
+        <div class="space-y-4 max-w-2xl text-xs sm:text-sm">
+          <p class="text-slate-600">
+            ระบบใช้ Playwright Bot เพื่อเข้าถึงหน้า <code>https://www.bigseller.com/web/order/index.htm?status=new</code> โดยจะจำเซสชันการล็อกอินของคุณไว้ในเครื่องคอมพิวเตอร์อย่างปลอดภัย
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button id="btnBigSellerLogin" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+              <span>เปิดหน้าล็อกอิน BigSeller ครั้งแรก</span>
+            </button>
+            <span class="text-xs text-slate-500">
+              *กดแล้วหน้าต่างเบราว์เซอร์จะเปิดขึ้น ให้ล็อกอินบัญชี BigSeller ของคุณเพียงครั้งเดียว
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Google Sheets Webhook Configuration -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2 text-base border-b border-slate-100 pb-3 mb-4">
+          <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
+          เชื่อมต่อ Google Sheets โดยอัตโนมัติ
+        </h3>
+        <div class="space-y-4 max-w-3xl text-xs sm:text-sm">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">ลิงก์ Google Sheets ของคุณ:</label>
+            <input type="text" id="settingSheetUrl" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-600 text-xs sm:text-sm" value="https://docs.google.com/spreadsheets/d/1kKYSU-vcSVh3G8wQMOSO3HF42zA2yJ33dmlxwjk348E/edit?gid=391311781#gid=391311781" readonly>
+          </div>
+
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Google Apps Script Webhook URL:</label>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="text" id="settingWebhookUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs sm:text-sm">
+              <button id="btnSaveSettings" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition whitespace-nowrap">
+                บันทึกการตั้งค่า
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">
+              นำ URL ที่ได้จากการกด "ทำให้ใช้งานได้ (Deploy as Web App)" ใน Apps Script มาวางที่นี่
+            </p>
+          </div>
+
+          <!-- Apps Script Instructions Box -->
+          <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-semibold text-slate-800 text-xs">โค้ด Google Apps Script สำเร็จรูป:</span>
+              <button id="btnCopyScript" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i> คัดลอกโค้ด
+              </button>
+            </div>
+            <pre id="appsScriptCode" class="text-[11px] sm:text-xs bg-slate-900 text-slate-100 p-3 rounded-lg overflow-x-auto max-h-48 font-mono"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL: SLIP UPLOAD (MOBILE & DESKTOP) ================= -->
+  <div id="slipUploadModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-end sm:items-center justify-center sm:p-4">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2 text-base">
+          <i data-lucide="receipt" class="w-5 h-5 text-blue-600"></i>
+          <span>แนบสลิปโอนเงิน</span>
+        </h3>
+        <button class="modal-close text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3.5">
+        <!-- Order Info Summary -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1">
+          <p><span class="text-slate-500">เลขออเดอร์:</span> <span class="font-semibold font-mono" id="modalOrderNumber">-</span></p>
+          <p><span class="text-slate-500">สินค้า:</span> <span class="font-bold text-slate-800" id="modalProductName">-</span></p>
+          <p><span class="text-slate-500">ยอดเงินที่ต้องโอน:</span> <span class="font-bold text-emerald-600 text-base" id="modalTotalCost">฿0</span></p>
+        </div>
+
+        <!-- Touch-Friendly Upload Options for Mobile -->
+        <div id="dropZone" class="space-y-2">
+          <!-- Button 1: Camera direct (Mobile) -->
+          <button type="button" id="btnLaunchCamera" class="w-full py-3 px-4 rounded-xl bg-blue-50 border-2 border-dashed border-blue-400 hover:bg-blue-100/60 text-blue-700 font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98]">
+            <i data-lucide="camera" class="w-5 h-5 text-blue-600"></i>
+            <span>ถ่ายรูปด้วยกล้องมือถือ</span>
+          </button>
+          <input type="file" id="slipCameraInput" accept="image/*" capture="environment" class="hidden">
+
+          <!-- Button 2: File gallery -->
+          <button type="button" id="btnLaunchGallery" class="w-full py-2.5 px-4 rounded-xl bg-slate-50 border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+            <i data-lucide="image" class="w-4 h-4 text-slate-500"></i>
+            <span>เลือกรูปจากคลังภาพ / ไฟล์</span>
+          </button>
+          <input type="file" id="slipFileInput" accept="image/*" class="hidden">
+        </div>
+
+        <!-- Preview Area -->
+        <div id="slipPreviewContainer" class="hidden text-center">
+          <img id="slipImagePreview" class="max-h-56 mx-auto rounded-xl shadow-sm border border-slate-200 object-contain">
+          <button id="btnRemoveSlipPreview" class="text-xs text-rose-600 hover:text-rose-700 mt-2 font-semibold">
+            ลบและเลือกรูปใหม่
+          </button>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="modal-close flex-1 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+            ยกเลิก
+          </button>
+          <button type="button" id="btnConfirmUploadSlip" class="flex-1 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition disabled:opacity-50" disabled>
+            อัปโหลดสลิป
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SLIP FULL PREVIEW ================= -->
+  <div id="slipViewModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-4 shadow-2xl">
+      <div class="flex justify-between items-center mb-2">
+        <h4 class="font-semibold text-slate-800 text-sm">รูปสลิปโอนเงิน</h4>
+        <button class="modal-close text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="max-h-[75vh] overflow-auto flex items-center justify-center bg-slate-100 rounded-xl p-2">
+        <img id="slipFullImage" class="max-w-full max-h-[70vh] rounded-lg shadow">
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: MOBILE QR CODE ================= -->
+  <div id="qrModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-bold text-slate-900 text-base">สแกนเพื่อเปิดบนมือถือ</h3>
+        <button class="modal-close text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="bg-slate-50 p-4 rounded-xl inline-block border border-slate-200 mb-3 shadow-inner">
+        <img id="qrImage" class="w-48 h-48 mx-auto" alt="QR Code">
+      </div>
+      <p class="text-xs text-slate-600 mb-2">
+        ใช้กล้องมือถือสแกน QR Code นี้ เพื่อเปิดใช้งานบนโทรศัพท์และถ่ายรูปสลิปส่งได้ทันที!
+      </p>
+      <div class="bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-700 break-all" id="qrLocalUrl">
+        -
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ADD/EDIT MAPPING ================= -->
+  <div id="mappingModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+        <h3 class="font-bold text-slate-900 text-base" id="mappingModalTitle">เพิ่มคู่มือจับคู่ยาง</h3>
+        <button class="modal-close text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="mappingForm" class="space-y-3.5 text-xs sm:text-sm">
+        <input type="hidden" id="mappingId">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">คำค้นขนาดยาง / รุ่น (เช่น 215/45R17 KUMHO):</label>
+          <input type="text" id="mappingPattern" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">ร้านซับเริ่มต้น (Supplier):</label>
+          <input type="text" id="mappingSupplier" required list="suppliersDataList" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <datalist id="suppliersDataList"></datalist>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">ราคาต้นทุน/เส้น (บาท):</label>
+            <input type="number" id="mappingPrice" required min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">ค่าส่ง (บาท):</label>
+            <input type="number" id="mappingShipping" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">หมายเหตุ:</label>
+          <input type="text" id="mappingNote" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="modal-close flex-1 py-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">ยกเลิก</button>
+          <button type="submit" class="flex-1 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition">บันทึก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-xs sm:text-sm border border-slate-700" id="toastContent">
+      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 flex-shrink-0" id="toastIcon"></i>
+      <span id="toastMessage" class="truncate">แจ้งเตือน</span>
+    </div>
+  </div>
+
+  <!-- App Main Javascript -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

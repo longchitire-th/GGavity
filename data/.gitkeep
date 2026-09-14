@@ -1,0 +1,2 @@
+# This file ensures the data directory exists on deployment.
+# db.json will be auto-created by the app at startup.

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Data (ephemeral on cloud, don't track)
+data/db.json
+data/user_data/
+
+# Uploaded files (ephemeral on cloud)
+uploads/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# Large promo images
+savetyre_promo.png
+
+# Debug / test scripts
+debug_*.js
+inspect_*.js
+test_*.js
+verify_*.js
