@@ -1,12 +1,41 @@
 /**
  * วุ่นวายโภชนา V2.0 - Noodle Recipe Ideas Logic
+ * Handles both Object and Array recipe data structures cleanly
  */
 
 let activeCountryFilter = 'all';
 let recipeSearchQuery = '';
 
+// Helper to normalize any recipe item
+function normalizeRecipe(r, index) {
+  if (!r) return null;
+  if (Array.isArray(r)) {
+    const ing = Array.isArray(r[2]) ? r[2] : (typeof r[2] === 'string' ? r[2].split(',').map(s => s.trim()) : []);
+    const st = Array.isArray(r[3]) ? r[3] : (typeof r[3] === 'string' ? r[3].split('|').map(s => s.trim()) : []);
+    return {
+      id: index + 1,
+      name: r[0] || 'ไม่มีชื่อเมนู',
+      country: r[1] || 'นานาชาติ',
+      ingredients: ing,
+      steps: st
+    };
+  }
+  return {
+    id: r.id !== undefined ? r.id : (index + 1),
+    name: r.name || 'ไม่มีชื่อเมนู',
+    country: r.country || 'นานาชาติ',
+    ingredients: Array.isArray(r.ingredients) ? r.ingredients : (typeof r.ingredients === 'string' ? r.ingredients.split(',').map(s => s.trim()) : []),
+    steps: Array.isArray(r.steps) ? r.steps : (typeof r.steps === 'string' ? r.steps.split('|').map(s => s.trim()) : [])
+  };
+}
+
+function getNormalizedRecipes() {
+  const raw = window.NOODLE_RECIPES || [];
+  return raw.map((r, i) => normalizeRecipe(r, i)).filter(Boolean);
+}
+
 function renderRecipes() {
-  const recipes = window.NOODLE_RECIPES || [];
+  const recipes = getNormalizedRecipes();
   const container = document.getElementById('recipeGrid');
   const countEl = document.getElementById('recipeTotalCount');
   if (!container) return;
@@ -14,13 +43,10 @@ function renderRecipes() {
   if (countEl) countEl.textContent = `${recipes.length} เมนู`;
 
   // Filter
-  let filtered = recipes.filter(r => {
-    const [name, country, ingredients, steps] = r;
-    const matchCountry = activeCountryFilter === 'all' || (country && country.includes(activeCountryFilter));
-    const matchSearch = !recipeSearchQuery || 
-      name.toLowerCase().includes(recipeSearchQuery) || 
-      ingredients.toLowerCase().includes(recipeSearchQuery) ||
-      (country && country.toLowerCase().includes(recipeSearchQuery));
+  const filtered = recipes.filter(r => {
+    const matchCountry = activeCountryFilter === 'all' || (r.country && r.country.includes(activeCountryFilter));
+    const searchTarget = `${r.name} ${r.country} ${r.ingredients.join(' ')}`.toLowerCase();
+    const matchSearch = !recipeSearchQuery || searchTarget.includes(recipeSearchQuery);
     return matchCountry && matchSearch;
   });
 
@@ -29,19 +55,19 @@ function renderRecipes() {
     return;
   }
 
-  // If viewing 'all' and no search, display random 12 or first 24
+  // Display top 24 or filtered
   const displayItems = recipeSearchQuery ? filtered : filtered.slice(0, 24);
 
-  container.innerHTML = displayItems.map((r, idx) => {
-    const [name, country, ingredients, steps] = r;
+  container.innerHTML = displayItems.map(r => {
+    const ingText = r.ingredients.join(', ');
     return `
-      <div class="recipe-card" onclick="openRecipeDetail('${escapeHtml(name)}')">
+      <div class="recipe-card" onclick="openRecipeById(${r.id})">
         <div>
-          <h3>🍜 ${escapeHtml(name)}</h3>
-          <p><strong>เครื่องปรุง:</strong> ${escapeHtml(ingredients)}</p>
+          <h3>🍜 ${window.escapeHtml(r.name)}</h3>
+          <p><strong>เครื่องปรุง:</strong> ${window.escapeHtml(ingText)}</p>
         </div>
         <div>
-          <span class="recipe-tag">🌏 ${escapeHtml(country)}</span>
+          <span class="recipe-tag">🌏 ${window.escapeHtml(r.country)}</span>
         </div>
       </div>
     `;
@@ -49,7 +75,7 @@ function renderRecipes() {
 }
 
 function randomizeRecipes() {
-  const recipes = window.NOODLE_RECIPES || [];
+  const recipes = getNormalizedRecipes();
   const container = document.getElementById('recipeGrid');
   if (!container || recipes.length === 0) return;
 
@@ -58,27 +84,26 @@ function randomizeRecipes() {
   const picks = shuffled.slice(0, 8);
 
   container.innerHTML = picks.map(r => {
-    const [name, country, ingredients, steps] = r;
+    const ingText = r.ingredients.join(', ');
     return `
-      <div class="recipe-card" onclick="openRecipeDetail('${escapeHtml(name)}')">
+      <div class="recipe-card" onclick="openRecipeById(${r.id})">
         <div>
-          <h3>🍜 ${escapeHtml(name)}</h3>
-          <p><strong>เครื่องปรุง:</strong> ${escapeHtml(ingredients)}</p>
+          <h3>🍜 ${window.escapeHtml(r.name)}</h3>
+          <p><strong>เครื่องปรุง:</strong> ${window.escapeHtml(ingText)}</p>
         </div>
         <div>
-          <span class="recipe-tag">🌏 ${escapeHtml(country)}</span>
+          <span class="recipe-tag">🌏 ${window.escapeHtml(r.country)}</span>
         </div>
       </div>
     `;
   }).join('');
 }
 
-function openRecipeDetail(name) {
-  const recipes = window.NOODLE_RECIPES || [];
-  const item = recipes.find(r => r[0] === name);
+function openRecipeById(id) {
+  const recipes = getNormalizedRecipes();
+  const item = recipes.find(r => r.id === id);
   if (!item) return;
 
-  const [recipeName, country, ingredients, steps] = item;
   const modal = document.getElementById('recipeModal');
   const title = document.getElementById('modalRecipeName');
   const countryEl = document.getElementById('modalRecipeCountry');
@@ -87,17 +112,19 @@ function openRecipeDetail(name) {
 
   if (!modal) return;
 
-  if (title) title.textContent = recipeName;
-  if (countryEl) countryEl.textContent = `ต้นตำรับ: ${country}`;
+  if (title) title.textContent = item.name;
+  if (countryEl) countryEl.textContent = `ต้นตำรับ: ${item.country}`;
 
   if (ingList) {
-    const ingArray = ingredients.split(',').map(s => s.trim()).filter(Boolean);
-    ingList.innerHTML = ingArray.map(ing => `<li style="margin: 4px 0; color: var(--text-muted);">${escapeHtml(ing)}</li>`).join('');
+    ingList.innerHTML = item.ingredients.map(ing => 
+      `<li style="margin: 4px 0; color: var(--text-muted);">${window.escapeHtml(ing)}</li>`
+    ).join('');
   }
 
   if (stepsList) {
-    const stepArray = steps.split('|').map(s => s.trim()).filter(Boolean);
-    stepsList.innerHTML = stepArray.map(st => `<li style="margin: 8px 0; line-height: 1.5;">${escapeHtml(st)}</li>`).join('');
+    stepsList.innerHTML = item.steps.map(st => 
+      `<li style="margin: 8px 0; line-height: 1.5;">${window.escapeHtml(st)}</li>`
+    ).join('');
   }
 
   modal.classList.add('open');
@@ -127,9 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
       renderRecipes();
     });
   });
+
+  // Render initially
+  renderRecipes();
 });
 
 window.renderRecipes = renderRecipes;
 window.randomizeRecipes = randomizeRecipes;
-window.openRecipeDetail = openRecipeDetail;
+window.openRecipeById = openRecipeById;
+window.openRecipeDetail = openRecipeById;
 window.closeRecipeModal = closeRecipeModal;
