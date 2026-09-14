@@ -1,0 +1,18 @@
+{
+  "name": "วุ่นวายโภชนา V2.0",
+  "short_name": "วุ่นวายโภชนา",
+  "description": "ระบบบัญชีรายรับ-รายจ่าย & วิเคราะห์ธุรกิจร้านอาหาร",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "logo-wanwan.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

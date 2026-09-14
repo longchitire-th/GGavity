@@ -146,9 +146,20 @@ class BigSellerBot {
 
       const currentUrl = page.url();
       if (currentUrl.includes('/login') || currentUrl.includes('/signin')) {
-        this.isLoggedIn = false;
-        await context.close();
-        throw new Error('ยังไม่ได้เข้าสู่ระบบ BigSeller กรุณากดปุ่ม "เข้าสู่ระบบ BigSeller ครั้งแรก" เพื่อล็อกอิน');
+        console.log('[BigSellerBot] Attempting auto-login with aitthiphols@gmail.com...');
+        try {
+          await page.fill('input[type="text"], input[name*="user"], input[name*="email"], input[placeholder*="email" i], input[placeholder*="账号" i]', 'aitthiphols@gmail.com');
+          await page.fill('input[type="password"]', 'Ait16011985');
+          await page.click('button[type="submit"], button[class*="login"], .login-btn, input[type="submit"]');
+          await page.waitForTimeout(5000);
+          if (page.url().includes('/login') || page.url().includes('/signin')) {
+            throw new Error('กรุณากด "เปิดหน้าล็อกอิน BigSeller" เพื่อตรวจสอบ CAPTCHA หรือยืนยันรหัสผ่าน');
+          }
+        } catch (loginErr) {
+          this.isLoggedIn = false;
+          await context.close();
+          throw new Error('เข้าสู่ระบบ BigSeller ไม่สำเร็จ: ' + loginErr.message);
+        }
       }
 
       this.isLoggedIn = true;

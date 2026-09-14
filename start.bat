@@ -1,7 +1,8 @@
 @echo off
-title Daily Tire Purchasing App
+chcp 65001 >nul
+title วุ่นวายโภชนา V2.0 - บัญชีร้าน & วิเคราะห์ธุรกิจ
 echo =======================================================
-echo    Starting Daily Tire Purchasing App...
+echo    กำลังเปิดแอป "วุ่นวายโภชนา V2.0"...
 echo =======================================================
 start "" "http://localhost:3838"
 node server.js
