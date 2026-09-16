@@ -1,0 +1,147 @@
+{
+  "orders": [
+    {
+      "id": "ord-1789524045364-resvl",
+      "status": "รอสั่ง",
+      "storeName": "หลงฉื่อ กรุ๊ป",
+      "orderNumber": "1118781023321746",
+      "productName": "ยาง 215/45R17 KUMHO รุ่น ECSTA PS31 ราคาต่อเส้น ปี 2025",
+      "quantity": 1,
+      "unit": "เส้น",
+      "supplier": "Save Tyre (ไทร์ทูยู)",
+      "extraNote": "เวลาสั่งซื้อ: 14 ก.ย. 2026 18:48",
+      "pricePerUnit": 1500,
+      "shippingFee": 0,
+      "platform": "Lazada",
+      "totalCost": 1500,
+      "slipUrl": "",
+      "slipUploadedAt": null,
+      "orderTime": "2026-09-16T02:00:45.364Z",
+      "cutoffDate": "2026-09-16",
+      "syncedToSheet": false,
+      "syncedAt": null,
+      "updatedAt": "2026-09-16T02:00:45.364Z",
+      "createdAt": "2026-09-16T02:00:45.364Z"
+    },
+    {
+      "id": "ord-1789524045364-a94tq",
+      "status": "รอสั่ง",
+      "storeName": "Long Chi GROUP",
+      "orderNumber": "2609142H7604TV",
+      "productName": "ยาง 235/65R17 KUMHO รุ่น ROAD VENTURE AT52 ราคาต่อเส้น ปี 2026",
+      "quantity": 1,
+      "unit": "เส้น",
+      "supplier": "Save Tyre (ไทร์ทูยู)",
+      "extraNote": "เวลาสั่งซื้อ: 14 ก.ย. 2026 19:13",
+      "pricePerUnit": 2950,
+      "shippingFee": 100,
+      "platform": "Shopee",
+      "totalCost": 3050,
+      "slipUrl": "",
+      "slipUploadedAt": null,
+      "orderTime": "2026-09-16T02:00:45.364Z",
+      "cutoffDate": "2026-09-16",
+      "syncedToSheet": false,
+      "syncedAt": null,
+      "updatedAt": "2026-09-16T02:03:55.930Z",
+      "createdAt": "2026-09-16T02:00:45.364Z"
+    },
+    {
+      "id": "ord-1789524045365-b1y0f",
+      "status": "รอสั่ง",
+      "storeName": "LC Tyre",
+      "orderNumber": "2609155BVQNQFS",
+      "productName": "ยาง 265/40R20 SAILUN รุ่น ERANGE PREMIUM ราคาต่อเส้น ปี 2025",
+      "quantity": 1,
+      "unit": "เส้น",
+      "supplier": "KPS Stock",
+      "extraNote": "เวลาสั่งซื้อ: 15 ก.ย. 2026 22:16",
+      "pricePerUnit": 0,
+      "shippingFee": 0,
+      "platform": "Shopee",
+      "totalCost": 0,
+      "slipUrl": "",
+      "slipUploadedAt": null,
+      "orderTime": "2026-09-16T02:00:45.365Z",
+      "cutoffDate": "2026-09-16",
+      "syncedToSheet": false,
+      "syncedAt": null,
+      "updatedAt": "2026-09-16T02:03:22.092Z",
+      "createdAt": "2026-09-16T02:00:45.365Z"
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "sup-savetyre",
+      "name": "Save Tyre (ไทร์ทูยู)",
+      "phone": "02-8126351 (เซลล์ปัญญา 099-6169978)",
+      "note": "order.savetyre.net | แถม 39+1, 7+1, แลกซื้อ"
+    },
+    {
+      "id": "sup-topform",
+      "name": "TopForm (ท็อปฟอร์ม)",
+      "phone": "02-970-6917 ถึง 8",
+      "note": "topform.co.th / topformstocks.com | ยาง Yokohama, Pirelli, Continental"
+    },
+    {
+      "id": "sup-kps",
+      "name": "KPS Stock",
+      "phone": "084-2156566",
+      "note": "kpsstockupdate.ddns.net:8000"
+    },
+    {
+      "id": "sup-besttire",
+      "name": "BestTire",
+      "phone": "-",
+      "note": "www.besttire.co.th"
+    },
+    {
+      "id": "sup-wyzauto",
+      "name": "WYZauto",
+      "phone": "-",
+      "note": "wyzauto.com"
+    }
+  ],
+  "mappings": [
+    {
+      "id": "map-1",
+      "pattern": "215/45R17 KUMHO",
+      "supplier": "Save Tyre (ไทร์ทูยู)",
+      "pricePerUnit": 1500,
+      "shippingFee": 0,
+      "note": "โปรโมชั่น 39 แถม 1"
+    },
+    {
+      "id": "map-2",
+      "pattern": "195/65R15 YOKOHAMA",
+      "supplier": "TopForm (ท็อปฟอร์ม)",
+      "pricePerUnit": 1710,
+      "shippingFee": 0,
+      "note": "ราคาพิเศษ NET สต็อกพร้อมส่ง"
+    },
+    {
+      "id": "map-3",
+      "pattern": "235/65R17 KUMHO",
+      "supplier": "เอกชัยซัพพลายยางยนต์",
+      "pricePerUnit": 2950,
+      "shippingFee": 100,
+      "note": "รุ่น ROAD VENTURE AT52"
+    },
+    {
+      "id": "map-1789524219253",
+      "pattern": "235/65R17",
+      "supplier": "Save Tyre (ไทร์ทูยู)",
+      "pricePerUnit": 2950,
+      "shippingFee": 100,
+      "createdAt": "2026-09-16T02:03:39.253Z"
+    }
+  ],
+  "settings": {
+    "cutoffStartHour": 12,
+    "cutoffEndHour": 8,
+    "googleSheetWebhook": "",
+    "googleSheetUrl": "https://docs.google.com/spreadsheets/d/1kKYSU-vcSVh3G8wQMOSO3HF42zA2yJ33dmlxwjk348E/edit?gid=391311781#gid=391311781",
+    "autoSyncSheet": false,
+    "bigsellerUrl": "https://www.bigseller.com/web/order/index.htm?status=new"
+  }
+}

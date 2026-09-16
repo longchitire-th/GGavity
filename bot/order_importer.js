@@ -1,87 +1,130 @@
+const fs = require('fs');
+const path = require('path');
+const xlsx = require('xlsx');
 const db = require('../services/db');
 
 class OrderImporter {
   /**
-   * Parse exported CSV from BigSeller
+   * Import from file path (supports .csv, .xlsx, .xls)
+   */
+  importFile(filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+    let matrix = [];
+
+    if (ext === '.xlsx' || ext === '.xls') {
+      const workbook = xlsx.readFile(filePath);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      matrix = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+    } else {
+      // For CSV or text: read with UTF-8 first to preserve Thai characters
+      const content = fs.readFileSync(filePath, 'utf8');
+      const workbook = xlsx.read(content, { type: 'string' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      matrix = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+    }
+
+    return this.importMatrix(matrix);
+  }
+
+  /**
+   * Parse exported CSV string
    */
   importCsvContent(content) {
-    const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
-    if (lines.length < 2) return { success: false, count: 0, message: 'ไฟล์ไม่มีข้อมูล' };
+    const workbook = xlsx.read(content, { type: 'string' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const matrix = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+    return this.importMatrix(matrix);
+  }
 
-    const headerLine = lines[0].toLowerCase();
-    const rows = lines.slice(1);
-    const importedOrders = [];
+  importMatrix(matrix) {
+    if (!matrix || matrix.length < 2) {
+      return { success: false, count: 0, message: 'ไฟล์ไม่มีข้อมูลคำสั่งซื้อ' };
+    }
 
-    // Identify column indexes based on header names
-    const headers = this.parseCsvLine(lines[0]);
-    let orderNumIdx = headers.findIndex(h => /order|sn|เลขออเดอร์|订单/i.test(h));
-    let storeIdx = headers.findIndex(h => /store|shop|ร้านค้า|店铺/i.test(h));
-    let productIdx = headers.findIndex(h => /item|product|goods|title|ชื่อสินค้า|รายการ/i.test(h));
-    let qtyIdx = headers.findIndex(h => /qty|quantity|จำนวน|数量/i.test(h));
-    let platformIdx = headers.findIndex(h => /platform|channel|ช่องทาง/i.test(h));
+    const headers = (matrix[0] || []).map(h => String(h || '').trim());
+    const rows = matrix.slice(1);
 
-    // Fallbacks if header names are slightly different
+    // Identify exact column indexes based on BigSeller header names
+    let orderNumIdx = headers.findIndex(h => /หมายเลขคำสั่งซื้อ|เลขออเดอร์|เลขที่คำสั่งซื้อ|order\s*no|order\s*id|sn|订单/i.test(h));
+    let platformIdx = headers.findIndex(h => /^แพลตฟอร์ม$|platform|channel|ช่องทาง/i.test(h));
+    let storeIdx = headers.findIndex(h => /ร้านค้า\s*เพลตฟอร์ม|ร้านค้า\s*BigSeller|ร้านค้า|store|shop|店铺/i.test(h));
+    let productIdx = headers.findIndex(h => /^ชื่อสินค้า$|ชื่อ\s*สินค้า|product\s*name|item\s*name|รายการสินค้า/i.test(h));
+    let skuIdx = headers.findIndex(h => /^sku$/i.test(h));
+    let qtyIdx = headers.findIndex(h => /^จำนวน$|quantity|qty|数量/i.test(h));
+    let timeIdx = headers.findIndex(h => /เวลาสั่งซื้อ|เวลาที่สั่งซื้อ|order\s*time/i.test(h));
+    let shippingIdx = headers.findIndex(h => /^ค่าจัดส่ง$|shipping\s*fee/i.test(h));
+
+    // Fallbacks
     if (orderNumIdx === -1) orderNumIdx = 0;
-    if (storeIdx === -1) storeIdx = 1;
-    if (productIdx === -1) productIdx = 3;
-    if (qtyIdx === -1) qtyIdx = 4;
+    if (productIdx === -1) productIdx = skuIdx >= 0 ? skuIdx : 27;
+    if (qtyIdx === -1) qtyIdx = 32;
 
     const todayStr = new Date().toISOString().split('T')[0];
+    const importedOrders = [];
 
-    for (const rowLine of rows) {
-      const cols = this.parseCsvLine(rowLine);
-      if (cols.length <= 1) continue;
+    for (const cols of rows) {
+      if (!cols || cols.length === 0) continue;
 
-      const orderNumber = (cols[orderNumIdx] || '').replace(/['"]/g, '').trim();
-      const storeName = (cols[storeIdx] || '').trim();
-      const productName = (cols[productIdx] || '').trim();
-      const quantity = parseInt(cols[qtyIdx], 10) || 1;
+      const orderNumber = String(cols[orderNumIdx] || '').replace(/['"]/g, '').trim();
+      const rawProduct = (productIdx >= 0 && cols[productIdx]) ? String(cols[productIdx]).trim() : '';
+      const rawSku = (skuIdx >= 0 && cols[skuIdx]) ? String(cols[skuIdx]).trim() : '';
+      const productName = rawProduct || rawSku || 'ยางรถยนต์';
+
+      if (!orderNumber && !productName) continue;
+
+      // Platform detection
       let platform = 'Shopee';
       if (platformIdx >= 0 && cols[platformIdx]) {
-        platform = cols[platformIdx].trim();
-      } else if (/lazada/i.test(storeName) || /lazada/i.test(productName)) {
+        const platText = String(cols[platformIdx]).trim();
+        if (/lazada/i.test(platText)) platform = 'Lazada';
+        else if (/shopee/i.test(platText)) platform = 'Shopee';
+        else if (/tiktok/i.test(platText)) platform = 'TikTok';
+        else platform = platText;
+      } else if (orderNumber.length >= 15 || /^\d{16}$/.test(orderNumber)) {
+        // Lazada order numbers are typically 16 digits
         platform = 'Lazada';
       }
 
-      if (orderNumber || productName) {
-        const orderRecord = db.upsertOrder({
-          orderNumber: orderNumber || `ORD-${Date.now()}`,
-          storeName: storeName || (platform === 'Lazada' ? 'หลงฉื่อ กรุ๊ป Lazada' : 'Long Chi GROUP JACK Shopee'),
-          platform,
-          productName: productName || 'ยางรถยนต์',
-          quantity,
-          unit: 'เส้น',
-          cutoffDate: todayStr,
-          status: 'รอสั่ง'
-        });
-        importedOrders.push(orderRecord);
+      // Store name
+      let storeName = (storeIdx >= 0 && cols[storeIdx]) ? String(cols[storeIdx]).trim() : '';
+      if (!storeName) {
+        storeName = platform === 'Lazada' ? 'หลงฉื่อ กรุ๊ป' : 'Long Chi GROUP';
       }
+
+      // Quantity
+      let quantity = 1;
+      if (qtyIdx >= 0 && cols[qtyIdx] !== undefined) {
+        quantity = parseInt(String(cols[qtyIdx]).replace(/[^\d]/g, ''), 10) || 1;
+      }
+
+      // Order time
+      const orderTimeRaw = (timeIdx >= 0 && cols[timeIdx]) ? String(cols[timeIdx]).trim() : '';
+
+      const orderRecord = db.upsertOrder({
+        orderNumber: orderNumber || `ORD-${Date.now()}`,
+        storeName,
+        platform,
+        productName,
+        quantity,
+        unit: 'เส้น',
+        cutoffDate: todayStr,
+        status: 'รอสั่ง',
+        extraNote: orderTimeRaw ? `เวลาสั่งซื้อ: ${orderTimeRaw}` : ''
+      });
+
+      importedOrders.push(orderRecord);
     }
+
+    console.log(`[OrderImporter] Successfully processed ${importedOrders.length} orders from BigSeller file`);
 
     return {
       success: true,
       count: importedOrders.length,
       orders: importedOrders
     };
-  }
-
-  parseCsvLine(text) {
-    const result = [];
-    let cur = '';
-    let inQuotes = false;
-    for (let i = 0; i < text.length; i++) {
-      const c = text[i];
-      if (c === '"') {
-        inQuotes = !inQuotes;
-      } else if (c === ',' && !inQuotes) {
-        result.push(cur.trim());
-        cur = '';
-      } else {
-        cur += c;
-      }
-    }
-    result.push(cur.trim());
-    return result;
   }
 }
 

@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
+const DB_FILE = path.join(DATA_DIR, 'tire_orders_db.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -13,6 +13,11 @@ if (!fs.existsSync(DATA_DIR)) {
 const defaultData = {
   orders: [],
   suppliers: [
+    { id: 'sup-savetyre', name: 'Save Tyre (ไทร์ทูยู)', phone: '02-8126351 (เซลล์ปัญญา 099-6169978)', note: 'order.savetyre.net | แถม 39+1, 7+1, แลกซื้อ' },
+    { id: 'sup-topform', name: 'TopForm (ท็อปฟอร์ม)', phone: '02-970-6917 ถึง 8', note: 'topform.co.th / topformstocks.com | ยาง Yokohama, Pirelli, Continental' },
+    { id: 'sup-kps', name: 'KPS Stock', phone: '084-2156566', note: 'kpsstockupdate.ddns.net:8000' },
+    { id: 'sup-besttire', name: 'BestTire', phone: '-', note: 'www.besttire.co.th' },
+    { id: 'sup-wyzauto', name: 'WYZauto', phone: '-', note: 'wyzauto.com' },
     { id: 'sup-1', name: 'เจริญโชคไทร์การยาง', phone: '081-234-5678', note: 'ส่งไว สินค้า Kumho/Bridgestone' },
     { id: 'sup-2', name: 'เอกชัยซัพพลายยางยนต์', phone: '089-876-5432', note: 'มีรุ่น AT52 ราคาดี' },
     { id: 'sup-3', name: 'สยามยางไทยกรุ๊ป', phone: '02-999-8888', note: 'สายไหม รับของได้เลย' }

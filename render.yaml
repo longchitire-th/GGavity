@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: daily-tire-purchasing
+    env: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    disk:
+      name: tire-data
+      mountPath: /app/data
+      sizeGB: 1

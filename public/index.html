@@ -76,6 +76,13 @@
             <span class="hidden xs:inline">ดึงออเดอร์</span>
           </button>
 
+          <!-- Import BigSeller File Button -->
+          <button id="btnImportBigSeller" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg shadow-sm transition" title="นำเข้าไฟล์คำสั่งซื้อจาก BigSeller">
+            <i data-lucide="upload" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600"></i>
+            <span class="hidden sm:inline">นำเข้าไฟล์</span>
+          </button>
+          <input type="file" id="bigSellerFileInput" accept=".csv, .txt" class="hidden">
+
           <!-- Sync to Google Sheets Button -->
           <button id="btnSyncSheets" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg shadow-sm transition">
             <i data-lucide="sheet" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600"></i>
@@ -183,6 +190,16 @@
       <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-analytics">
         <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
         <span>สถิติ & รายจ่าย</span>
+      </button>
+
+      <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-savetyre">
+        <i data-lucide="tags" class="w-4 h-4 text-emerald-600"></i>
+        <span>สต็อก & แลกซื้อ SaveTyre</span>
+      </button>
+
+      <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-topform">
+        <i data-lucide="box" class="w-4 h-4 text-blue-600"></i>
+        <span>สต็อก & โปร TopForm</span>
       </button>
 
       <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-settings">
@@ -425,6 +442,20 @@
               *กดแล้วหน้าต่างเบราว์เซอร์จะเปิดขึ้น ให้ล็อกอินบัญชี BigSeller ของคุณเพียงครั้งเดียว
             </span>
           </div>
+
+          <div class="border-t border-slate-100 pt-3">
+            <h4 class="font-bold text-slate-800 text-xs sm:text-sm mb-1 flex items-center gap-1.5">
+              <i data-lucide="file-up" class="w-4 h-4 text-indigo-600"></i>
+              หรือ นำเข้าไฟล์คำสั่งซื้อจาก BigSeller (ง่าย สะดวก และปลอดภัยที่สุด)
+            </h4>
+            <p class="text-xs text-slate-500 mb-2">
+              ในหน้าคำสั่งซื้อ BigSeller กดปุ่ม <b>"Export / ส่งออกคำสั่งซื้อ"</b> (เป็นไฟล์ CSV) แล้วนำมากดปุ่มนี้เพื่อนำเข้าออเดอร์ทันทีโดยไม่ต้องล็อกอิน
+            </p>
+            <button id="btnSettingsImportCsv" class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold rounded-lg text-xs transition flex items-center gap-1.5">
+              <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+              <span>เลือกไฟล์ BigSeller CSV เพื่อนำเข้าคำสั่งซื้อ</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -464,6 +495,122 @@
             <pre id="appsScriptCode" class="text-[11px] sm:text-xs bg-slate-900 text-slate-100 p-3 rounded-lg overflow-x-auto max-h-48 font-mono"></pre>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB CONTENT: SAVETYRE SMART OPTIMIZER ================= -->
+    <section id="tab-savetyre" class="tab-pane hidden space-y-4 sm:space-y-6">
+      <!-- SaveTyre Live Stock Search -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+              <i data-lucide="search" class="w-5 h-5 text-emerald-600"></i>
+              ค้นหาสต็อกสด SaveTyre (ไทร์ทูยู)
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">ค้นหาสต็อกคงเหลือจริงแบบ Real-time จาก order.savetyre.net (บัญชี: Phrajan)</p>
+          </div>
+          <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <i data-lucide="award" class="w-3.5 h-3.5"></i>
+            <span id="saveTyreRightsBadge">สิทธิ์แลกซื้อ: กำลังโหลด...</span>
+          </span>
+        </div>
+
+        <div class="flex gap-2 max-w-xl">
+          <input type="text" id="inputSaveTyreSearch" placeholder="พิมพ์ขนาดยาง เช่น 215/45R17 หรือ PS31..." class="flex-1 px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <button id="btnSearchSaveTyre" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            <span>ค้นหาสต็อก</span>
+          </button>
+        </div>
+
+        <!-- Live Search Results Container -->
+        <div id="saveTyreSearchResults" class="mt-4 hidden"></div>
+      </div>
+
+      <!-- Redemption Catalog (รายการแลกซื้อคุ้มสุด) -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+              <i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i>
+              รายการยางและสินค้าที่ใช้สิทธิ์แลกซื้อได้ (Redemption Catalog 126 รายการ)
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">
+              ยางและเครื่องมือที่สามารถนำแต้ม/สิทธิ์มาแลกซื้อได้ในราคาพิเศษ พร้อมคำนวณส่วนต่างกำไรให้เห็นทันที
+            </p>
+          </div>
+          <button id="btnRefreshRedemption" class="text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 font-semibold px-3 py-1.5 rounded-lg transition self-start sm:self-auto flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>รีเฟรชข้อมูล</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs">
+                <th class="py-2.5 px-3">สินค้า / ขนาดยาง</th>
+                <th class="py-2.5 px-2">ยี่ห้อ</th>
+                <th class="py-2.5 px-2 text-center">สต็อก</th>
+                <th class="py-2.5 px-3 text-right">ราคาปกติ</th>
+                <th class="py-2.5 px-3 text-right text-emerald-600 font-bold">ราคาแลกซื้อ</th>
+                <th class="py-2.5 px-2 text-center text-purple-700 font-semibold">สิทธิ์ที่ใช้</th>
+                <th class="py-2.5 px-3 text-right text-amber-600 font-bold">ประหยัดได้</th>
+              </tr>
+            </thead>
+            <tbody id="redemptionTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB CONTENT: TOPFORM SMART OPTIMIZER ================= -->
+    <section id="tab-topform" class="tab-pane hidden space-y-4 sm:space-y-6">
+      <!-- TopForm Live Stock Search -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+              <i data-lucide="search" class="w-5 h-5 text-blue-600"></i>
+              ค้นหาสต็อกสด TopForm (ท็อปฟอร์ม)
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">ค้นหาสต็อกสดและโปรโมชั่น NET จาก topform.co.th (บัญชี: longchi.tire@gmail.com - บจก.หลงฉื่อ กรุ๊ป)</p>
+          </div>
+          <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            <span>Dealer Tier: Bronze</span>
+          </span>
+        </div>
+
+        <div class="flex gap-2 max-w-xl">
+          <input type="text" id="inputTopFormSearch" placeholder="พิมพ์ขนาดยาง เช่น 215/45R17 หรือ 195/65R15..." class="flex-1 px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <button id="btnSearchTopForm" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            <span>ค้นหาสต็อก</span>
+          </button>
+        </div>
+
+        <!-- TopForm Live Results Container -->
+        <div id="topFormSearchResults" class="mt-4 hidden"></div>
+      </div>
+
+      <!-- TopForm Rewards Card -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+              <i data-lucide="gift" class="w-5 h-5 text-purple-600"></i>
+              ของรางวัลแลกคะแนน TopForm Rewards
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">ของรางวัลสะสมคะแนนจากการสั่งซื้อยางกับ TopForm</p>
+          </div>
+          <button id="btnRefreshTopFormRewards" class="text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>รีเฟรช</span>
+          </button>
+        </div>
+        <div id="topFormRewardsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
       </div>
     </section>
 
@@ -603,6 +750,169 @@
           <button type="submit" class="flex-1 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition">บันทึก</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ADD/EDIT SUPPLIER ================= -->
+  <div id="supplierModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+        <h3 class="font-bold text-slate-900 text-base" id="supplierModalTitle">เพิ่มร้านค้าซับพลายเออร์</h3>
+        <button class="modal-close text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="supplierForm" class="space-y-3.5 text-xs sm:text-sm">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">ชื่อร้านซับพลายเออร์ (Supplier Name):</label>
+          <input type="text" id="supplierName" required placeholder="เช่น เอี่ยวการยาง, กิตติพาณิชย์" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">เบอร์โทรศัพท์ติดต่อ:</label>
+          <input type="text" id="supplierPhone" placeholder="เช่น 081-234-5678" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">เว็บไซต์ / ลิงก์ระบบ:</label>
+          <input type="text" id="supplierWebsite" placeholder="เช่น https://..." class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">หมายเหตุ / จุดเด่น / เงื่อนไขจัดส่ง:</label>
+          <input type="text" id="supplierNote" placeholder="เช่น 4 เส้นส่งฟรี, มารับเองลด 50 บ." class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="modal-close flex-1 py-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">ยกเลิก</button>
+          <button type="submit" class="flex-1 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition">บันทึกร้านซับ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SMART SUPPLIER COMPARISON ================= -->
+  <div id="supplierCompareModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+      <div class="flex justify-between items-start border-b border-slate-100 pb-3 mb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 font-bold">เปรียบเทียบซัพพลายเออร์</span>
+            <span id="compareOrderPlatformBadge" class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700"></span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-base sm:text-lg mt-1" id="compareOrderProduct">กำลังโหลด...</h3>
+          <p class="text-xs text-slate-500">จำนวนที่ต้องการสั่ง: <span id="compareOrderQty" class="font-bold text-slate-800">1</span> เส้น</p>
+        </div>
+        <button class="modal-close text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div id="compareLoading" class="py-12 text-center text-slate-400">
+        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500"></i>
+        กำลังเปรียบเทียบสต็อกและราคาจาก SaveTyre และ TopForm แบบ Real-time...
+      </div>
+
+      <!-- Content Container -->
+      <div id="compareContent" class="hidden space-y-4">
+        <!-- Best Recommendation Banner -->
+        <div id="compareBestBanner" class="p-3.5 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="award" class="w-6 h-6 text-emerald-600 flex-shrink-0"></i>
+            <div>
+              <p class="font-bold text-xs sm:text-sm" id="compareBestTitle">แนะนำ: Save Tyre</p>
+              <p class="text-xs text-emerald-700" id="compareBestReason">-</p>
+            </div>
+          </div>
+          <button id="btnApplyBest" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap self-end sm:self-auto">
+            เลือกตัวนี้เลย
+          </button>
+        </div>
+
+        <!-- Side-by-side Suppliers Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 1. Save Tyre Card -->
+          <div id="cardSaveTyreCompare" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <i data-lucide="tags" class="w-4 h-4 text-emerald-600"></i>
+                  Save Tyre (ไทร์ทูยู)
+                </span>
+                <span id="badgeSaveTyreStock" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">-</span>
+              </div>
+              <div id="bodySaveTyreCompare" class="text-xs text-slate-600 space-y-1 mb-3">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+            <button id="btnApplySaveTyre" class="w-full text-xs py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition shadow-sm">
+              ใช้ราคา Save Tyre
+            </button>
+          </div>
+
+          <!-- 2. TopForm Card -->
+          <div id="cardTopFormCompare" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <i data-lucide="box" class="w-4 h-4 text-blue-600"></i>
+                  TopForm (ท็อปฟอร์ม)
+                </span>
+                <span id="badgeTopFormStock" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">-</span>
+              </div>
+              <div id="bodyTopFormCompare" class="text-xs text-slate-600 space-y-1 mb-3">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+            <button id="btnApplyTopForm" class="w-full text-xs py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-sm">
+              ใช้ราคา TopForm
+            </button>
+          </div>
+
+          <!-- 3. KPS Stock Card -->
+          <div id="cardKpsCompare" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <i data-lucide="layers" class="w-4 h-4 text-purple-600"></i>
+                  KPS Stock
+                </span>
+                <span id="badgeKpsStock" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">-</span>
+              </div>
+              <div id="bodyKpsCompare" class="text-xs text-slate-600 space-y-1 mb-3">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+            <button id="btnApplyKps" class="w-full text-xs py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition shadow-sm">
+              ใช้ราคา KPS Stock
+            </button>
+          </div>
+
+          <!-- 4. BestTire Card -->
+          <div id="cardBestTireCompare" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <i data-lucide="circle-dot" class="w-4 h-4 text-orange-600"></i>
+                  BestTire
+                </span>
+                <span id="badgeBestTireStock" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">-</span>
+              </div>
+              <div id="bodyBestTireCompare" class="text-xs text-slate-600 space-y-1 mb-3">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+            <button id="btnApplyBestTire" class="w-full text-xs py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition shadow-sm">
+              ใช้ราคา BestTire
+            </button>
+          </div>
+        </div>
+
+        <!-- Alternative options dropdown/toggle -->
+        <div id="compareAlternatives" class="border-t border-slate-100 pt-3">
+          <p class="text-xs font-semibold text-slate-700 mb-2">รุ่นและยี่ห้ออื่น ๆ ในขนาดเดียวกันจาก TopForm:</p>
+          <div id="alternativesList" class="space-y-1.5 max-h-48 overflow-y-auto text-xs">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

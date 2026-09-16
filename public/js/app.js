@@ -5,7 +5,10 @@ let state = {
   mappings: [],
   analytics: null,
   activeOrderIdForSlip: null,
-  selectedSlipFile: null
+  selectedSlipFile: null,
+  saveTyreRedemption: null,
+  topFormRewards: null,
+  activeCompareOrder: null
 };
 
 // ==========================================
@@ -30,7 +33,9 @@ async function loadInitialData() {
     fetchMappings(),
     fetchAnalytics(),
     fetchSettings(),
-    fetchNetworkInfo()
+    fetchNetworkInfo(),
+    fetchSaveTyreRedemption(),
+    fetchTopFormRewards()
   ]);
 }
 
@@ -57,11 +62,11 @@ async function fetchSuppliers() {
     const json = await res.json();
     if (json.success) {
       state.suppliers = json.data;
-      renderSuppliers();
       updateSuppliersDatalist();
+      renderSuppliers();
     }
   } catch (err) {
-    console.error('Error fetching suppliers:', err);
+    console.warn('โหลดร้านซับไม่สำเร็จ:', err.message);
   }
 }
 
@@ -74,7 +79,7 @@ async function fetchMappings() {
       renderMappings();
     }
   } catch (err) {
-    console.error('Error fetching mappings:', err);
+    console.warn('โหลดคู่มือจับคู่ไม่สำเร็จ:', err.message);
   }
 }
 
@@ -85,10 +90,9 @@ async function fetchAnalytics() {
     if (json.success) {
       state.analytics = json.data;
       renderAnalytics();
-      updateKpis();
     }
   } catch (err) {
-    console.error('Error fetching analytics:', err);
+    console.warn('โหลดสถิติไม่สำเร็จ:', err.message);
   }
 }
 
@@ -97,19 +101,18 @@ async function fetchSettings() {
     const res = await fetch('/api/settings');
     const json = await res.json();
     if (json.success && json.data) {
-      const el = document.getElementById('settingWebhookUrl');
-      if (el) el.value = json.data.googleSheetWebhook || '';
+      const webhookInput = document.getElementById('settingWebhookUrl');
+      if (webhookInput) webhookInput.value = json.data.googleSheetWebhook || '';
     }
 
-    // Load Apps Script code
     const scriptRes = await fetch('/api/sheets/script-template');
     const scriptJson = await scriptRes.json();
     if (scriptJson.success) {
-      const codeEl = document.getElementById('appsScriptCode');
-      if (codeEl) codeEl.innerText = scriptJson.script;
+      const codeElem = document.getElementById('appsScriptCode');
+      if (codeElem) codeElem.innerText = scriptJson.script;
     }
   } catch (err) {
-    console.error('Error fetching settings:', err);
+    console.warn('โหลดการตั้งค่าไม่สำเร็จ:', err.message);
   }
 }
 
@@ -124,30 +127,56 @@ async function fetchNetworkInfo() {
       if (qrUrl) qrUrl.innerText = json.localUrl;
     }
   } catch (err) {
-    console.error('Error fetching network info:', err);
+    console.warn('โหลดข้อมูลเครือข่ายไม่สำเร็จ:', err.message);
   }
 }
 
 // ==========================================
-// RENDERING FUNCTIONS
+// KPI SUMMARY BAR
 // ==========================================
 function updateKpis() {
-  if (!state.analytics || !state.analytics.today) {
-    document.getElementById('statTiresCount').innerText = state.orders.reduce((sum, o) => sum + (o.quantity || 1), 0);
-    document.getElementById('statTotalExpense').innerText = '฿' + state.orders.reduce((sum, o) => sum + (o.totalCost || 0), 0).toLocaleString();
-    return;
-  }
+  const totalOrders = state.orders.length;
+  let orderedCount = 0;
+  let pendingCount = 0;
+  let oosCount = 0;
+  let totalExpense = 0;
+  let slipsCount = 0;
 
-  const t = state.analytics.today;
-  document.getElementById('statTiresCount').innerText = t.totalTiresCount;
-  document.getElementById('statTotalExpense').innerText = '฿' + t.totalExpense.toLocaleString();
-  document.getElementById('statReadyCount').innerText = t.readyCount;
-  document.getElementById('statOutOfStockCount').innerText = t.outOfStockCount;
-  document.getElementById('statSlipsCount').innerText = t.slipsUploadedCount;
-  document.getElementById('statSlipsTotal').innerText = `/ ${t.totalOrders} รายการ`;
-  document.getElementById('badgeOrderCount').innerText = state.orders.length;
+  state.orders.forEach(o => {
+    if (o.status === 'สั่งแล้ว (ส่งได้)' || o.status === 'สั่งแล้ว' || o.status === 'ส่งได้') {
+      orderedCount++;
+    } else if (o.status === 'สินค้าขาดตลาด (ส่งไม่ได้)' || o.status === 'ขาดตลาด' || o.status === 'ยกเลิก') {
+      oosCount++;
+    } else {
+      pendingCount++;
+    }
+
+    const itemTotal = (Number(o.quantity) || 1) * (Number(o.pricePerUnit) || 0) + (Number(o.shippingFee) || 0);
+    totalExpense += itemTotal;
+
+    if (o.slipUrl) slipsCount++;
+  });
+
+  const elPending = document.getElementById('statPendingOrders');
+  const elReady = document.getElementById('statReadyOrders');
+  const elOos = document.getElementById('statOosOrders');
+  const elExpense = document.getElementById('statTotalExpense');
+  const elSlips = document.getElementById('statSlipsCount');
+  const elSlipsTotal = document.getElementById('statSlipsTotal');
+  const badgeOrder = document.getElementById('badgeOrderCount');
+
+  if (elPending) elPending.innerText = pendingCount;
+  if (elReady) elReady.innerText = orderedCount;
+  if (elOos) elOos.innerText = oosCount;
+  if (elExpense) elExpense.innerText = '฿' + totalExpense.toLocaleString();
+  if (elSlips) elSlips.innerText = slipsCount;
+  if (elSlipsTotal) elSlipsTotal.innerText = `/ ${totalOrders} รายการ`;
+  if (badgeOrder) badgeOrder.innerText = totalOrders;
 }
 
+// ==========================================
+// ORDERS RENDERING (MOBILE CARDS & DESKTOP TABLE)
+// ==========================================
 function renderOrders() {
   const tbody = document.getElementById('ordersTableBody');
   const cardsContainer = document.getElementById('ordersCardsContainer');
@@ -218,7 +247,7 @@ function renderOrders() {
 
       return `
         <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-sm space-y-3" id="card-${order.id}">
-          <!-- Top Row: Status & Platform & Check Price -->
+          <!-- Top Row: Status & Platform & Compare Suppliers -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5">
               <select onchange="updateOrderStatus('${order.id}', this.value)" class="text-xs font-bold rounded-lg border px-2.5 py-1 focus:outline-none ${statusBorderClass}">
@@ -229,10 +258,16 @@ function renderOrders() {
               ${platformBadge}
             </div>
 
-            <a href="${checkPriceLink}" target="_blank" class="text-[11px] text-blue-600 font-semibold inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-lg transition">
-              <span>ตรวจราคา</span>
-              <i data-lucide="external-link" class="w-3 h-3"></i>
-            </a>
+            <div class="flex items-center gap-1.5">
+              <button onclick="openSupplierCompare('${order.id}')" class="text-[11px] text-indigo-700 font-bold inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-1 rounded-lg transition" title="เปรียบเทียบสต็อกและราคาจาก SaveTyre และ TopForm">
+                <i data-lucide="scale" class="w-3 h-3"></i>
+                <span>เปรียบเทียบซับ</span>
+              </button>
+              <a href="${checkPriceLink}" target="_blank" class="text-[11px] text-blue-600 font-semibold inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-lg transition" title="ตรวจราคาในระบบ Shopee/Lazada">
+                <span>ตรวจราคา</span>
+                <i data-lucide="external-link" class="w-3 h-3"></i>
+              </a>
+            </div>
           </div>
 
           <!-- Order No & Store -->
@@ -248,7 +283,10 @@ function renderOrders() {
 
           <!-- Product Title & Quantity -->
           <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-start justify-between gap-2">
-            <p class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">${order.productName}</p>
+            <div>
+              <p class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">${order.productName}</p>
+              ${order.extraNote ? `<p class="text-[11px] text-amber-700 mt-1 font-medium">${order.extraNote}</p>` : ''}
+            </div>
             <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0">
               ${order.quantity || 1} ${order.unit || 'เส้น'}
             </span>
@@ -262,7 +300,7 @@ function renderOrders() {
                 type="text" 
                 list="suppliersDataList" 
                 value="${order.supplier || ''}" 
-                placeholder="แตะเพื่อเลือกร้านซับ..." 
+                placeholder="แตะเพื่อเลือกร้านซับ หรือกดเปรียบเทียบซับ..." 
                 onchange="saveMobileOrderPricing('${order.id}')" 
                 id="mobile-supplier-${order.id}" 
                 class="w-full text-xs sm:text-sm px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -325,25 +363,25 @@ function renderOrders() {
       }
 
       const platformBadge = order.platform === 'Lazada' 
-        ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800">Lazada</span>`
-        : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-100 text-orange-800">Shopee</span>`;
+        ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Lazada</span>`
+        : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800">Shopee</span>`;
 
       const checkPriceLink = order.platform === 'Lazada'
         ? `https://sellercenter.lazada.co.th/order/detail/${order.orderNumber}`
         : `https://seller.shopee.co.th/portal/sale/order`;
 
-      const slipDisplay = order.slipUrl
+      const slipButton = order.slipUrl
         ? `
-          <div class="flex items-center justify-center gap-1">
-            <img src="${order.slipUrl}" class="w-8 h-8 rounded border border-slate-200 object-cover cursor-pointer hover:scale-110 transition slip-thumbnail" onclick="viewSlip('${order.slipUrl}')" title="คลิกดูรูปสลิป">
-            <button onclick="openSlipUpload('${order.id}')" class="text-slate-400 hover:text-blue-600 p-1" title="เปลี่ยนสลิป">
-              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+          <div class="flex items-center gap-1.5">
+            <img src="${order.slipUrl}" class="w-8 h-8 rounded border border-slate-200 object-cover cursor-pointer hover:scale-110 transition" onclick="viewSlip('${order.slipUrl}')" title="คลิกเพื่อดูสลิปเต็มจอ">
+            <button onclick="openSlipUpload('${order.id}')" class="text-xs text-blue-600 hover:text-blue-800 p-1" title="เปลี่ยนรูปสลิป">
+              <i data-lucide="refresh-cw" class="w-3 h-3"></i>
             </button>
           </div>
         `
         : `
-          <button onclick="openSlipUpload('${order.id}')" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 border border-slate-200 rounded-lg transition">
-            <i data-lucide="camera" class="w-3.5 h-3.5 text-blue-500"></i>
+          <button onclick="openSlipUpload('${order.id}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg transition" title="อัปโหลดสลิปโอนเงิน">
+            <i data-lucide="upload" class="w-3 h-3"></i>
             <span>แนบสลิป</span>
           </button>
         `;
@@ -372,13 +410,20 @@ function renderOrders() {
           <td class="py-2.5 px-3 font-mono text-xs text-slate-700">
             <div class="flex items-center gap-1">
               <span class="truncate max-w-[120px]" title="${order.orderNumber}">${order.orderNumber}</span>
-              <button onclick="copyToClipboard('${order.orderNumber}')" class="text-slate-400 hover:text-slate-600 p-0.5">
+              <button onclick="copyToClipboard('${order.orderNumber}')" class="text-slate-400 hover:text-slate-600 p-0.5" title="คัดลอก">
                 <i data-lucide="copy" class="w-3 h-3"></i>
               </button>
             </div>
           </td>
           <td class="py-2.5 px-3">
             <div class="font-medium text-slate-900 leading-snug">${order.productName}</div>
+            <div class="flex items-center gap-1.5 mt-1">
+              <button onclick="openSupplierCompare('${order.id}')" class="text-[11px] text-indigo-700 font-bold inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-lg transition" title="เปรียบเทียบซับ SaveTyre & TopForm">
+                <i data-lucide="scale" class="w-3 h-3"></i>
+                <span>เปรียบเทียบซับ</span>
+              </button>
+              ${order.extraNote ? `<span class="text-[11px] text-amber-700 font-medium">${order.extraNote}</span>` : ''}
+            </div>
           </td>
           <td class="py-2.5 px-2 text-center">
             <span class="inline-block px-2 py-0.5 font-bold text-slate-800 bg-slate-100 rounded text-xs">
@@ -391,42 +436,40 @@ function renderOrders() {
               list="suppliersDataList" 
               value="${order.supplier || ''}" 
               placeholder="เลือกร้านซับ..." 
-              onchange="saveOrderPricing('${order.id}')" 
-              id="supplier-${order.id}" 
-              class="w-full text-xs px-2 py-1 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white font-medium text-slate-800">
+              onchange="saveRowPricing('${order.id}')" 
+              id="input-supplier-${order.id}" 
+              class="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
           </td>
-          <td class="py-2.5 px-3">
+          <td class="py-2.5 px-3 text-right">
             <input 
               type="number" 
               value="${order.pricePerUnit || ''}" 
               placeholder="0" 
-              min="0" 
+              min="0"
               oninput="recalcRow('${order.id}', ${order.quantity || 1})" 
-              onchange="saveOrderPricing('${order.id}')" 
-              id="price-${order.id}" 
-              class="w-20 text-xs px-2 py-1 text-right border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white font-semibold text-slate-800">
+              onchange="saveRowPricing('${order.id}')" 
+              id="input-price-${order.id}" 
+              class="w-20 text-xs px-2 py-1.5 border border-slate-200 rounded-lg text-right font-bold text-slate-900 bg-slate-50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
           </td>
-          <td class="py-2.5 px-2">
+          <td class="py-2.5 px-3 text-right">
             <input 
               type="number" 
               value="${order.shippingFee || 0}" 
               placeholder="0" 
-              min="0" 
+              min="0"
               oninput="recalcRow('${order.id}', ${order.quantity || 1})" 
-              onchange="saveOrderPricing('${order.id}')" 
-              id="shipping-${order.id}" 
-              class="w-16 text-xs px-2 py-1 text-right border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white text-slate-600">
+              onchange="saveRowPricing('${order.id}')" 
+              id="input-shipping-${order.id}" 
+              class="w-16 text-xs px-2 py-1.5 border border-slate-200 rounded-lg text-right text-slate-700 bg-slate-50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
           </td>
-          <td class="py-2.5 px-3 text-right">
-            <span class="font-bold text-slate-900 text-xs sm:text-sm" id="total-${order.id}">
-              ฿${total.toLocaleString()}
-            </span>
+          <td class="py-2.5 px-3 text-right font-bold text-emerald-600 text-xs" id="total-${order.id}">
+            ฿${total.toLocaleString()}
           </td>
           <td class="py-2.5 px-3 text-center">
-            ${slipDisplay}
+            ${slipButton}
           </td>
           <td class="py-2.5 px-2 text-center">
-            <button onclick="deleteOrder('${order.id}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="ลบรายการ">
+            <button onclick="deleteOrder('${order.id}')" class="text-slate-400 hover:text-red-500 p-1 transition" title="ลบรายการ">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
           </td>
@@ -438,26 +481,27 @@ function renderOrders() {
   initLucide();
 }
 
+// Live recalculation helpers
 function recalcRow(orderId, qty) {
-  const price = Number(document.getElementById(`price-${orderId}`)?.value) || 0;
-  const shipping = Number(document.getElementById(`shipping-${orderId}`)?.value) || 0;
+  const price = Number(document.getElementById(`input-price-${orderId}`)?.value) || 0;
+  const shipping = Number(document.getElementById(`input-shipping-${orderId}`)?.value) || 0;
   const total = (qty * price) + shipping;
-  const totalEl = document.getElementById(`total-${orderId}`);
-  if (totalEl) totalEl.innerText = '฿' + total.toLocaleString();
+  const elem = document.getElementById(`total-${orderId}`);
+  if (elem) elem.innerText = '฿' + total.toLocaleString();
 }
 
 function recalcMobileRow(orderId, qty) {
   const price = Number(document.getElementById(`mobile-price-${orderId}`)?.value) || 0;
   const shipping = Number(document.getElementById(`mobile-shipping-${orderId}`)?.value) || 0;
   const total = (qty * price) + shipping;
-  const totalEl = document.getElementById(`mobile-total-${orderId}`);
-  if (totalEl) totalEl.innerText = '฿' + total.toLocaleString();
+  const elem = document.getElementById(`mobile-total-${orderId}`);
+  if (elem) elem.innerText = '฿' + total.toLocaleString();
 }
 
-async function saveOrderPricing(orderId) {
-  const supplier = document.getElementById(`supplier-${orderId}`)?.value || '';
-  const pricePerUnit = Number(document.getElementById(`price-${orderId}`)?.value) || 0;
-  const shippingFee = Number(document.getElementById(`shipping-${orderId}`)?.value) || 0;
+async function saveRowPricing(orderId) {
+  const supplier = document.getElementById(`input-supplier-${orderId}`)?.value || '';
+  const pricePerUnit = Number(document.getElementById(`input-price-${orderId}`)?.value) || 0;
+  const shippingFee = Number(document.getElementById(`input-shipping-${orderId}`)?.value) || 0;
 
   try {
     const res = await fetch(`/api/orders/${orderId}/pricing`, {
@@ -561,7 +605,10 @@ function renderSuppliers() {
   container.innerHTML = state.suppliers.map(sup => `
     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-start">
       <div>
-        <h4 class="font-bold text-slate-800 text-xs sm:text-sm">${sup.name}</h4>
+        <div class="flex items-center gap-1.5">
+          <h4 class="font-bold text-slate-800 text-xs sm:text-sm">${sup.name}</h4>
+          ${sup.name.includes('Save') || sup.name.includes('TopForm') || sup.name.includes('KPS') || sup.name.includes('BestTire') ? `<span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">ต่อระบบสดแล้ว</span>` : ''}
+        </div>
         ${sup.phone ? `<p class="text-xs text-slate-500 mt-0.5">📞 ${sup.phone}</p>` : ''}
         ${sup.note ? `<p class="text-xs text-slate-400 mt-0.5">${sup.note}</p>` : ''}
       </div>
@@ -630,7 +677,6 @@ async function deleteMapping(id) {
 function renderAnalytics() {
   if (!state.analytics) return;
 
-  // 1. Best Sellers
   const bestList = document.getElementById('bestSellersList');
   if (bestList) {
     if (state.analytics.bestSellers.length === 0) {
@@ -656,63 +702,55 @@ function renderAnalytics() {
     }
   }
 
-  // 2. Out of Stock Frequent
   const outList = document.getElementById('outOfStockList');
   if (outList) {
-    if (state.analytics.outOfStockFrequent.length === 0) {
-      outList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">ไม่มีสินค้าขาดตลาดในขณะนี้ เยี่ยมมาก!</p>`;
+    if (state.analytics.frequentlyOutOfStock.length === 0) {
+      outList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">ไม่มีสินค้าขาดตลาดในรอบนี้</p>`;
     } else {
-      outList.innerHTML = state.analytics.outOfStockFrequent.map((item, idx) => `
+      outList.innerHTML = state.analytics.frequentlyOutOfStock.map(item => `
         <div class="flex items-center justify-between p-2.5 bg-rose-50/50 rounded-xl border border-rose-100">
-          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <span class="w-6 h-6 rounded-full bg-rose-200 text-rose-800 flex items-center justify-center font-bold text-xs flex-shrink-0">
-              ${idx + 1}
-            </span>
-            <div class="min-w-0">
-              <p class="font-medium text-slate-900 text-xs truncate">${item.name}</p>
-              <p class="text-[11px] text-rose-600 font-medium">ของหมด ${item.outOfStockCount} ครั้ง</p>
+          <div class="min-w-0">
+            <p class="font-medium text-slate-900 text-xs truncate">${item.name}</p>
+            <p class="text-[11px] text-rose-600">ขาดตลาด ${item.count} ครั้ง</p>
+          </div>
+          <span class="text-xs font-bold text-rose-700">${item.totalQty} เส้น</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  const supExpense = document.getElementById('supplierExpenseList');
+  if (supExpense) {
+    const suppliers = Object.keys(state.analytics.bySupplier);
+    if (suppliers.length === 0) {
+      supExpense.innerHTML = `<p class="text-xs text-slate-400 col-span-3 text-center py-4">ยังไม่มีข้อมูลรายจ่าย</p>`;
+    } else {
+      supExpense.innerHTML = suppliers.map(s => {
+        const item = state.analytics.bySupplier[s];
+        return `
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <p class="font-bold text-slate-800 text-xs truncate">${s || 'ยังไม่ระบุซับ'}</p>
+            <div class="mt-2 flex justify-between items-baseline">
+              <span class="text-sm sm:text-base font-bold text-blue-700">฿${(item.totalSpent || 0).toLocaleString()}</span>
+              <span class="text-[11px] text-slate-500">${item.totalQty} เส้น (${item.count} รายการ)</span>
             </div>
           </div>
-          <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-rose-100 text-rose-700 flex-shrink-0">ขาดบ่อย</span>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   }
 
-  // 3. Supplier Expenses
-  const supList = document.getElementById('supplierExpenseList');
-  if (supList) {
-    if (state.analytics.supplierBreakdown.length === 0) {
-      supList.innerHTML = `<p class="text-xs text-slate-400 col-span-3 text-center py-4">ยังไม่มีข้อมูลรายจ่ายแยกตามซับ</p>`;
-    } else {
-      supList.innerHTML = state.analytics.supplierBreakdown.map(sup => `
-        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-          <div class="flex justify-between items-start mb-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm truncate">${sup.supplier}</h4>
-            <span class="text-[11px] font-semibold px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full flex-shrink-0">${sup.tireQty} เส้น</span>
-          </div>
-          <div class="flex items-baseline justify-between mt-2 pt-2 border-t border-slate-200">
-            <span class="text-[11px] text-slate-500">ยอดที่ต้องชำระ:</span>
-            <span class="text-sm sm:text-base font-bold text-emerald-600">฿${sup.totalCost.toLocaleString()}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-  }
-
-  // 4. Slip Gallery
   const slipGrid = document.getElementById('slipGalleryGrid');
   if (slipGrid) {
-    const ordersWithSlips = state.orders.filter(o => o.slipUrl);
-    if (ordersWithSlips.length === 0) {
-      slipGrid.innerHTML = `<p class="text-xs text-slate-400 col-span-6 text-center py-6">ยังไม่มีสลิปโอนเงินที่อัปโหลด</p>`;
+    const slips = state.orders.filter(o => o.slipUrl);
+    if (slips.length === 0) {
+      slipGrid.innerHTML = `<p class="text-xs text-slate-400 col-span-6 text-center py-4">ยังไม่มีสลิปที่แนบในวันนี้</p>`;
     } else {
-      slipGrid.innerHTML = ordersWithSlips.map(o => `
-        <div class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-square cursor-pointer" onclick="viewSlip('${o.slipUrl}')">
-          <img src="${o.slipUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex flex-col justify-end p-2 text-white">
-            <span class="text-[11px] font-bold line-clamp-1">฿${(o.totalCost || 0).toLocaleString()}</span>
-            <span class="text-[10px] text-slate-300 truncate">${o.supplier || o.orderNumber}</span>
+      slipGrid.innerHTML = slips.map(o => `
+        <div class="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square cursor-pointer" onclick="viewSlip('${o.slipUrl}')">
+          <img src="${o.slipUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+          <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-semibold p-1 text-center">
+            #${o.orderNumber}
           </div>
         </div>
       `).join('');
@@ -721,32 +759,461 @@ function renderAnalytics() {
 }
 
 // ==========================================
-// SLIP UPLOAD (CAMERA & FILE MODAL)
+// SAVETYRE & TOPFORM INTEGRATION
 // ==========================================
-function openSlipUpload(orderId) {
+
+// --- SaveTyre ---
+async function fetchSaveTyreRedemption(force = false) {
+  try {
+    const res = await fetch(`/api/savetyre/redemption?force=${force}`);
+    const json = await res.json();
+    if (json.success) {
+      state.saveTyreRedemption = json;
+      renderSaveTyreRedemption();
+    }
+  } catch (err) {
+    console.warn('SaveTyre redemption fetch failed:', err.message);
+  }
+}
+
+function renderSaveTyreRedemption() {
+  const badge = document.getElementById('saveTyreRightsBadge');
+  const tbody = document.getElementById('redemptionTableBody');
+  if (!state.saveTyreRedemption) return;
+
+  if (badge) {
+    badge.innerText = `สิทธิ์แลกซื้อ: ${state.saveTyreRedemption.userRights || 0} สิทธิ์`;
+  }
+
+  if (tbody && state.saveTyreRedemption.items) {
+    if (state.saveTyreRedemption.items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">กำลังเชื่อมต่อฐานข้อมูลแลกซื้อ...</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = state.saveTyreRedemption.items.map(item => `
+      <tr class="hover:bg-slate-50/80 transition">
+        <td class="py-2.5 px-3 font-medium text-slate-800">${item.title}</td>
+        <td class="py-2.5 px-2 text-slate-500">${item.brand}</td>
+        <td class="py-2.5 px-2 text-center font-semibold text-slate-700">${item.stock}</td>
+        <td class="py-2.5 px-3 text-right text-slate-400 line-through">฿${item.priceRetail ? item.priceRetail.toLocaleString() : '-'}</td>
+        <td class="py-2.5 px-3 text-right font-bold text-emerald-600">฿${item.priceRedemption ? item.priceRedemption.toLocaleString() : '-'}</td>
+        <td class="py-2.5 px-2 text-center font-bold text-purple-700">${item.rightsRequired} สิทธิ์</td>
+        <td class="py-2.5 px-3 text-right font-bold text-amber-600">
+          ${item.savingsAmount ? `ประหยัด ฿${item.savingsAmount.toLocaleString()} (-${item.savingsPercent}%)` : '-'}
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function searchSaveTyreLive() {
+  const input = document.getElementById('inputSaveTyreSearch');
+  const container = document.getElementById('saveTyreSearchResults');
+  if (!input || !container) return;
+
+  const keyword = input.value.trim();
+  if (!keyword) return;
+
+  container.classList.remove('hidden');
+  container.innerHTML = `
+    <div class="p-6 text-center text-slate-400">
+      <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600"></i>
+      กำลังค้นหาสต็อกใน order.savetyre.net...
+    </div>
+  `;
+  initLucide();
+
+  try {
+    const res = await fetch(`/api/savetyre/stock?keyword=${encodeURIComponent(keyword)}`);
+    const json = await res.json();
+    if (json.success && json.items) {
+      if (json.items.length === 0) {
+        container.innerHTML = `<p class="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">ไม่พบสินค้าในสต็อก SaveTyre สำหรับ "${keyword}"</p>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="space-y-2">
+          <p class="font-semibold text-xs text-slate-700 mb-2">พบ ${json.items.length} รายการในสต็อก SaveTyre:</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            ${json.items.map(item => `
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col justify-between">
+                <div>
+                  <div class="flex justify-between items-start mb-1">
+                    <span class="font-bold text-slate-800">${item.brand} ${item.model}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">สต็อกปี ${item.stockYearCurr} เส้น</span>
+                  </div>
+                  <p class="text-slate-500 text-[11px]">${item.sku || ''}</p>
+                  <p class="text-slate-600 text-[11px]">สต็อกรวม: ${item.stockTotal} เส้น</p>
+                  ${item.promo ? `<p class="text-amber-700 font-bold text-[11px] mt-1">🎁 โปรโมชั่น: ${item.promo}</p>` : ''}
+                </div>
+                <div class="mt-2 pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <span class="font-bold text-slate-900">฿${item.priceRetail ? item.priceRetail.toLocaleString() : '-'}</span>
+                  <span class="text-[10px] text-slate-400">ส่งฟรี กทม./ศาลายา</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      initLucide();
+    }
+  } catch (err) {
+    container.innerHTML = `<p class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs text-center">ค้นหาไม่สำเร็จ: ${err.message}</p>`;
+  }
+}
+
+// --- TopForm ---
+async function fetchTopFormRewards() {
+  try {
+    const res = await fetch('/api/topform/rewards');
+    const json = await res.json();
+    if (json.success && json.rewards) {
+      state.topFormRewards = json.rewards;
+      renderTopFormRewards();
+    }
+  } catch (err) {
+    console.warn('TopForm rewards fetch failed:', err.message);
+  }
+}
+
+function renderTopFormRewards() {
+  const container = document.getElementById('topFormRewardsGrid');
+  if (!container || !state.topFormRewards) return;
+
+  if (state.topFormRewards.length === 0) {
+    container.innerHTML = `<p class="text-xs text-slate-400 col-span-3">ไม่พบรายการของรางวัล</p>`;
+    return;
+  }
+
+  container.innerHTML = state.topFormRewards.map(r => `
+    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+      ${r.imageUrl ? `<img src="${r.imageUrl}" class="w-14 h-14 object-cover rounded-lg border border-slate-200">` : `<div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 font-bold text-lg"><i data-lucide="gift" class="w-6 h-6"></i></div>`}
+      <div>
+        <p class="font-bold text-xs sm:text-sm text-slate-900">${r.name}</p>
+        <p class="text-xs text-purple-700 font-semibold mt-0.5">${r.point ? r.point.toLocaleString() : 0} คะแนน</p>
+        <span class="text-[10px] text-slate-400">สะสมจากการสั่งซื้อยาง TopForm</span>
+      </div>
+    </div>
+  `).join('');
+  initLucide();
+}
+
+async function searchTopFormLive() {
+  const input = document.getElementById('inputTopFormSearch');
+  const container = document.getElementById('topFormSearchResults');
+  if (!input || !container) return;
+
+  const keyword = input.value.trim();
+  if (!keyword) return;
+
+  container.classList.remove('hidden');
+  container.innerHTML = `
+    <div class="p-6 text-center text-slate-400">
+      <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600"></i>
+      กำลังค้นหาสต็อกสดใน topform.co.th...
+    </div>
+  `;
+  initLucide();
+
+  try {
+    const res = await fetch(`/api/topform/stock?keyword=${encodeURIComponent(keyword)}`);
+    const json = await res.json();
+    if (json.success && json.items) {
+      if (json.items.length === 0) {
+        container.innerHTML = `<p class="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">ไม่พบสินค้าในสต็อก TopForm สำหรับ "${keyword}"</p>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="space-y-2">
+          <p class="font-semibold text-xs text-slate-700 mb-2">พบ ${json.items.length} รายการในสต็อก TopForm (ขนาด ${json.sizeQuery}):</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            ${json.items.map(item => `
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col justify-between">
+                <div>
+                  <div class="flex justify-between items-start mb-1">
+                    <span class="font-bold text-slate-800">${item.name}</span>
+                    <span class="px-1.5 py-0.5 rounded ${item.availableStock > 0 ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'} font-bold text-[10px]">
+                      สต็อก ${item.availableStock} เส้น
+                    </span>
+                  </div>
+                  <p class="text-slate-500 text-[11px]">รหัส: ${item.code} | สัญชาติ: ${item.country || '-'}</p>
+                  <p class="text-slate-500 text-[11px]">DOT: ${item.year || '-'}</p>
+                  ${item.promoSummary ? `<p class="text-amber-700 font-bold text-[11px] mt-1">🎁 ${item.promoSummary}</p>` : ''}
+                </div>
+                <div class="mt-2 pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span class="font-bold text-slate-900 text-sm">฿${item.price.toLocaleString()}</span>
+                    ${item.netPrice < item.price ? `<span class="text-[11px] text-emerald-600 font-bold ml-1">(NET ฿${item.netPrice.toLocaleString()})</span>` : ''}
+                  </div>
+                  <span class="text-[10px] text-slate-400">บาท/เส้น</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      initLucide();
+    }
+  } catch (err) {
+    container.innerHTML = `<p class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs text-center">ค้นหาไม่สำเร็จ: ${err.message}</p>`;
+  }
+}
+
+// --- Smart Supplier Comparison Modal ---
+async function openSupplierCompare(orderId) {
   const order = state.orders.find(o => o.id === orderId);
   if (!order) return;
 
+  state.activeCompareOrder = order;
+
+  const modal = document.getElementById('supplierCompareModal');
+  const loading = document.getElementById('compareLoading');
+  const content = document.getElementById('compareContent');
+  const prodTitle = document.getElementById('compareOrderProduct');
+  const qtyElem = document.getElementById('compareOrderQty');
+  const platformBadge = document.getElementById('compareOrderPlatformBadge');
+
+  prodTitle.innerText = order.productName;
+  qtyElem.innerText = order.quantity || 1;
+  platformBadge.innerText = order.platform || 'Shopee';
+
+  loading.classList.remove('hidden');
+  content.classList.add('hidden');
+  modal.classList.remove('hidden');
+  initLucide();
+
+  try {
+    const res = await fetch(`/api/suppliers/compare?productName=${encodeURIComponent(order.productName)}&quantity=${order.quantity || 1}`);
+    const json = await res.json();
+
+    loading.classList.add('hidden');
+    content.classList.remove('hidden');
+
+    // 1. Recommendation Banner
+    const banner = document.getElementById('compareBestBanner');
+    const bestTitle = document.getElementById('compareBestTitle');
+    const bestReason = document.getElementById('compareBestReason');
+    const btnBest = document.getElementById('btnApplyBest');
+
+    if (json.bestOption) {
+      banner.classList.remove('hidden');
+      bestTitle.innerText = `แนะนำ: ${json.bestOption.supplier}`;
+      bestReason.innerText = `${json.bestOption.reason} • ต้นทุน ฿${json.bestOption.pricePerUnit.toLocaleString()}/เส้น (ยอดรวม ฿${json.bestOption.totalCost.toLocaleString()})`;
+      btnBest.onclick = () => applySupplierDeal(order.id, json.bestOption.supplier, json.bestOption.pricePerUnit, 0);
+    } else {
+      banner.classList.add('hidden');
+    }
+
+    // 2. Save Tyre Card
+    const stBadge = document.getElementById('badgeSaveTyreStock');
+    const stBody = document.getElementById('bodySaveTyreCompare');
+    const stBtn = document.getElementById('btnApplySaveTyre');
+
+    if (json.savetyre && json.savetyre.matched) {
+      const st = json.savetyre;
+      stBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+      stBadge.innerText = `มีสต็อก ${st.totalStockAvailable} เส้น`;
+      
+      let promoHtml = '';
+      if (st.bestVolumePromo) {
+        promoHtml = `<p class="text-amber-700 font-bold">🎁 โปรโมชั่น: ${st.bestVolumePromo.promoName} (เฉลี่ย ฿${Math.round(st.bestVolumePromo.effectivePricePerUnit).toLocaleString()}/เส้น)</p>`;
+      }
+      if (st.redemptionMatch) {
+        promoHtml += `<p class="text-purple-700 font-bold">🪙 ใช้สิทธิ์แลกซื้อได้: ฿${st.redemptionMatch.priceRedemption.toLocaleString()}/เส้น</p>`;
+      }
+
+      stBody.innerHTML = `
+        <p class="font-bold text-slate-800">${st.selectedItem?.brand || ''} ${st.selectedItem?.model || ''}</p>
+        <p>ราคาต่อเส้น: <strong class="text-emerald-700 text-sm">฿${st.unitPrice.toLocaleString()}</strong></p>
+        <p>ยอดรวมสั่ง ${order.quantity || 1} เส้น: <strong>฿${st.totalCost.toLocaleString()}</strong> (ส่งฟรี)</p>
+        ${promoHtml}
+      `;
+      stBtn.disabled = false;
+      stBtn.className = 'w-full text-xs py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition shadow-sm';
+      stBtn.onclick = () => applySupplierDeal(order.id, 'Save Tyre (ไทร์ทูยู)', st.unitPrice, 0);
+    } else {
+      stBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600';
+      stBadge.innerText = 'ไม่พบสต็อก';
+      stBody.innerHTML = `<p class="text-slate-400 py-3">${json.savetyre?.reason || 'ไม่พบสินค้ารุ่นนี้ในระบบ Save Tyre'}</p>`;
+      stBtn.disabled = true;
+      stBtn.className = 'w-full text-xs py-2 bg-slate-200 text-slate-400 font-semibold rounded-lg cursor-not-allowed';
+    }
+
+    // 3. TopForm Card
+    const tfBadge = document.getElementById('badgeTopFormStock');
+    const tfBody = document.getElementById('bodyTopFormCompare');
+    const tfBtn = document.getElementById('btnApplyTopForm');
+
+    if (json.topform && json.topform.matched) {
+      const tf = json.topform;
+      tfBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800';
+      tfBadge.innerText = `มีสต็อก ${tf.totalStockAvailable} เส้น`;
+
+      let promoHtml = '';
+      if (tf.promoSummary) {
+        promoHtml = `<p class="text-amber-700 font-bold">🎁 โปรโมชั่น: ${tf.promoSummary}</p>`;
+      }
+
+      tfBody.innerHTML = `
+        <p class="font-bold text-slate-800">${tf.selectedItem?.name || ''}</p>
+        <p>ราคาต่อเส้น: <strong class="text-blue-700 text-sm">฿${tf.unitPrice.toLocaleString()}</strong></p>
+        <p>ยอดรวมสั่ง ${order.quantity || 1} เส้น: <strong>฿${tf.totalCost.toLocaleString()}</strong></p>
+        <p class="text-slate-400 text-[11px]">DOT: ${tf.selectedItem?.year || '-'} | ผลิต: ${tf.selectedItem?.country || '-'}</p>
+        ${promoHtml}
+      `;
+      tfBtn.disabled = false;
+      tfBtn.className = 'w-full text-xs py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-sm';
+      tfBtn.onclick = () => applySupplierDeal(order.id, 'TopForm (ท็อปฟอร์ม)', tf.unitPrice, 0);
+    } else {
+      tfBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600';
+      tfBadge.innerText = 'ไม่พบสต็อก';
+      tfBody.innerHTML = `<p class="text-slate-400 py-3">${json.topform?.reason || 'ไม่พบสินค้ารุ่นนี้ในระบบ TopForm'}</p>`;
+      tfBtn.disabled = true;
+      tfBtn.className = 'w-full text-xs py-2 bg-slate-200 text-slate-400 font-semibold rounded-lg cursor-not-allowed';
+    }
+
+    // 3. KPS Stock Card
+    const kpsBadge = document.getElementById('badgeKpsStock');
+    const kpsBody = document.getElementById('bodyKpsCompare');
+    const kpsBtn = document.getElementById('btnApplyKps');
+
+    if (json.kps && json.kps.matched) {
+      const kps = json.kps;
+      kpsBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800';
+      kpsBadge.innerText = `มีสต็อก ${kps.totalStockAvailable} เส้น`;
+
+      let promoHtml = '';
+      if (kps.promoSummary) {
+        promoHtml = `<p class="text-purple-700 font-bold">🎁 หมายเหตุ: ${kps.promoSummary}</p>`;
+      }
+
+      kpsBody.innerHTML = `
+        <p class="font-bold text-slate-800">${kps.selectedItem?.name || ''}</p>
+        <p>ราคาต่อเส้น: <strong class="text-purple-700 text-sm">฿${kps.unitPrice.toLocaleString()}</strong></p>
+        <p>ยอดรวมสั่ง ${order.quantity || 1} เส้น: <strong>฿${kps.totalCost.toLocaleString()}</strong></p>
+        <p class="text-slate-400 text-[11px]">DOT: ${kps.selectedItem?.dot || '-'} | สาขา: ${kps.selectedItem?.branch || '-'}</p>
+        ${promoHtml}
+      `;
+      kpsBtn.disabled = false;
+      kpsBtn.className = 'w-full text-xs py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition shadow-sm';
+      kpsBtn.onclick = () => applySupplierDeal(order.id, 'KPS Stock', kps.unitPrice, 0);
+    } else {
+      kpsBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600';
+      kpsBadge.innerText = 'ไม่พบสต็อก';
+      kpsBody.innerHTML = `<p class="text-slate-400 py-3">${json.kps?.reason || 'ไม่พบสินค้ารุ่นนี้ในระบบ KPS'}</p>`;
+      kpsBtn.disabled = true;
+      kpsBtn.className = 'w-full text-xs py-2 bg-slate-200 text-slate-400 font-semibold rounded-lg cursor-not-allowed';
+    }
+
+    // 4. BestTire Card
+    const btBadge = document.getElementById('badgeBestTireStock');
+    const btBody = document.getElementById('bodyBestTireCompare');
+    const btBtn = document.getElementById('btnApplyBestTire');
+
+    if (json.besttire && json.besttire.matched) {
+      const bt = json.besttire;
+      btBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800';
+      btBadge.innerText = `มีสต็อก ${bt.totalStockAvailable}+ เส้น`;
+
+      let promoHtml = '';
+      if (bt.promoSummary) {
+        promoHtml = `<p class="text-orange-700 font-bold">🎁 โปรโมชั่น: ${bt.promoSummary}</p>`;
+      }
+
+      btBody.innerHTML = `
+        <p class="font-bold text-slate-800">${bt.selectedItem?.name || ''}</p>
+        <p>ราคาต่อเส้น: <strong class="text-orange-700 text-sm">฿${bt.unitPrice.toLocaleString()}</strong></p>
+        <p>ยอดรวมสั่ง ${order.quantity || 1} เส้น: <strong>฿${bt.totalCost.toLocaleString()}</strong></p>
+        <p class="text-slate-400 text-[11px]">สัปดาห์: ${bt.selectedItem?.weekYear || '-'} | แต้ม: ${bt.selectedItem?.points || '0'}</p>
+        ${promoHtml}
+      `;
+      btBtn.disabled = false;
+      btBtn.className = 'w-full text-xs py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition shadow-sm';
+      btBtn.onclick = () => applySupplierDeal(order.id, 'BestTire', bt.unitPrice, 0);
+    } else {
+      btBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600';
+      btBadge.innerText = 'ไม่พบสต็อก';
+      btBody.innerHTML = `<p class="text-slate-400 py-3">${json.besttire?.reason || 'ไม่พบสินค้ารุ่นนี้ในระบบ BestTire'}</p>`;
+      btBtn.disabled = true;
+      btBtn.className = 'w-full text-xs py-2 bg-slate-200 text-slate-400 font-semibold rounded-lg cursor-not-allowed';
+    }
+
+    // 4. Alternatives from TopForm
+    const altContainer = document.getElementById('alternativesList');
+    if (json.topform?.allAlternatives && json.topform.allAlternatives.length > 0) {
+      altContainer.innerHTML = json.topform.allAlternatives.map(alt => `
+        <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between gap-2">
+          <div class="truncate flex-1">
+            <span class="font-bold text-slate-800">${alt.name}</span>
+            <span class="text-slate-500 ml-1.5">(สต็อก: ${alt.availableStock} | DOT: ${alt.year || '-'})</span>
+            ${alt.promoSummary ? `<span class="text-amber-600 font-semibold ml-1">🎁 ${alt.promoSummary}</span>` : ''}
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-bold text-slate-900">฿${alt.price.toLocaleString()}</span>
+            <button onclick="applySupplierDeal('${order.id}', 'TopForm (ท็อปฟอร์ม)', ${alt.price}, 0)" class="text-[10px] bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2 py-1 rounded transition">
+              เลือกรุ่นนี้
+            </button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      altContainer.innerHTML = `<p class="text-slate-400 text-xs">ไม่มีรุ่นทางเลือกเพิ่มเติม</p>`;
+    }
+
+    initLucide();
+  } catch (err) {
+    loading.innerHTML = `<p class="text-rose-600 text-xs py-6">เกิดข้อผิดพลาดในการดึงข้อมูลเปรียบเทียบ: ${err.message}</p>`;
+  }
+}
+
+async function applySupplierDeal(orderId, supplierName, pricePerUnit, shippingFee = 0) {
+  try {
+    const res = await fetch(`/api/orders/${orderId}/pricing`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ supplier: supplierName, pricePerUnit, shippingFee })
+    });
+    const json = await res.json();
+    if (json.success) {
+      const idx = state.orders.findIndex(o => o.id === orderId);
+      if (idx >= 0) state.orders[idx] = json.data;
+      renderOrders();
+      updateKpis();
+      fetchAnalytics();
+      document.getElementById('supplierCompareModal').classList.add('hidden');
+      showToast(`อัปเดตราคาเป็น ฿${pricePerUnit.toLocaleString()} (${supplierName}) แล้ว!`);
+    }
+  } catch (err) {
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  }
+}
+
+// ==========================================
+// SLIP UPLOAD & VIEWING
+// ==========================================
+function openSlipUpload(orderId) {
   state.activeOrderIdForSlip = orderId;
   state.selectedSlipFile = null;
 
-  document.getElementById('modalOrderNumber').innerText = '#' + order.orderNumber;
-  document.getElementById('modalProductName').innerText = order.productName;
-  document.getElementById('modalTotalCost').innerText = '฿' + (order.totalCost || 0).toLocaleString();
+  const order = state.orders.find(o => o.id === orderId);
+  const info = document.getElementById('slipOrderInfo');
+  if (info && order) {
+    info.innerText = `#${order.orderNumber} - ${order.productName}`;
+  }
 
-  // Reset file inputs & preview
-  document.getElementById('slipFileInput').value = '';
-  document.getElementById('slipCameraInput').value = '';
   document.getElementById('slipPreviewContainer').classList.add('hidden');
   document.getElementById('dropZone').classList.remove('hidden');
   document.getElementById('btnConfirmUploadSlip').disabled = true;
+  document.getElementById('btnConfirmUploadSlip').innerText = 'ยืนยันการแนบสลิป';
 
   document.getElementById('slipUploadModal').classList.remove('hidden');
 }
 
-function viewSlip(slipUrl) {
-  const img = document.getElementById('slipFullImage');
-  if (img) img.src = slipUrl;
+function viewSlip(url) {
+  document.getElementById('slipFullImage').src = url;
   document.getElementById('slipViewModal').classList.remove('hidden');
 }
 
@@ -787,6 +1254,8 @@ function setupEventListeners() {
         renderMappings();
         renderSuppliers();
       }
+      if (targetTab === 'tab-savetyre') renderSaveTyreRedemption();
+      if (targetTab === 'tab-topform') fetchTopFormRewards();
     });
   });
 
@@ -864,6 +1333,43 @@ function setupEventListeners() {
       }
     } catch (err) {
       showToast('เปิดเบราว์เซอร์ไม่สำเร็จ: ' + err.message, 'error');
+    }
+  });
+
+  // BigSeller CSV Import Handlers
+  const bigSellerFileInput = document.getElementById('bigSellerFileInput');
+  document.getElementById('btnImportBigSeller')?.addEventListener('click', () => {
+    bigSellerFileInput?.click();
+  });
+  document.getElementById('btnSettingsImportCsv')?.addEventListener('click', () => {
+    bigSellerFileInput?.click();
+  });
+
+  bigSellerFileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    showToast(`กำลังนำเข้าไฟล์ ${file.name}...`);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/orders/import-csv', {
+        method: 'POST',
+        body: formData
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`นำเข้าคำสั่งซื้อสำเร็จ ${json.count} รายการ!`);
+        await fetchOrders();
+        await fetchAnalytics();
+      } else {
+        showToast(json.error || 'นำเข้าไม่สำเร็จ', 'error');
+      }
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการนำเข้าไฟล์: ' + err.message, 'error');
+    } finally {
+      bigSellerFileInput.value = '';
     }
   });
 
@@ -951,38 +1457,13 @@ function setupEventListeners() {
         await fetchOrders();
         await fetchAnalytics();
       } else {
-        showToast(json.error || 'อัปโหลดสลิปไม่สำเร็จ', 'error');
+        showToast(json.error || 'อัปโหลดไม่สำเร็จ', 'error');
       }
     } catch (err) {
-      showToast('อัปโหลดสลิปไม่สำเร็จ: ' + err.message, 'error');
+      showToast('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message, 'error');
     } finally {
       uploadBtn.disabled = false;
-      uploadBtn.innerText = 'อัปโหลดสลิป';
-    }
-  });
-
-  // Add Supplier Button
-  document.getElementById('btnAddSupplier')?.addEventListener('click', async () => {
-    const name = prompt('กรอกชื่อร้านซับ (Supplier):');
-    if (!name || !name.trim()) return;
-    const phone = prompt('กรอกเบอร์โทรศัพท์ (ถ้ามี):') || '';
-    const note = prompt('หมายเหตุเพิ่มเติม (ถ้ามี):') || '';
-
-    try {
-      const res = await fetch('/api/suppliers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), phone, note })
-      });
-      const json = await res.json();
-      if (json.success) {
-        state.suppliers.push(json.data);
-        renderSuppliers();
-        updateSuppliersDatalist();
-        showToast('เพิ่มร้านซับเรียบร้อยแล้ว');
-      }
-    } catch (err) {
-      showToast('เพิ่มร้านซับไม่สำเร็จ: ' + err.message, 'error');
+      uploadBtn.innerText = 'ยืนยันการแนบสลิป';
     }
   });
 
@@ -1055,6 +1536,55 @@ function setupEventListeners() {
       showToast('บันทึกไม่สำเร็จ: ' + err.message, 'error');
     }
   });
+
+  // New Supplier Modal
+  document.getElementById('btnAddSupplier')?.addEventListener('click', () => {
+    document.getElementById('supplierForm')?.reset();
+    document.getElementById('supplierModal')?.classList.remove('hidden');
+  });
+
+  // Submit Supplier Form
+  document.getElementById('supplierForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('supplierName').value.trim();
+    const phone = document.getElementById('supplierPhone').value.trim();
+    const website = document.getElementById('supplierWebsite').value.trim();
+    const note = document.getElementById('supplierNote').value.trim();
+
+    try {
+      const res = await fetch('/api/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, website, note })
+      });
+      const json = await res.json();
+      if (json.success) {
+        state.suppliers.push(json.data);
+        renderSuppliers();
+        updateSuppliersDatalist();
+        document.getElementById('supplierModal')?.classList.add('hidden');
+        showToast(`เพิ่มร้านซับ "${name}" สำเร็จแล้ว`);
+      } else {
+        showToast(json.error || 'เพิ่มร้านซับไม่สำเร็จ', 'error');
+      }
+    } catch (err) {
+      showToast('เพิ่มร้านซับไม่สำเร็จ: ' + err.message, 'error');
+    }
+  });
+
+  // SaveTyre Live Search Button & Enter
+  document.getElementById('btnSearchSaveTyre')?.addEventListener('click', searchSaveTyreLive);
+  document.getElementById('inputSaveTyreSearch')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') searchSaveTyreLive();
+  });
+  document.getElementById('btnRefreshRedemption')?.addEventListener('click', () => fetchSaveTyreRedemption(true));
+
+  // TopForm Live Search Button & Enter
+  document.getElementById('btnSearchTopForm')?.addEventListener('click', searchTopFormLive);
+  document.getElementById('inputTopFormSearch')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') searchTopFormLive();
+  });
+  document.getElementById('btnRefreshTopFormRewards')?.addEventListener('click', fetchTopFormRewards);
 }
 
 // ==========================================

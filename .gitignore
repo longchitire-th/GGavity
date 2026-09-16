@@ -4,6 +4,8 @@ node_modules/
 # Data (ephemeral on cloud, don't track)
 data/db.json
 data/user_data/
+data/savetyre_session/
+public/js/recipes*
 
 # Uploaded files (ephemeral on cloud)
 uploads/

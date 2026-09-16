@@ -1,0 +1,11 @@
+node_modules
+.git
+.vscode
+*.log
+savetyre_promo.png
+data/savetyre_session
+data/user_data
+debug_*.js
+inspect_*.js
+test_*.js
+verify_*.js

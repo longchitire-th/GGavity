@@ -11,6 +11,10 @@ const db = require('./services/db');
 const bigsellerBot = require('./bot/bigseller_bot');
 const sheetsService = require('./services/sheets_service');
 const analyticsService = require('./services/analytics_service');
+const saveTyreService = require('./services/savetyre_service');
+const topformService = require('./services/topform_service');
+const kpsService = require('./services/kps_service');
+const bestTireService = require('./services/besttire_service');
 
 const app = express();
 const PORT = process.env.PORT || 3838;
@@ -45,6 +49,19 @@ const upload = multer({
       cb(new Error('กรุณาอัปโหลดไฟล์รูปภาพ (JPG, PNG, WEBP) หรือ PDF'));
     }
   }
+});
+
+const dataUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, 'uploads'));
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.csv';
+      cb(null, `import-${Date.now()}${ext}`);
+    }
+  }),
+  limits: { fileSize: 25 * 1024 * 1024 } // 25MB
 });
 
 // Middlewares
@@ -124,13 +141,12 @@ app.delete('/api/orders/:id', (req, res) => {
 // Slip Upload (Mobile & PC)
 const orderImporter = require('./bot/order_importer');
 
-app.post('/api/orders/import-csv', upload.single('file'), (req, res) => {
+app.post('/api/orders/import-csv', dataUpload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'ไม่พบไฟล์' });
     }
-    const content = fs.readFileSync(req.file.path, 'utf8');
-    const result = orderImporter.importCsvContent(content);
+    const result = orderImporter.importFile(req.file.path);
     try { fs.unlinkSync(req.file.path); } catch {}
     res.json(result);
   } catch (err) {
@@ -284,6 +300,204 @@ app.get('/api/sheets/script-template', (req, res) => {
     success: true,
     script: sheetsService.getAppsScriptTemplate()
   });
+});
+
+// --- SaveTyre Integration ---
+app.get('/api/savetyre/stock', async (req, res) => {
+  try {
+    const keyword = req.query.keyword || '';
+    const result = await saveTyreService.searchStock(keyword);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/savetyre/redemption', async (req, res) => {
+  try {
+    const force = req.query.force === 'true';
+    const result = await saveTyreService.getRedemptionCatalog(force);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/savetyre/evaluate', async (req, res) => {
+  try {
+    const { productName, quantity } = req.query;
+    const result = await saveTyreService.evaluateOrder(productName, Number(quantity) || 1);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- TopForm Integration ---
+app.get('/api/topform/stock', async (req, res) => {
+  try {
+    const { keyword, width, series, rim, page, pageSize } = req.query;
+    const result = await topformService.searchStock({ keyword, width, series, rim, page, pageSize });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/topform/rewards', async (req, res) => {
+  try {
+    const result = await topformService.getRewards();
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/topform/evaluate', async (req, res) => {
+  try {
+    const { productName, quantity } = req.query;
+    const result = await topformService.evaluateOrder(productName, Number(quantity) || 1);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- KPS Stock Integration ---
+app.get('/api/kps/stock', async (req, res) => {
+  try {
+    const keyword = req.query.keyword || '';
+    const items = await kpsService.searchStock(keyword);
+    res.json({ success: true, count: items.length, items });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- BestTire Integration ---
+app.get('/api/besttire/stock', async (req, res) => {
+  try {
+    const keyword = req.query.keyword || '';
+    const items = await bestTireService.searchStock(keyword);
+    res.json({ success: true, count: items.length, items });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- Multi-Supplier Smart Comparator (Save Tyre, TopForm, KPS Stock, BestTire) ---
+app.get('/api/suppliers/compare', async (req, res) => {
+  try {
+    const { productName, quantity = 1 } = req.query;
+    const qty = Number(quantity) || 1;
+
+    const [saveTyrePromise, topFormPromise, kpsPromise, bestTirePromise] = await Promise.allSettled([
+      saveTyreService.evaluateOrder(productName, qty),
+      topformService.evaluateOrder(productName, qty),
+      kpsService.evaluateOrder(productName, qty),
+      bestTireService.evaluateOrder(productName, qty)
+    ]);
+
+    const saveTyreData = saveTyrePromise.status === 'fulfilled' ? saveTyrePromise.value : { matched: false, supplier: 'Save Tyre', reason: saveTyrePromise.reason?.message };
+    const topFormData = topFormPromise.status === 'fulfilled' ? topFormPromise.value : { matched: false, supplier: 'TopForm', reason: topFormPromise.reason?.message };
+    const kpsData = kpsPromise.status === 'fulfilled' ? kpsPromise.value : { matched: false, supplier: 'KPS Stock', reason: kpsPromise.reason?.message };
+    const bestTireData = bestTirePromise.status === 'fulfilled' ? bestTirePromise.value : { matched: false, supplier: 'BestTire', reason: bestTirePromise.reason?.message };
+
+    const suppliersList = [
+      { key: 'savetyre', name: 'Save Tyre (ไทร์ทูยู)', data: saveTyreData },
+      { key: 'topform', name: 'TopForm (ท็อปฟอร์ม)', data: topFormData },
+      { key: 'kps', name: 'KPS Stock', data: kpsData },
+      { key: 'besttire', name: 'BestTire', data: bestTireData }
+    ];
+
+    // Priority criteria: 1. มี/ไม่มี (Stock) -> 2. ราคา (Price) -> 3. เงื่อนไข (Promotions/Conditions)
+    suppliersList.forEach(s => {
+      const stock = s.data.totalStockAvailable || 0;
+      s.hasStock = Boolean(s.data.matched && stock >= qty);
+      s.partialStock = Boolean(s.data.matched && stock > 0 && stock < qty);
+      s.outOfStock = Boolean(!s.data.matched || stock === 0);
+      s.stockCount = stock;
+      s.unitPrice = s.data.unitPrice || 0;
+      s.totalCost = s.data.totalCost || 0;
+
+      const conditions = [];
+      if (s.data.bestVolumePromo) conditions.push(s.data.bestVolumePromo.promoName);
+      if (s.data.promoSummary) conditions.push(s.data.promoSummary);
+      if (s.data.lotYear) conditions.push(`ล็อต ${s.data.lotYear}`);
+      if (s.data.selectedItem?.year) conditions.push(`DOT ${s.data.selectedItem.year}`);
+      if (s.data.selectedItem?.dot) conditions.push(`DOT ${s.data.selectedItem.dot}`);
+      if (s.data.selectedItem?.points) conditions.push(`แต้มสะสม ${s.data.selectedItem.points}`);
+      if (s.data.selectedItem?.branch) conditions.push(`สาขา ${s.data.selectedItem.branch}`);
+      s.conditions = conditions;
+    });
+
+    // Sort strictly by: 1. Stock (hasStock=2, partial=1, out=0) -> 2. Price (lowest totalCost) -> 3. Conditions count
+    suppliersList.sort((a, b) => {
+      const scoreA = a.hasStock ? 2 : (a.partialStock ? 1 : 0);
+      const scoreB = b.hasStock ? 2 : (b.partialStock ? 1 : 0);
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      if (a.hasStock && b.hasStock) {
+        if (a.totalCost !== b.totalCost) return a.totalCost - b.totalCost;
+        return b.conditions.length - a.conditions.length;
+      }
+      return 0;
+    });
+
+    const inStockCandidates = suppliersList.filter(s => s.hasStock);
+    let bestOption = null;
+
+    if (inStockCandidates.length > 0) {
+      const winner = inStockCandidates[0];
+      const second = inStockCandidates[1];
+      const savings = second ? (second.totalCost - winner.totalCost) : 0;
+      
+      let reason = `✅ มีของพร้อมส่ง (${winner.stockCount} เส้น) • ราคาดีที่สุด ฿${winner.unitPrice.toLocaleString()}/เส้น`;
+      if (savings > 0) {
+        reason += ` (ประหยัดกว่า ${second.name} ฿${savings.toLocaleString()})`;
+      }
+      if (winner.conditions.length > 0) {
+        reason += ` • เงื่อนไข: ${winner.conditions.join(', ')}`;
+      }
+
+      bestOption = {
+        supplier: winner.name,
+        supplierKey: winner.key,
+        pricePerUnit: winner.unitPrice,
+        totalCost: winner.totalCost,
+        stockCount: winner.stockCount,
+        conditions: winner.conditions,
+        reason
+      };
+    } else {
+      const partialCandidates = suppliersList.filter(s => s.partialStock);
+      if (partialCandidates.length > 0) {
+        const candidate = partialCandidates[0];
+        bestOption = {
+          supplier: candidate.name,
+          supplierKey: candidate.key,
+          pricePerUnit: candidate.unitPrice,
+          totalCost: candidate.totalCost,
+          stockCount: candidate.stockCount,
+          conditions: candidate.conditions,
+          reason: `⚠️ ของไม่ครบตามสั่ง (มีเพียง ${candidate.stockCount} เส้น) @ ฿${candidate.unitPrice.toLocaleString()}/เส้น`
+        };
+      }
+    }
+
+    res.json({
+      success: true,
+      productName,
+      quantity: qty,
+      bestOption,
+      rankedSuppliers: suppliersList,
+      savetyre: saveTyreData,
+      topform: topFormData,
+      kps: kpsData,
+      besttire: bestTireData
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // --- System & Network Info (QR Code for Mobile) ---

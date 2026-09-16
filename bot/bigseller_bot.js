@@ -61,21 +61,50 @@ class BigSellerBot {
    * Open interactive browser for the user to log in to BigSeller
    */
   async openInteractiveLogin() {
+    if (this.activeLoginContext) {
+      try { await this.activeLoginContext.close(); } catch {}
+      this.activeLoginContext = null;
+    }
+
     console.log('[BigSellerBot] Launching interactive browser for user login...');
     const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
       headless: false,
-      viewport: { width: 1280, height: 800 },
+      viewport: { width: 1280, height: 850 },
       args: ['--start-maximized', '--disable-blink-features=AutomationControlled']
     });
+    this.activeLoginContext = context;
 
     const page = context.pages().length > 0 ? context.pages()[0] : await context.newPage();
     await page.goto(BIGSELLER_ORDER_URL, { waitUntil: 'domcontentloaded' });
 
     console.log('[BigSellerBot] Waiting for user to complete login in the opened browser window...');
-    
-    // Return a promise that resolves when user logs in or closes
+
+    // Auto-detect login: periodically check if URL changed away from login page
+    const checkTimer = setInterval(async () => {
+      try {
+        if (!this.activeLoginContext) {
+          clearInterval(checkTimer);
+          return;
+        }
+        const url = page.url();
+        if (url.includes('bigseller.com') && !url.includes('/login') && !url.includes('/signin') && !url.includes('/register')) {
+          console.log('[BigSellerBot] User login confirmed! URL:', url);
+          this.isLoggedIn = true;
+          clearInterval(checkTimer);
+        }
+      } catch {
+        clearInterval(checkTimer);
+      }
+    }, 2000);
+
+    context.on('close', () => {
+      this.activeLoginContext = null;
+      clearInterval(checkTimer);
+      console.log('[BigSellerBot] Interactive browser window closed by user.');
+    });
+
     return {
-      message: 'เปิดหน้าต่างเบราว์เซอร์ BigSeller แล้ว กรุณาล็อกอินให้เรียบร้อยในหน้าต่างที่ปรากฏขึ้น จากนั้นสามารถปิดหน้าต่างหรือกดดึงข้อมูลได้ทันที',
+      message: 'เปิดหน้าต่างเบราว์เซอร์แล้ว กรุณาล็อกอิน BigSeller ในหน้าต่างที่ปรากฏขึ้น เมื่อล็อกอินเสร็จแล้วสามารถปิดหน้าต่างนั้น แล้วกลับมากด "ดึงออเดอร์" ได้ทันทีครับ',
       success: true
     };
   }
@@ -84,6 +113,11 @@ class BigSellerBot {
    * Check login status by checking cookies or visiting page headlessly
    */
   async checkLoginStatus() {
+    if (this.activeLoginContext) {
+      try { await this.activeLoginContext.close(); } catch {}
+      this.activeLoginContext = null;
+    }
+
     try {
       const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
         headless: true,
@@ -109,6 +143,11 @@ class BigSellerBot {
   async fetchOrders(options = {}) {
     if (this.isScraping) {
       throw new Error('ระบบกำลังดึงข้อมูลอยู่แล้ว กรุณารอสักครู่...');
+    }
+
+    if (this.activeLoginContext) {
+      try { await this.activeLoginContext.close(); } catch {}
+      this.activeLoginContext = null;
     }
 
     this.isScraping = true;
