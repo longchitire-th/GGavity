@@ -17,7 +17,9 @@ let state = {
 document.addEventListener('DOMContentLoaded', async () => {
   initLucide();
   setupEventListeners();
+  initTabStorefrontCalculator();
   await loadInitialData();
+  renderTabQuickLookup();
 });
 
 function initLucide() {
@@ -1256,6 +1258,7 @@ function setupEventListeners() {
       }
       if (targetTab === 'tab-savetyre') renderSaveTyreRedemption();
       if (targetTab === 'tab-topform') fetchTopFormRewards();
+      if (targetTab === 'tab-calculator') renderTabStorefrontCalculator();
     });
   });
 
@@ -1628,3 +1631,551 @@ function showToast(message, type = 'success') {
     toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
   }, 3500);
 }
+
+// ==========================================
+// STOREFRONT CALCULATOR ENGINE (หน้าร้าน)
+// สูตร: ทุนค่ายาง + ค่าแรงช่าง (50 บ./เส้น) + กำไร + VAT 7% + ค่ารถ (ขั้นตอนสุดท้าย)
+// ==========================================
+const tabCalcState = {
+  qty: 4,
+  laborPerUnit: 50,
+  profitMode: 'per_unit', // 'per_unit', 'total', 'percent'
+  profitVal: 300,
+  includeVat: false,
+  shippingMode: 'per_order', // 'per_order', 'per_unit', 'free'
+  shippingVal: 100,
+  roundedTotal: null,
+  history: JSON.parse(localStorage.getItem('tire_quote_history') || '[]'),
+  initialized: false
+};
+
+function initTabStorefrontCalculator() {
+  if (tabCalcState.initialized) return;
+  tabCalcState.initialized = true;
+
+  // Qty Preset buttons
+  document.querySelectorAll('.tab-qty-btn').forEach(btn => {
+    btn.addEventListener('click', () => setTabQty(btn.dataset.qty));
+  });
+
+  document.getElementById('tabInputCustomQty')?.addEventListener('input', (e) => {
+    if (e.target.value) setTabQty(e.target.value);
+  });
+
+  // Inputs real-time recalculation
+  ['tabInputTireCostPerUnit', 'tabInputLaborPerUnit', 'tabInputProfitValue', 'tabInputShippingValue'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      tabCalcState.roundedTotal = null;
+      recalcTabStorefront();
+    });
+  });
+
+  // Labor Quick Buttons
+  document.getElementById('tabBtnResetLabor50')?.addEventListener('click', () => {
+    const input = document.getElementById('tabInputLaborPerUnit');
+    if (input) input.value = 50;
+    recalcTabStorefront();
+    showToast('ตั้งค่าแรงช่างเป็น 50 บ./เส้น');
+  });
+
+  document.getElementById('tabBtnLaborFree')?.addEventListener('click', () => {
+    const input = document.getElementById('tabInputLaborPerUnit');
+    if (input) input.value = 0;
+    recalcTabStorefront();
+    showToast('ตั้งค่าแรงช่างเป็น ฟรี (0 บ.)');
+  });
+
+  // Profit Mode Buttons
+  document.querySelectorAll('.tab-profit-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabCalcState.profitMode = btn.dataset.mode;
+      tabCalcState.roundedTotal = null;
+      document.querySelectorAll('.tab-profit-mode-btn').forEach(b => {
+        b.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
+        b.classList.add('text-slate-600');
+      });
+      btn.classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+      btn.classList.remove('text-slate-600');
+
+      const profitInput = document.getElementById('tabInputProfitValue');
+      if (tabCalcState.profitMode === 'percent') {
+        if (profitInput) profitInput.value = 20;
+      } else if (tabCalcState.profitMode === 'total') {
+        if (profitInput) profitInput.value = 1000;
+      } else {
+        if (profitInput) profitInput.value = 300;
+      }
+      renderTabProfitPresets();
+      recalcTabStorefront();
+    });
+  });
+
+  // Shipping Mode Buttons
+  document.querySelectorAll('.tab-shipping-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => setTabShippingMode(btn.dataset.mode));
+  });
+
+  // Shipping Preset Buttons
+  document.querySelectorAll('.tab-ship-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = parseFloat(btn.dataset.val);
+      const input = document.getElementById('tabInputShippingValue');
+      if (input) input.value = val;
+      if (val === 0) setTabShippingMode('free');
+      else if (tabCalcState.shippingMode === 'free') setTabShippingMode('per_order');
+      recalcTabStorefront();
+    });
+  });
+
+  // VAT Toggle
+  const vatToggle = document.getElementById('tabToggleVat');
+  vatToggle?.addEventListener('change', (e) => {
+    tabCalcState.includeVat = e.target.checked;
+    tabCalcState.roundedTotal = null;
+    const label = document.getElementById('tabLabelVatStatus');
+    if (label) label.innerText = tabCalcState.includeVat ? 'คิด VAT 7%' : 'ไม่คิด VAT';
+    recalcTabStorefront();
+  });
+
+  // Rounding Buttons
+  document.querySelectorAll('.tab-round-btn').forEach(btn => {
+    btn.addEventListener('click', () => applyTabRounding(parseInt(btn.dataset.round)));
+  });
+
+  document.getElementById('tabBtnResetRounding')?.addEventListener('click', () => {
+    tabCalcState.roundedTotal = null;
+    recalcTabStorefront();
+    showToast('กลับสู่ยอดคำนวณจริงตามสูตร');
+  });
+
+  // Copy LINE Quote
+  document.getElementById('tabBtnCopyLineQuote')?.addEventListener('click', copyTabLineQuote);
+
+  // Save Quote
+  document.getElementById('tabBtnSaveQuote')?.addEventListener('click', saveTabQuoteHistory);
+
+  // Clear History
+  document.getElementById('tabBtnClearHistory')?.addEventListener('click', () => {
+    tabCalcState.history = [];
+    localStorage.removeItem('tire_quote_history');
+    renderTabHistoryList();
+    showToast('ล้างประวัติแล้ว');
+  });
+
+  // Reset Calculator
+  document.getElementById('btnTabResetCalc')?.addEventListener('click', () => {
+    document.getElementById('tabInputTireName').value = '';
+    document.getElementById('tabInputTireCostPerUnit').value = '';
+    document.getElementById('tabInputLaborPerUnit').value = 50;
+    document.getElementById('tabInputProfitValue').value = 300;
+    document.getElementById('tabInputShippingValue').value = 100;
+    if (vatToggle) vatToggle.checked = false;
+    tabCalcState.includeVat = false;
+    document.getElementById('tabLabelVatStatus').innerText = 'ไม่คิด VAT';
+    setTabQty(4);
+    setTabShippingMode('per_order');
+    tabCalcState.roundedTotal = null;
+    recalcTabStorefront();
+    showToast('ล้างข้อมูลเริ่มต้นใหม่');
+  });
+
+  // Quick Lookup Dropdown Toggle
+  const btnQuick = document.getElementById('btnTabQuickLookup');
+  const dropdown = document.getElementById('tabQuickLookupDropdown');
+  btnQuick?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown?.classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => dropdown?.classList.add('hidden'));
+
+  // Initial Renders
+  renderTabProfitPresets();
+  renderTabHistoryList();
+  renderTabQuickLookup();
+  recalcTabStorefront();
+}
+
+function renderTabStorefrontCalculator() {
+  initTabStorefrontCalculator();
+  renderTabQuickLookup();
+  recalcTabStorefront();
+  initLucide();
+}
+
+function renderTabProfitPresets() {
+  const container = document.getElementById('tabProfitPresetsContainer');
+  const symbol = document.getElementById('tabProfitSymbol');
+  const unitLabel = document.getElementById('tabProfitUnitLabel');
+  if (!container || !symbol || !unitLabel) return;
+
+  if (tabCalcState.profitMode === 'per_unit') {
+    symbol.innerText = '฿';
+    unitLabel.innerText = 'บาท / เส้น';
+    container.innerHTML = `
+      <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
+      ${[200, 300, 400, 500, 600].map(p => `
+        <button type="button" class="tab-profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
+      `).join('')}
+    `;
+  } else if (tabCalcState.profitMode === 'total') {
+    symbol.innerText = '฿';
+    unitLabel.innerText = 'บาท / บิล';
+    container.innerHTML = `
+      <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
+      ${[800, 1000, 1200, 1500, 2000].map(p => `
+        <button type="button" class="tab-profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
+      `).join('')}
+    `;
+  } else {
+    symbol.innerText = '%';
+    unitLabel.innerText = '% กำไร';
+    container.innerHTML = `
+      <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
+      ${[10, 15, 20, 25, 30].map(p => `
+        <button type="button" class="tab-profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p}%</button>
+      `).join('')}
+    `;
+  }
+
+  container.querySelectorAll('.tab-profit-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = parseFloat(btn.dataset.val);
+      const input = document.getElementById('tabInputProfitValue');
+      if (input) input.value = val;
+      tabCalcState.roundedTotal = null;
+      recalcTabStorefront();
+    });
+  });
+}
+
+function setTabQty(q) {
+  tabCalcState.qty = parseInt(q) || 1;
+  tabCalcState.roundedTotal = null;
+  const label = document.getElementById('tabLabelQtyDisplay');
+  if (label) label.innerText = `${tabCalcState.qty} เส้น`;
+
+  document.querySelectorAll('.tab-qty-btn').forEach(btn => {
+    if (parseInt(btn.dataset.qty) === tabCalcState.qty) {
+      btn.classList.add('border-2', 'border-blue-600', 'bg-blue-50', 'text-blue-700', 'shadow-sm');
+      btn.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
+    } else {
+      btn.classList.remove('border-2', 'border-blue-600', 'bg-blue-50', 'text-blue-700', 'shadow-sm');
+      btn.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+    }
+  });
+
+  const customInput = document.getElementById('tabInputCustomQty');
+  if (customInput) {
+    if (![1, 2, 4].includes(tabCalcState.qty)) customInput.value = tabCalcState.qty;
+    else customInput.value = '';
+  }
+
+  recalcTabStorefront();
+}
+
+function setTabShippingMode(mode) {
+  tabCalcState.shippingMode = mode;
+  tabCalcState.roundedTotal = null;
+  document.querySelectorAll('.tab-shipping-mode-btn').forEach(btn => {
+    if (btn.dataset.mode === mode) {
+      btn.classList.add('bg-white', 'text-amber-900', 'shadow-sm');
+      btn.classList.remove('text-amber-800');
+    } else {
+      btn.classList.remove('bg-white', 'text-amber-900', 'shadow-sm');
+      btn.classList.add('text-amber-800');
+    }
+  });
+
+  const inputGroup = document.getElementById('tabShippingInputGroup');
+  const label = document.getElementById('tabShippingUnitLabel');
+
+  if (mode === 'free') {
+    inputGroup?.classList.add('hidden');
+  } else {
+    inputGroup?.classList.remove('hidden');
+    if (label) label.innerText = mode === 'per_order' ? 'บาท / รอบเรียก' : 'บาท / เส้น';
+  }
+
+  recalcTabStorefront();
+}
+
+function applyTabRounding(step) {
+  const grandTotalText = document.getElementById('tabBdGrandTotal')?.innerText.replace(/[^0-9]/g, '') || '0';
+  const exact = parseInt(grandTotalText) || 0;
+  if (exact <= 0) return;
+  const rounded = Math.ceil(exact / step) * step;
+  tabCalcState.roundedTotal = rounded;
+  recalcTabStorefront();
+  showToast(`ปัดราคาขายเป็น ฿${rounded.toLocaleString()} (ปัดหลัก ${step})`);
+}
+
+function recalcTabStorefront() {
+  const qty = tabCalcState.qty;
+  const tireCostUnit = parseFloat(document.getElementById('tabInputTireCostPerUnit')?.value) || 0;
+  const laborUnit = parseFloat(document.getElementById('tabInputLaborPerUnit')?.value) || 0;
+  const profitVal = parseFloat(document.getElementById('tabInputProfitValue')?.value) || 0;
+  const shippingVal = parseFloat(document.getElementById('tabInputShippingValue')?.value) || 0;
+  const includeVat = tabCalcState.includeVat;
+
+  // 1. Total Tire Cost
+  const totalTireCost = tireCostUnit * qty;
+
+  // 2. Total Labor Cost (Default 50 THB/tire)
+  const totalLaborCost = laborUnit * qty;
+
+  // 3. Desired Profit
+  let totalProfit = 0;
+  if (tabCalcState.profitMode === 'per_unit') {
+    totalProfit = profitVal * qty;
+  } else if (tabCalcState.profitMode === 'total') {
+    totalProfit = profitVal;
+  } else if (tabCalcState.profitMode === 'percent') {
+    const baseCost = totalTireCost + totalLaborCost;
+    totalProfit = Math.round(baseCost * (profitVal / 100));
+  }
+
+  // Base Subtotal before VAT & Shipping
+  const baseSubtotal = totalTireCost + totalLaborCost + totalProfit;
+
+  // 4. VAT 7%
+  let vatAmount = 0;
+  if (includeVat) {
+    vatAmount = Math.round(baseSubtotal * 0.07);
+  }
+
+  // 5. Shipping / Transport Fee (Placed as the last step before grand total)
+  let totalShipping = 0;
+  if (tabCalcState.shippingMode === 'per_order') {
+    totalShipping = shippingVal;
+  } else if (tabCalcState.shippingMode === 'per_unit') {
+    totalShipping = shippingVal * qty;
+  } else {
+    totalShipping = 0;
+  }
+
+  // Grand Total & Unit Pricing
+  const exactGrandTotal = baseSubtotal + vatAmount + totalShipping;
+  const effectiveGrandTotal = tabCalcState.roundedTotal !== null ? tabCalcState.roundedTotal : exactGrandTotal;
+  const pricePerUnit = qty > 0 ? Math.round(effectiveGrandTotal / qty) : 0;
+  const profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
+  const profitMarginPct = effectiveGrandTotal > 0 ? Math.round((totalProfit / effectiveGrandTotal) * 100) : 0;
+  const shippingPerUnit = qty > 0 ? (totalShipping / qty).toFixed(1) : 0;
+
+  // Update DOM elements
+  const el = id => document.getElementById(id);
+  if (el('tabDisplayTotalTireCost')) el('tabDisplayTotalTireCost').innerText = `฿${totalTireCost.toLocaleString()}`;
+  if (el('tabDisplayTotalLaborCost')) el('tabDisplayTotalLaborCost').innerText = `฿${totalLaborCost.toLocaleString()}`;
+  if (el('tabDisplayTotalProfit')) el('tabDisplayTotalProfit').innerText = `รวมกำไร: ฿${totalProfit.toLocaleString()}`;
+  if (el('tabDisplayTotalShipping')) el('tabDisplayTotalShipping').innerText = `฿${totalShipping.toLocaleString()}`;
+  if (el('tabShippingAveragePerUnit')) el('tabShippingAveragePerUnit').innerText = `ตกเฉลี่ย ฿${shippingPerUnit} / เส้น`;
+
+  // VAT row
+  if (includeVat) {
+    el('tabVatAmountRow')?.classList.remove('hidden');
+    el('tabBdVatRow')?.classList.remove('hidden');
+    if (el('tabDisplayVatAmount')) el('tabDisplayVatAmount').innerText = `฿${vatAmount.toLocaleString()}`;
+    if (el('tabBdVatCost')) el('tabBdVatCost').innerText = `+฿${vatAmount.toLocaleString()}`;
+  } else {
+    el('tabVatAmountRow')?.classList.add('hidden');
+    el('tabBdVatRow')?.classList.add('hidden');
+    if (el('tabBdVatCost')) el('tabBdVatCost').innerText = `฿0`;
+  }
+
+  // Hero Summary
+  if (el('tabDisplayGrandTotal')) el('tabDisplayGrandTotal').innerText = effectiveGrandTotal.toLocaleString();
+  if (el('tabDisplayPricePerUnit')) el('tabDisplayPricePerUnit').innerText = `฿${pricePerUnit.toLocaleString()}`;
+
+  // Breakdown Card
+  if (el('tabBdTireQty')) el('tabBdTireQty').innerText = qty;
+  if (el('tabBdTireCost')) el('tabBdTireCost').innerText = `฿${totalTireCost.toLocaleString()}`;
+  if (el('tabBdLaborRate')) el('tabBdLaborRate').innerText = laborUnit;
+  if (el('tabBdLaborCost')) el('tabBdLaborCost').innerText = `฿${totalLaborCost.toLocaleString()}`;
+  if (el('tabBdProfitCost')) el('tabBdProfitCost').innerText = `+฿${totalProfit.toLocaleString()}`;
+  if (el('tabBdProfitMargin')) el('tabBdProfitMargin').innerText = `${profitMarginPct}% (${profitPerUnit.toLocaleString()} บ./เส้น)`;
+  if (el('tabBdShippingCost')) el('tabBdShippingCost').innerText = `+฿${totalShipping.toLocaleString()}`;
+  if (el('tabBdGrandTotal')) el('tabBdGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
+
+  // 2 vs 4 Comparison
+  updateTabComparison(tireCostUnit, laborUnit, profitVal, shippingVal, includeVat);
+}
+
+function updateTabComparison(tireCostUnit, laborUnit, profitVal, shippingVal, includeVat) {
+  const el = id => document.getElementById(id);
+  if (tireCostUnit <= 0) {
+    if (el('tabCmp2Total')) el('tabCmp2Total').innerText = '฿0';
+    if (el('tabCmp2PerUnit')) el('tabCmp2PerUnit').innerText = 'เส้นละ ฿0';
+    if (el('tabCmp4Total')) el('tabCmp4Total').innerText = '฿0';
+    if (el('tabCmp4PerUnit')) el('tabCmp4PerUnit').innerText = 'เส้นละ ฿0';
+    return;
+  }
+
+  [2, 4].forEach(testQty => {
+    const cost = tireCostUnit * testQty;
+    const labor = laborUnit * testQty;
+    let profit = 0;
+    if (tabCalcState.profitMode === 'per_unit') profit = profitVal * testQty;
+    else if (tabCalcState.profitMode === 'total') profit = Math.round(profitVal * (testQty / tabCalcState.qty));
+    else profit = Math.round((cost + labor) * (profitVal / 100));
+
+    let vat = 0;
+    if (includeVat) vat = Math.round((cost + labor + profit) * 0.07);
+
+    let ship = 0;
+    if (tabCalcState.shippingMode === 'per_order') ship = shippingVal;
+    else if (tabCalcState.shippingMode === 'per_unit') ship = shippingVal * testQty;
+
+    const total = cost + labor + profit + vat + ship;
+    const perUnit = Math.round(total / testQty);
+
+    if (testQty === 2) {
+      if (el('tabCmp2Total')) el('tabCmp2Total').innerText = `฿${total.toLocaleString()}`;
+      if (el('tabCmp2PerUnit')) el('tabCmp2PerUnit').innerText = `เส้นละ ฿${perUnit.toLocaleString()}`;
+    } else {
+      if (el('tabCmp4Total')) el('tabCmp4Total').innerText = `฿${total.toLocaleString()}`;
+      if (el('tabCmp4PerUnit')) el('tabCmp4PerUnit').innerText = `เส้นละ ฿${perUnit.toLocaleString()}`;
+    }
+  });
+}
+
+function copyTabLineQuote() {
+  const tireName = document.getElementById('tabInputTireName')?.value.trim() || 'ยางรถยนต์มาตรฐาน';
+  const qty = tabCalcState.qty;
+  const grandTotal = document.getElementById('tabDisplayGrandTotal')?.innerText || '0';
+  const pricePerUnit = document.getElementById('tabDisplayPricePerUnit')?.innerText || '0';
+
+  const message = 
+`🚗 ข้อเสนอราคาพิเศษ (หน้าร้าน)
+━━━━━━━━━━━━━━━━━━━━
+📦 สินค้า: ${tireName}
+🔢 จำนวน: ${qty} เส้น
+💰 ราคาเส้นละ: ${pricePerUnit} บาท
+🏷️ ยอดรวมทั้งสิ้น: ฿${grandTotal} บาท
+
+✨ บริการพร้อมในชุด:
+  • ฟรี ค่าแรงติดตั้ง ถอด-ใส่-ถ่วงล้อ
+  • ฟรี เปลี่ยนจุ๊บลมใหม่
+  • ฟรี ตรวจเช็กระบบเบรกและช่วงล่างเบื้องต้น
+
+📞 สนใจล็อกราคา หรือนัดคิวติดตั้งแจ้งได้เลยครับผม!`;
+
+  copyToClipboard(message);
+}
+
+function saveTabQuoteHistory() {
+  const tireName = document.getElementById('tabInputTireName')?.value.trim() || 'ไม่ระบุชื่อรุ่น';
+  const grandTotal = document.getElementById('tabDisplayGrandTotal')?.innerText || '0';
+  const pricePerUnit = document.getElementById('tabDisplayPricePerUnit')?.innerText || '0';
+
+  const quote = {
+    id: Date.now(),
+    date: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+    tireName,
+    qty: tabCalcState.qty,
+    grandTotal,
+    pricePerUnit,
+    costUnit: document.getElementById('tabInputTireCostPerUnit')?.value || 0,
+    profitVal: document.getElementById('tabInputProfitValue')?.value || 300,
+    shippingVal: document.getElementById('tabInputShippingValue')?.value || 100
+  };
+
+  tabCalcState.history.unshift(quote);
+  if (tabCalcState.history.length > 15) tabCalcState.history.pop();
+  localStorage.setItem('tire_quote_history', JSON.stringify(tabCalcState.history));
+  renderTabHistoryList();
+  showToast('บันทึกรายการเสนอราคาลงประวัติแล้ว');
+}
+
+function renderTabHistoryList() {
+  const container = document.getElementById('tabRecentQuotesList');
+  if (!container) return;
+  if (!tabCalcState.history || tabCalcState.history.length === 0) {
+    container.innerHTML = '<p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก</p>';
+    return;
+  }
+
+  container.innerHTML = tabCalcState.history.map(item => `
+    <div class="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer transition" onclick="loadTabHistoryItem(${item.id})">
+      <div class="min-w-0 pr-2">
+        <p class="font-bold text-slate-800 truncate">${item.tireName}</p>
+        <p class="text-[10px] text-slate-500">${item.qty} เส้น • เส้นละ ${item.pricePerUnit} (${item.date})</p>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <span class="font-bold text-emerald-600 font-prompt">฿${item.grandTotal}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.loadTabHistoryItem = function(id) {
+  const item = tabCalcState.history.find(h => h.id === id);
+  if (!item) return;
+  if (document.getElementById('tabInputTireName')) document.getElementById('tabInputTireName').value = item.tireName;
+  if (document.getElementById('tabInputTireCostPerUnit')) document.getElementById('tabInputTireCostPerUnit').value = item.costUnit;
+  if (document.getElementById('tabInputProfitValue')) document.getElementById('tabInputProfitValue').value = item.profitVal;
+  if (document.getElementById('tabInputShippingValue') && item.shippingVal) document.getElementById('tabInputShippingValue').value = item.shippingVal;
+  setTabQty(item.qty);
+  showToast(`โหลดข้อมูล: ${item.tireName}`);
+};
+
+function renderTabQuickLookup() {
+  const list = document.getElementById('tabQuickLookupList');
+  const btn = document.getElementById('btnTabQuickLookup');
+  if (!list || !state.mappings || state.mappings.length === 0) {
+    if (btn) btn.classList.add('hidden');
+    return;
+  }
+  if (btn) btn.classList.remove('hidden');
+  list.innerHTML = state.mappings.map(m => `
+    <div class="p-2 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-transparent hover:border-slate-200" onclick="applyTabMapping('${m.id}')">
+      <p class="font-bold text-slate-800">${m.pattern}</p>
+      <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+        <span>ซับ: ${m.supplier || '-'}</span>
+        <span class="text-blue-600 font-bold">ทุน ฿${(m.pricePerUnit || 0).toLocaleString()}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.applyTabMapping = function(id) {
+  const m = state.mappings.find(x => x.id === id);
+  if (!m) return;
+  if (document.getElementById('tabInputTireName')) document.getElementById('tabInputTireName').value = m.pattern;
+  if (document.getElementById('tabInputTireCostPerUnit')) document.getElementById('tabInputTireCostPerUnit').value = m.pricePerUnit || 0;
+  if (document.getElementById('tabInputShippingValue') && m.shippingFee) {
+    document.getElementById('tabInputShippingValue').value = m.shippingFee;
+  }
+  document.getElementById('tabQuickLookupDropdown')?.classList.add('hidden');
+  recalcTabStorefront();
+  showToast(`ดึงทุน ${m.pattern}: ฿${m.pricePerUnit} เรียบร้อย`);
+};
+
+// ==========================================
+// PWA INSTALLATION & SERVICE WORKER
+// ==========================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+let deferredAppPrompt = null;
+const btnInstallApp = document.getElementById('btnInstallPwa');
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredAppPrompt = e;
+  if (btnInstallApp) btnInstallApp.classList.remove('hidden');
+});
+
+btnInstallApp?.addEventListener('click', async () => {
+  if (deferredAppPrompt) {
+    deferredAppPrompt.prompt();
+    const { outcome } = await deferredAppPrompt.userChoice;
+    if (outcome === 'accepted') {
+      showToast('ติดตั้งแอป GGavity เรียบร้อยแล้ว!');
+    }
+    deferredAppPrompt = null;
+    btnInstallApp.classList.add('hidden');
+  } else {
+    showToast('วิธีติดตั้งบน iPhone/iPad: กดปุ่ม Share [⎋] แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"');
+  }
+});

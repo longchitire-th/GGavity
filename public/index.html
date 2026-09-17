@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ระบบจัดการสั่งซื้อยางประจำวัน (Daily Tire Purchasing App)</title>
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GGavity">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -64,6 +74,18 @@
 
         <!-- Right Quick Actions -->
         <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+          <!-- Quick Storefront Calculator Button -->
+          <a href="/calculator.html" target="_blank" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-lg shadow-sm transition" title="เปิดเครื่องคิดราคาหน้าร้าน (เต็มจอ/มือถือ)">
+            <i data-lucide="calculator" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600"></i>
+            <span class="hidden xs:inline">คิดราคาหน้าร้าน</span>
+          </a>
+
+          <!-- PWA Install Button -->
+          <button id="btnInstallPwa" class="hidden inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg shadow-sm transition" title="ติดตั้งแอป GGavity ลงเครื่อง / มือถือ">
+            <i data-lucide="download-cloud" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600"></i>
+            <span class="hidden sm:inline">ติดตั้งแอป</span>
+          </button>
+
           <!-- Mobile QR Code (Desktop only) -->
           <button id="btnOpenQr" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition" title="เปิดบนมือถือเพื่อถ่ายสลิป">
             <i data-lucide="smartphone" class="w-4 h-4 text-blue-600"></i>
@@ -180,6 +202,12 @@
         <i data-lucide="clipboard-list" class="w-4 h-4"></i>
         <span>ออเดอร์ประจำวัน</span>
         <span class="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-blue-100 text-blue-700 font-bold" id="badgeOrderCount">0</span>
+      </button>
+
+      <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-amber-700 hover:text-amber-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-calculator">
+        <i data-lucide="calculator" class="w-4 h-4 text-amber-600"></i>
+        <span>คิดราคาหน้าร้าน & กำไร</span>
+        <span class="px-1.5 py-0.2 rounded text-[10px] bg-amber-100 text-amber-800 font-bold">สูตรหน้าร้าน</span>
       </button>
 
       <button class="tab-btn px-3 sm:px-4 py-3 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-memory">
@@ -611,6 +639,418 @@
           </button>
         </div>
         <div id="topFormRewardsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- ================= TAB CONTENT: STOREFRONT CALCULATOR ================= -->
+    <section id="tab-calculator" class="tab-pane hidden space-y-4 sm:space-y-6">
+      
+      <!-- Banner / Title -->
+      <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-2xl p-4 sm:p-5 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+              <i data-lucide="calculator" class="w-5 h-5 text-white"></i>
+            </span>
+            <h2 class="text-base sm:text-xl font-bold font-prompt">เครื่องคิดราคาขาย & กำไรหน้าร้าน (Storefront Tire Calculator)</h2>
+          </div>
+          <p class="text-xs sm:text-sm text-amber-100 mt-1">
+            สูตรคำนวณ: <span class="font-semibold text-white">ทุนยาง + ค่าแรงช่าง (50 บ./เส้น) + กำไร + VAT 7% + ค่ารถ (ขั้นตอนสุดท้าย)</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/calculator.html" target="_blank" class="text-xs bg-white text-amber-900 hover:bg-amber-50 font-bold px-3 py-2 rounded-xl shadow transition flex items-center gap-1.5 whitespace-nowrap">
+            <i data-lucide="external-link" class="w-3.5 h-3.5 text-amber-700"></i>
+            <span>เปิดเต็มจอ / จอมือถือ</span>
+          </a>
+          <button id="btnTabResetCalc" class="text-xs bg-black/20 hover:bg-black/30 text-white font-medium px-3 py-2 rounded-xl transition flex items-center gap-1">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>รีเซ็ต</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Calculator Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+        
+        <!-- Left Column: Step-by-Step Inputs (7 Cols) -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <!-- STEP 1: Tire info & Qty -->
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</span>
+                ข้อมูลยาง & จำนวนเส้น
+              </h3>
+              <div class="relative">
+                <button id="btnTabQuickLookup" class="text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1">
+                  <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                  <span>ดึงทุนที่บันทึกไว้</span>
+                </button>
+                <div id="tabQuickLookupDropdown" class="hidden absolute right-0 mt-1 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-20 p-2 max-h-60 overflow-y-auto">
+                  <p class="text-[11px] font-semibold text-slate-400 px-2 py-1">เลือกรายการที่เคยบันทึกราคาไว้:</p>
+                  <div id="tabQuickLookupList" class="space-y-1 text-xs"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">
+                  ยี่ห้อ / รุ่น / ขนาดยาง (สำหรับใบเสนอราคาลูกค้า)
+                </label>
+                <div class="relative">
+                  <i data-lucide="disc" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                  <input type="text" id="tabInputTireName" placeholder="เช่น 205/55R16 Michelin Primacy 4 หรือ 195/65R15 Otani EK1000" 
+                    class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                </div>
+              </div>
+
+              <!-- Quantity -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-xs font-semibold text-slate-700">จำนวนเส้นที่ต้องการเปลี่ยน</label>
+                  <span class="text-xs text-blue-600 font-bold" id="tabLabelQtyDisplay">4 เส้น</span>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                  <button type="button" class="tab-qty-btn py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="1">1 เส้น</button>
+                  <button type="button" class="tab-qty-btn py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="2">2 เส้น</button>
+                  <button type="button" class="tab-qty-btn py-2 text-sm font-semibold rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 transition shadow-sm" data-qty="4">4 เส้น (ชุด)</button>
+                  <div class="relative">
+                    <input type="number" id="tabInputCustomQty" min="1" max="100" placeholder="ระบุเอง" 
+                      class="w-full py-2 px-2 text-center text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: ทุนยาง & ค่าแรงช่าง -->
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            
+            <!-- ทุนยาง -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                  <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
+                  ทุนค่ายาง (Tire Cost)
+                </h3>
+                <span class="text-xs text-slate-500 font-medium">รวมทุนยาง: <span id="tabDisplayTotalTireCost" class="font-bold text-slate-800">฿0</span></span>
+              </div>
+
+              <div class="relative">
+                <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">฿</span>
+                <input type="number" id="tabInputTireCostPerUnit" min="0" step="10" placeholder="ใส่ราคาทุนต่อเส้น เช่น 1500" 
+                  class="w-full pl-8 pr-16 py-2.5 text-base font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                <span class="absolute right-3.5 top-3 text-xs text-slate-400 font-medium">บาท / เส้น</span>
+              </div>
+            </div>
+
+            <!-- ค่าแรงช่าง (Default 50 บ./เส้น) -->
+            <div class="pt-3 border-t border-slate-100">
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
+                    ค่าแรงมือช่าง
+                  </h3>
+                  <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-amber-100 text-amber-800">เส้นละ 50 บาท</span>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">รวมค่าแรงช่าง: <span id="tabDisplayTotalLaborCost" class="font-bold text-slate-800">฿200</span></span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-400">฿</span>
+                  <input type="number" id="tabInputLaborPerUnit" value="50" min="0" step="5" 
+                    class="w-full pl-8 pr-16 py-2 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <span class="absolute right-3 top-2.5 text-xs text-slate-400">บาท / เส้น</span>
+                </div>
+                <button type="button" id="tabBtnResetLabor50" class="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                  50 บ./เส้น
+                </button>
+                <button type="button" id="tabBtnLaborFree" class="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                  ฟรี (0 บ.)
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">* มาตรฐานร้านเส้นละ 50 บาท (คำนวณคูณตามจำนวนเส้นอัตโนมัติ)</p>
+            </div>
+          </div>
+
+          <!-- STEP 3: กำไรที่อยากได้ & VAT 7% -->
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                  <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">4</span>
+                  กำไรที่อยากได้ (Profit)
+                </h3>
+                <span class="text-xs text-emerald-600 font-bold" id="tabDisplayTotalProfit">รวมกำไร: ฿0</span>
+              </div>
+
+              <!-- Profit Mode Buttons -->
+              <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl mb-2.5 text-xs font-semibold">
+                <button type="button" class="tab-profit-mode-btn py-1.5 rounded-lg bg-white text-emerald-700 shadow-sm transition" data-mode="per_unit">
+                  บาท / เส้น
+                </button>
+                <button type="button" class="tab-profit-mode-btn py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition" data-mode="total">
+                  บาทยอดรวม
+                </button>
+                <button type="button" class="tab-profit-mode-btn py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition" data-mode="percent">
+                  % กำไร (Margin)
+                </button>
+              </div>
+
+              <!-- Profit Input -->
+              <div class="relative mb-2">
+                <span class="absolute left-3.5 top-2.5 text-sm font-bold text-emerald-500" id="tabProfitSymbol">฿</span>
+                <input type="number" id="tabInputProfitValue" value="300" min="0" step="10" placeholder="ใส่กำไร เช่น 300" 
+                  class="w-full pl-8 pr-20 py-2.5 text-base font-bold text-emerald-700 bg-emerald-50/40 border border-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                <span class="absolute right-3.5 top-3 text-xs text-emerald-600 font-medium" id="tabProfitUnitLabel">บาท / เส้น</span>
+              </div>
+
+              <!-- Presets -->
+              <div class="flex flex-wrap items-center gap-1.5" id="tabProfitPresetsContainer"></div>
+            </div>
+
+            <!-- VAT 7% -->
+            <div class="pt-3 border-t border-slate-100">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">5</span>
+                    ภาษีมูลค่าเพิ่ม VAT 7%
+                  </h3>
+                  <p class="text-[11px] text-slate-500">สำหรับลูกค้าขอใบกำกับภาษีเต็มรูป</p>
+                </div>
+
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="tabToggleVat" class="sr-only peer">
+                  <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <span class="ml-2 text-xs font-bold text-slate-700" id="tabLabelVatStatus">ไม่คิด VAT</span>
+                </label>
+              </div>
+
+              <div id="tabVatAmountRow" class="hidden mt-2 p-2.5 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center justify-between text-xs">
+                <span class="text-blue-800 font-medium">ยอดภาษี VAT 7%:</span>
+                <span class="font-bold text-blue-700 text-sm" id="tabDisplayVatAmount">฿0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 4: ค่ารถ (ช่องสุดท้ายก่อนรวมเป็นราคาขายให้ลูกค้า ตามคำสั่งผู้ใช้) -->
+          <div class="bg-amber-50/60 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 shadow-sm space-y-3 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-xl uppercase tracking-wider">
+              ขั้นตอนสุดท้ายก่อนรวมราคาขาย
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <h3 class="font-bold text-amber-950 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                  <span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">6</span>
+                  ค่ารถ / ค่าจัดส่งรับยาง (Transport Fee)
+                </h3>
+                <span class="text-xs text-amber-900 font-bold" id="tabDisplayTotalShipping">฿0</span>
+              </div>
+              <p class="text-xs text-amber-800/80 mb-2">
+                ค่ารถต่อรอบการเรียก อาจเป็นต่อเส้น ต่ออเดอร์ หรือต่อซับพลายเออร์
+              </p>
+            </div>
+
+            <!-- Mode Selector -->
+            <div class="grid grid-cols-3 gap-1.5 p-1 bg-amber-100/70 rounded-xl text-xs font-semibold">
+              <button type="button" class="tab-shipping-mode-btn py-1.5 rounded-lg bg-white text-amber-900 shadow-sm transition" data-mode="per_order">
+                ต่อรอบ / ต่อซับ
+              </button>
+              <button type="button" class="tab-shipping-mode-btn py-1.5 rounded-lg text-amber-800 hover:text-amber-950 transition" data-mode="per_unit">
+                ต่อเส้น
+              </button>
+              <button type="button" class="tab-shipping-mode-btn py-1.5 rounded-lg text-amber-800 hover:text-amber-950 transition" data-mode="free">
+                ส่งฟรี / รับเอง
+              </button>
+            </div>
+
+            <!-- Input Value -->
+            <div id="tabShippingInputGroup" class="relative">
+              <span class="absolute left-3.5 top-2.5 text-sm font-bold text-amber-600">฿</span>
+              <input type="number" id="tabInputShippingValue" value="100" min="0" step="10" placeholder="ใส่ค่ารถ เช่น 100" 
+                class="w-full pl-8 pr-28 py-2.5 text-base font-bold text-amber-900 bg-white border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+              <span class="absolute right-3.5 top-3 text-xs text-amber-700 font-medium" id="tabShippingUnitLabel">บาท / รอบเรียก</span>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+              <span class="text-[11px] font-medium text-amber-800 mr-1">ทางลัด:</span>
+              <button type="button" class="tab-ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="0">ฟรี (0 บ.)</button>
+              <button type="button" class="tab-ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="50">50 บ.</button>
+              <button type="button" class="tab-ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="100">100 บ.</button>
+              <button type="button" class="tab-ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="150">150 บ.</button>
+              <button type="button" class="tab-ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="200">200 บ.</button>
+            </div>
+
+            <div class="text-[11px] text-amber-900/80 flex items-center justify-between pt-1 border-t border-amber-200/60">
+              <span>การกระจายต้นทุนค่ารถ:</span>
+              <span class="font-bold" id="tabShippingAveragePerUnit">ตกเฉลี่ย ฿25 / เส้น</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Result & Customer Quote Card (5 Cols) -->
+        <div class="lg:col-span-5 space-y-4">
+          
+          <!-- STICKY PRICE CARD -->
+          <div class="bg-gradient-to-b from-slate-900 to-slate-800 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-slate-700 sticky top-20">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-700/80">
+              <span class="text-xs font-medium text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
+                <i data-lucide="calculator" class="w-4 h-4 text-emerald-400"></i>
+                ราคาขายสำหรับเสนอลูกค้า
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                หน้าร้านพร้อมเปลี่ยน
+              </span>
+            </div>
+
+            <!-- Grand Total -->
+            <div class="my-5 text-center">
+              <p class="text-xs text-slate-400 font-medium mb-1">ยอดรวมทั้งสิ้นที่แจ้งลูกค้า</p>
+              <div class="flex items-center justify-center gap-1 text-emerald-400 font-prompt">
+                <span class="text-2xl font-bold">฿</span>
+                <span class="text-4xl sm:text-5xl font-black tracking-tight" id="tabDisplayGrandTotal">0</span>
+              </div>
+              
+              <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-200 text-xs sm:text-sm font-semibold">
+                <span>เฉลี่ยเส้นละ:</span>
+                <span class="text-emerald-400 font-bold font-prompt text-base" id="tabDisplayPricePerUnit">฿0</span>
+                <span class="text-slate-400 text-xs">(ฟรีค่าแรง)</span>
+              </div>
+            </div>
+
+            <!-- Rounding -->
+            <div class="bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 mb-4">
+              <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                <span>ปัดเศษราคาขาย (หน้าร้านจำง่าย):</span>
+                <button id="tabBtnResetRounding" class="text-blue-400 hover:underline">ยอดจริง</button>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5 text-xs">
+                <button type="button" class="tab-round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="10">ปัดหลัก 10</button>
+                <button type="button" class="tab-round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="50">ปัดหลัก 50</button>
+                <button type="button" class="tab-round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="100">ปัดหลัก 100</button>
+              </div>
+            </div>
+
+            <!-- Breakdown -->
+            <div class="space-y-2 text-xs border-t border-slate-700/80 pt-3">
+              <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">แจกแจงโครงสร้างราคา:</div>
+
+              <div class="flex justify-between items-center text-slate-300">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="disc" class="w-3.5 h-3.5 text-slate-500"></i>
+                  1. ทุนค่ายาง (<span id="tabBdTireQty">4</span> เส้น):
+                </span>
+                <span class="font-semibold text-slate-200" id="tabBdTireCost">฿0</span>
+              </div>
+
+              <div class="flex justify-between items-center text-slate-300">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="wrench" class="w-3.5 h-3.5 text-amber-500"></i>
+                  2. ค่าแรงมือช่าง (<span id="tabBdLaborRate">50</span> บ./เส้น):
+                </span>
+                <span class="font-semibold text-slate-200" id="tabBdLaborCost">฿0</span>
+              </div>
+
+              <div class="flex justify-between items-center text-emerald-400">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                  3. กำไรที่อยากได้ (<span id="tabBdProfitMargin">0%</span>):
+                </span>
+                <span class="font-bold" id="tabBdProfitCost">+฿0</span>
+              </div>
+
+              <div class="flex justify-between items-center text-blue-400" id="tabBdVatRow">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="percent" class="w-3.5 h-3.5"></i>
+                  4. ภาษีมูลค่าเพิ่ม VAT 7%:
+                </span>
+                <span class="font-semibold" id="tabBdVatCost">+฿0</span>
+              </div>
+
+              <div class="flex justify-between items-center text-amber-300 bg-amber-950/40 px-2 py-1 rounded-lg border border-amber-500/20">
+                <span class="flex items-center gap-1.5 font-medium">
+                  <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                  5. ค่ารถ (ช่องสุดท้ายก่อนรวม):
+                </span>
+                <span class="font-bold" id="tabBdShippingCost">+฿0</span>
+              </div>
+
+              <div class="flex justify-between items-center text-sm font-bold text-white pt-2 border-t border-slate-700">
+                <span>รวมราคาขายทั้งสิ้น:</span>
+                <span class="text-emerald-400 font-prompt text-base" id="tabBdGrandTotal">฿0</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-5 space-y-2">
+              <button id="tabBtnCopyLineQuote" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 transition flex items-center justify-center gap-2">
+                <i data-lucide="message-circle" class="w-5 h-5"></i>
+                <span>คัดลอกข้อความส่ง LINE ลูกค้า</span>
+              </button>
+
+              <div class="grid grid-cols-2 gap-2">
+                <a href="/calculator.html" target="_blank" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="external-link" class="w-4 h-4 text-amber-400"></i>
+                  <span>เปิดเต็มจอ</span>
+                </a>
+                <button id="tabBtnSaveQuote" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
+                  <span>บันทึกประวัติ</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 2 vs 4 Comparison -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+              <i data-lucide="git-compare" class="w-4 h-4 text-blue-600"></i>
+              เปรียบเทียบด่วน: 2 เส้น VS 4 เส้น
+            </h4>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <p class="text-slate-500 font-medium">เปลี่ยน 2 เส้น</p>
+                <p class="text-base font-bold text-slate-900 font-prompt mt-0.5" id="tabCmp2Total">฿0</p>
+                <p class="text-[11px] text-slate-500" id="tabCmp2PerUnit">เส้นละ ฿0</p>
+              </div>
+              <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <p class="text-blue-800 font-medium">เปลี่ยน 4 เส้น</p>
+                  <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 rounded">แนะนำ</span>
+                </div>
+                <p class="text-base font-bold text-blue-900 font-prompt mt-0.5" id="tabCmp4Total">฿0</p>
+                <p class="text-[11px] text-blue-700 font-medium" id="tabCmp4PerUnit">เส้นละ ฿0</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Quotes -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
+                ประวัติการเสนอราคาล่าสุด
+              </h4>
+              <button id="tabBtnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-500">ล้างประวัติ</button>
+            </div>
+            <div id="tabRecentQuotesList" class="space-y-1.5 text-xs max-h-48 overflow-y-auto">
+              <p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก</p>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </section>
 
