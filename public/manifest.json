@@ -2,9 +2,9 @@
   "name": "GGavity - ระบบสั่งซื้อยาง & คำนวณกำไรหน้าร้าน",
   "short_name": "GGavity ยาง",
   "description": "ระบบจัดการสั่งซื้อยางประจำวันและเครื่องคิดราคาขายกำไรหน้าร้าน สำหรับศูนย์บริการยางยนต์",
-  "start_url": "/",
-  "id": "/",
-  "scope": "/",
+  "start_url": "./",
+  "id": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#2563eb",
@@ -12,31 +12,31 @@
   "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon.svg",
+      "src": "icons/icon.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
@@ -47,15 +47,8 @@
       "name": "คิดราคาขาย & กำไรหน้าร้าน",
       "short_name": "คิดราคาหน้าร้าน",
       "description": "เครื่องคำนวณราคาขายและกำไรหน้าร้านสูตรเร็ว",
-      "url": "/calculator.html",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "รายการสั่งซื้อยางประจำวัน",
-      "short_name": "ออเดอร์ยาง",
-      "description": "ดูและจัดการออเดอร์ยางประจำวัน",
-      "url": "/?tab=tab-orders",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "url": "./calculator.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
