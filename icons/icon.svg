@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Tire Rubber Gradient -->
+    <linearGradient id="tireGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+
+    <!-- Alloy Rim Gradient -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="40%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+
+    <!-- Profit Badge Gradient -->
+    <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    
+    <!-- Gold / Amber Accent -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded App Icon Background -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)" />
+
+  <!-- Outer Glow / Accent Ring -->
+  <circle cx="256" cy="256" r="215" fill="none" stroke="#3b82f6" stroke-width="4" stroke-opacity="0.3" stroke-dasharray="16 8" />
+
+  <!-- Outer Tire Rubber -->
+  <circle cx="256" cy="256" r="195" fill="url(#tireGrad)" stroke="#475569" stroke-width="8" />
+
+  <!-- Tire Tread Grooves -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#0f172a" stroke-width="6" stroke-dasharray="14 10" />
+  <circle cx="256" cy="256" r="162" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="8 8" />
+  
+  <!-- Tire Inner Wall -->
+  <circle cx="256" cy="256" r="140" fill="#0f172a" stroke="#1e293b" stroke-width="6" />
+
+  <!-- Wheel Rim (Alloy) -->
+  <circle cx="256" cy="256" r="115" fill="url(#rimGrad)" stroke="#cbd5e1" stroke-width="4" />
+  <circle cx="256" cy="256" r="105" fill="#1e293b" />
+
+  <!-- 5-Spoke Alloy Design -->
+  <g fill="url(#rimGrad)">
+    <!-- Spoke 1 (0 deg) -->
+    <path d="M256 160 L242 245 L270 245 Z" />
+    <!-- Spoke 2 (72 deg) -->
+    <path d="M256 256 L345 225 L330 252 Z" transform="rotate(0 256 256)" />
+    <path d="M256 256 L315 330 L290 345 Z" transform="rotate(0 256 256)" />
+    <path d="M256 256 L200 345 L175 325 Z" transform="rotate(0 256 256)" />
+    <path d="M256 256 L165 245 L180 220 Z" transform="rotate(0 256 256)" />
+    <path d="M256 256 L240 165 L272 165 Z" transform="rotate(0 256 256)" />
+
+    <!-- Alloy Rim Spokes (rotated star pattern) -->
+    <rect x="250" y="155" width="12" height="95" rx="6" />
+    <rect x="250" y="155" width="12" height="95" rx="6" transform="rotate(72 256 256)" />
+    <rect x="250" y="155" width="12" height="95" rx="6" transform="rotate(144 256 256)" />
+    <rect x="250" y="155" width="12" height="95" rx="6" transform="rotate(216 256 256)" />
+    <rect x="250" y="155" width="12" height="95" rx="6" transform="rotate(288 256 256)" />
+  </g>
+
+  <!-- Brake Rotor & Caliper Behind Spokes -->
+  <circle cx="256" cy="256" r="75" fill="#334155" stroke="#475569" stroke-width="3" />
+  
+  <!-- Center Cap with GG / Tire Logo -->
+  <circle cx="256" cy="256" r="42" fill="url(#rimGrad)" stroke="#f8fafc" stroke-width="3" />
+  <circle cx="256" cy="256" r="32" fill="#1e3a8a" />
+  <!-- Letter G -->
+  <text x="256" y="267" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#ffffff" text-anchor="middle">G</text>
+
+  <!-- LUG NUTS (5 nuts) -->
+  <circle cx="256" cy="205" r="5" fill="#f1f5f9" />
+  <circle cx="304" cy="240" r="5" fill="#f1f5f9" />
+  <circle cx="286" cy="298" r="5" fill="#f1f5f9" />
+  <circle cx="226" cy="298" r="5" fill="#f1f5f9" />
+  <circle cx="208" cy="240" r="5" fill="#f1f5f9" />
+
+  <!-- FLOATING BADGE: Calculator / Profit (Bottom Right) -->
+  <g transform="translate(300, 300)">
+    <!-- Glow -->
+    <circle cx="90" cy="90" r="85" fill="#047857" opacity="0.4" filter="blur(10px)" />
+    <!-- Badge Circle -->
+    <circle cx="90" cy="90" r="75" fill="url(#badgeGrad)" stroke="#ffffff" stroke-width="7" />
+    
+    <!-- Calculator / Thai Baht & Percent Symbol -->
+    <!-- Mini Display Screen -->
+    <rect x="58" y="52" width="64" height="24" rx="4" fill="#064e3b" stroke="#34d399" stroke-width="2" />
+    <text x="116" y="69" font-family="'Courier New', monospace" font-size="16" font-weight="bold" fill="#34d399" text-anchor="end">%฿+</text>
+
+    <!-- Calculator Buttons -->
+    <g fill="#ecfdf5">
+      <rect x="58" y="84" width="16" height="13" rx="3" />
+      <rect x="82" y="84" width="16" height="13" rx="3" />
+      <rect x="106" y="84" width="16" height="13" rx="3" fill="#f59e0b" />
+      
+      <rect x="58" y="103" width="16" height="13" rx="3" />
+      <rect x="82" y="103" width="16" height="13" rx="3" />
+      <rect x="106" y="103" width="16" height="13" rx="3" fill="#f59e0b" />
+
+      <rect x="58" y="122" width="38" height="13" rx="3" fill="#10b981" />
+      <rect x="106" y="122" width="16" height="13" rx="3" fill="#34d399" />
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>เครื่องคิดราคาขายยาง & คำนวณกำไรหน้าร้าน | GGavity</title>
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GGavity คิดราคา">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png">
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Sarabun', sans-serif;
+    }
+    h1, h2, h3, .font-prompt {
+      font-family: 'Prompt', sans-serif;
+    }
+    @media screen and (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-16 antialiased">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <a href="/" class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-200 hover:bg-blue-700 transition" title="กลับหน้าหลัก">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+          </a>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-bold text-slate-900 font-prompt">เครื่องคิดราคาขาย & กำไรหน้าร้าน</h1>
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                <i data-lucide="zap" class="w-3 h-3"></i> เสนอราคาเร็ว
+              </span>
+            </div>
+            <p class="text-xs text-slate-500">สูตร: ทุนยาง + ค่าแรงช่าง 50 บ. + กำไร + VAT 7% + ค่ารถ</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Install App Button -->
+          <button id="btnInstallPwaCalc" class="hidden px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition flex items-center gap-1 shadow-sm" title="ติดตั้งเป็นแอปบนมือถือ / แท็บเล็ต">
+            <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span class="hidden sm:inline">ติดตั้งแอป</span>
+          </button>
+          <button id="btnResetCalc" class="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center gap-1">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">ล้างข้อมูล</span>
+          </button>
+          <a href="/" class="px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition flex items-center gap-1">
+            <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+            <span>ระบบออเดอร์</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 no-print">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+      
+      <!-- ================= LEFT COLUMN: INPUT FORM (7 COLS) ================= -->
+      <div class="lg:col-span-7 space-y-4">
+        
+        <!-- CARD 1: ข้อมูลยาง & จำนวน -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+              <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</span>
+              ข้อมูลยาง & จำนวนเส้น
+            </h2>
+            <div class="relative">
+              <button id="btnQuickLookup" class="text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1">
+                <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                <span>ดึงทุนที่เคยบันทึก</span>
+              </button>
+              <!-- Dropdown Quick Lookup -->
+              <div id="quickLookupDropdown" class="hidden absolute right-0 mt-1 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-20 p-2 max-h-60 overflow-y-auto">
+                <p class="text-[11px] font-semibold text-slate-400 px-2 py-1">เลือกรายการที่เคยบันทึกราคาไว้:</p>
+                <div id="quickLookupList" class="space-y-1 text-xs">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                ยี่ห้อ / รุ่น / ขนาดยาง (สำหรับออกใบเสนอราคาให้ลูกค้า)
+              </label>
+              <div class="relative">
+                <i data-lucide="disc" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                <input type="text" id="inputTireName" placeholder="เช่น 205/55R16 Michelin Primacy 4 หรือ 195/65R15 Otani" 
+                  class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+              </div>
+            </div>
+
+            <!-- จำนวนเส้น -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-semibold text-slate-700">จำนวนเส้นที่ลูกค้าต้องการ</label>
+                <span class="text-xs text-blue-600 font-bold" id="labelQtyDisplay">4 เส้น</span>
+              </div>
+              <div class="grid grid-cols-4 gap-2">
+                <button type="button" class="qty-btn py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="1">1 เส้น</button>
+                <button type="button" class="qty-btn py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="2">2 เส้น</button>
+                <button type="button" class="qty-btn py-2 text-sm font-semibold rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 transition shadow-sm" data-qty="4">4 เส้น (ชุด)</button>
+                <div class="relative">
+                  <input type="number" id="inputCustomQty" min="1" max="100" placeholder="ระบุเอง" 
+                    class="w-full py-2 px-2 text-center text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: ทุนค่ายาง & ค่าแรงช่าง -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          
+          <!-- STEP 1: ทุนค่ายาง -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
+                ทุนค่ายาง (Tire Cost)
+              </h2>
+              <span class="text-xs text-slate-500 font-medium">รวมทุนยาง: <span id="displayTotalTireCost" class="font-bold text-slate-800">฿0</span></span>
+            </div>
+
+            <div class="relative">
+              <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">฿</span>
+              <input type="number" id="inputTireCostPerUnit" min="0" step="10" placeholder="ใส่ราคาทุนต่อเส้น เช่น 1500" 
+                class="w-full pl-8 pr-16 py-2.5 text-base font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+              <span class="absolute right-3.5 top-3 text-xs text-slate-400 font-medium">บาท / เส้น</span>
+            </div>
+          </div>
+
+          <!-- STEP 2: ค่าแรงมือช่าง (Default 50 บ./เส้น) -->
+          <div class="pt-3 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-2">
+                <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                  <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
+                  ค่าแรงมือช่าง
+                </h2>
+                <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-amber-100 text-amber-800">เส้นละ 50 บาท</span>
+              </div>
+              <span class="text-xs text-slate-500 font-medium">รวมค่าแรงช่าง: <span id="displayTotalLaborCost" class="font-bold text-slate-800">฿200</span></span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-400">฿</span>
+                <input type="number" id="inputLaborPerUnit" value="50" min="0" step="5" 
+                  class="w-full pl-8 pr-16 py-2 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <span class="absolute right-3 top-2.5 text-xs text-slate-400">บาท / เส้น</span>
+              </div>
+              <button type="button" id="btnResetLabor50" class="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition" title="รีเซ็ตเป็น 50 บ.">
+                50 บ./เส้น
+              </button>
+              <button type="button" id="btnLaborFree" class="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition" title="ฟรีค่าแรง">
+                ฟรี (0 บ.)
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">* ค่าแรงมือช่างมาตรฐานเส้นละ 50 บาท (คำนวณคูณตามจำนวนเส้นอัตโนมัติ)</p>
+          </div>
+        </div>
+
+        <!-- CARD 3: กำไรที่อยากได้ & VAT 7% -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          
+          <!-- STEP 3: กำไรที่อยากได้ -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">4</span>
+                กำไรที่อยากได้ (Profit)
+              </h2>
+              <span class="text-xs text-emerald-600 font-bold" id="displayTotalProfit">รวมกำไร: ฿0</span>
+            </div>
+
+            <!-- Profit Type Selector -->
+            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl mb-2.5 text-xs font-semibold">
+              <button type="button" class="profit-mode-btn py-1.5 rounded-lg bg-white text-emerald-700 shadow-sm transition" data-mode="per_unit">
+                บาท / เส้น
+              </button>
+              <button type="button" class="profit-mode-btn py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition" data-mode="total">
+                บาทยอดรวม
+              </button>
+              <button type="button" class="profit-mode-btn py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition" data-mode="percent">
+                % กำไร (Margin)
+              </button>
+            </div>
+
+            <!-- Input Profit Amount -->
+            <div class="relative mb-2">
+              <span class="absolute left-3.5 top-2.5 text-sm font-bold text-emerald-500" id="profitSymbol">฿</span>
+              <input type="number" id="inputProfitValue" value="300" min="0" step="10" placeholder="ใส่กำไรที่ต้องการ เช่น 300" 
+                class="w-full pl-8 pr-20 py-2.5 text-base font-bold text-emerald-700 bg-emerald-50/40 border border-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+              <span class="absolute right-3.5 top-3 text-xs text-emerald-600 font-medium" id="profitUnitLabel">บาท / เส้น</span>
+            </div>
+
+            <!-- Quick Profit Presets -->
+            <div class="flex flex-wrap items-center gap-1.5" id="profitPresetsContainer">
+              <!-- Rendered by JS based on mode -->
+            </div>
+          </div>
+
+          <!-- STEP 4: VAT 7% -->
+          <div class="pt-3 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                  <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">5</span>
+                  ภาษีมูลค่าเพิ่ม VAT 7%
+                </h2>
+                <p class="text-[11px] text-slate-500">เปิดเมื่อลูกค้าต้องการใบกำกับภาษีเต็มรูป</p>
+              </div>
+
+              <!-- Switch Toggle -->
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggleVat" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <span class="ml-2 text-xs font-bold text-slate-700" id="labelVatStatus">ไม่คิด VAT</span>
+              </label>
+            </div>
+
+            <!-- VAT Amount Row -->
+            <div id="vatAmountRow" class="hidden mt-2 p-2.5 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center justify-between text-xs">
+              <span class="text-blue-800 font-medium">ยอดภาษี VAT 7%:</span>
+              <span class="font-bold text-blue-700 text-sm" id="displayVatAmount">฿0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 4: ค่ารถ (ช่องสุดท้าย ก่อนรวมเป็นราคาขายให้ลูกค้า ตามโจทย์เป๊ะ) -->
+        <div class="bg-amber-50/60 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 shadow-sm space-y-3 relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-xl uppercase tracking-wider">
+            ขั้นตอนสุดท้ายก่อนรวมราคาขาย
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <h2 class="font-bold text-amber-950 text-sm sm:text-base flex items-center gap-2 font-prompt">
+                <span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">6</span>
+                ค่ารถ / ค่าขนส่งรับยาง (Transport Fee)
+              </h2>
+              <span class="text-xs text-amber-900 font-bold" id="displayTotalShipping">฿0</span>
+            </div>
+            <p class="text-xs text-amber-800/80 mb-2">
+              ค่ารถต่อรอบการเรียก อาจเป็นต่อเส้น ต่ออเดอร์ หรือต่อซับพลายเออร์
+            </p>
+          </div>
+
+          <!-- Transport Mode Selector -->
+          <div class="grid grid-cols-3 gap-1.5 p-1 bg-amber-100/70 rounded-xl text-xs font-semibold">
+            <button type="button" class="shipping-mode-btn py-1.5 rounded-lg bg-white text-amber-900 shadow-sm transition" data-mode="per_order">
+              ต่อรอบ / ต่อซับ
+            </button>
+            <button type="button" class="shipping-mode-btn py-1.5 rounded-lg text-amber-800 hover:text-amber-950 transition" data-mode="per_unit">
+              ต่อเส้น
+            </button>
+            <button type="button" class="shipping-mode-btn py-1.5 rounded-lg text-amber-800 hover:text-amber-950 transition" data-mode="free">
+              ส่งฟรี / รับเอง
+            </button>
+          </div>
+
+          <!-- Input Shipping Amount -->
+          <div id="shippingInputGroup" class="relative">
+            <span class="absolute left-3.5 top-2.5 text-sm font-bold text-amber-600">฿</span>
+            <input type="number" id="inputShippingValue" value="100" min="0" step="10" placeholder="ใส่ค่ารถ เช่น 100" 
+              class="w-full pl-8 pr-28 py-2.5 text-base font-bold text-amber-900 bg-white border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+            <span class="absolute right-3.5 top-3 text-xs text-amber-700 font-medium" id="shippingUnitLabel">บาท / รอบเรียก</span>
+          </div>
+
+          <!-- Quick Shipping Presets -->
+          <div class="flex flex-wrap items-center gap-1.5 pt-1">
+            <span class="text-[11px] font-medium text-amber-800 mr-1">ทางลัด:</span>
+            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="0">ฟรี (0 บ.)</button>
+            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="50">50 บ.</button>
+            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="100">100 บ.</button>
+            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="150">150 บ.</button>
+            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="200">200 บ.</button>
+          </div>
+
+          <!-- เฉลี่ยต่อเส้น -->
+          <div class="text-[11px] text-amber-900/80 flex items-center justify-between pt-1 border-t border-amber-200/60">
+            <span>การกระจายต้นทุนค่ารถ:</span>
+            <span class="font-bold" id="shippingAveragePerUnit">ตกเฉลี่ย ฿25 / เส้น</span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- ================= RIGHT COLUMN: RESULT & CUSTOMER QUOTE (5 COLS) ================= -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <!-- MAIN QUOTE CARD (STICKY) -->
+        <div class="bg-gradient-to-b from-slate-900 to-slate-800 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-slate-700 sticky top-20">
+          
+          <div class="flex items-center justify-between pb-3 border-b border-slate-700/80">
+            <span class="text-xs font-medium text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <i data-lucide="calculator" class="w-4 h-4 text-emerald-400"></i>
+              ราคาขายสำหรับเสนอลูกค้า
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              หน้าร้านพร้อมเปลี่ยน
+            </span>
+          </div>
+
+          <!-- GRAND TOTAL (HERO PRICE) -->
+          <div class="my-5 text-center">
+            <p class="text-xs text-slate-400 font-medium mb-1">ยอดรวมทั้งสิ้นที่แจ้งลูกค้า</p>
+            <div class="flex items-center justify-center gap-1 text-emerald-400 font-prompt">
+              <span class="text-2xl font-bold">฿</span>
+              <span class="text-4xl sm:text-5xl font-black tracking-tight" id="displayGrandTotal">0</span>
+            </div>
+            
+            <!-- Price Per Unit Badge -->
+            <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-200 text-xs sm:text-sm font-semibold">
+              <span>เฉลี่ยเส้นละ:</span>
+              <span class="text-emerald-400 font-bold font-prompt text-base" id="displayPricePerUnit">฿0</span>
+              <span class="text-slate-400 text-xs">(ฟรีค่าแรง)</span>
+            </div>
+          </div>
+
+          <!-- QUICK ROUNDING BUTTONS (สำหรับหน้าร้านบอกราคาง่าย) -->
+          <div class="bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 mb-4">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+              <span>ปัดเศษราคาขาย (หน้าร้านจำง่าย):</span>
+              <button id="btnResetRounding" class="text-blue-400 hover:underline">ยอดจริง</button>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 text-xs">
+              <button type="button" class="round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="10">ปัดหลัก 10</button>
+              <button type="button" class="round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="50">ปัดหลัก 50</button>
+              <button type="button" class="round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="100">ปัดหลัก 100</button>
+            </div>
+          </div>
+
+          <!-- COST BREAKDOWN TABLE -->
+          <div class="space-y-2 text-xs border-t border-slate-700/80 pt-3">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">แจกแจงโครงสร้างราคา:</div>
+
+            <div class="flex justify-between items-center text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="disc" class="w-3.5 h-3.5 text-slate-500"></i>
+                1. ทุนค่ายาง (<span id="bdTireQty">4</span> เส้น):
+              </span>
+              <span class="font-semibold text-slate-200" id="bdTireCost">฿0</span>
+            </div>
+
+            <div class="flex justify-between items-center text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="wrench" class="w-3.5 h-3.5 text-amber-500"></i>
+                2. ค่าแรงมือช่าง (<span id="bdLaborRate">50</span> บ./เส้น):
+              </span>
+              <span class="font-semibold text-slate-200" id="bdLaborCost">฿0</span>
+            </div>
+
+            <div class="flex justify-between items-center text-emerald-400">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                3. กำไรที่อยากได้ (<span id="bdProfitMargin">0%</span>):
+              </span>
+              <span class="font-bold" id="bdProfitCost">+฿0</span>
+            </div>
+
+            <div class="flex justify-between items-center text-blue-400" id="bdVatRow">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="percent" class="w-3.5 h-3.5"></i>
+                4. ภาษีมูลค่าเพิ่ม VAT 7%:
+              </span>
+              <span class="font-semibold" id="bdVatCost">+฿0</span>
+            </div>
+
+            <div class="flex justify-between items-center text-amber-300 bg-amber-950/40 px-2 py-1 rounded-lg border border-amber-500/20">
+              <span class="flex items-center gap-1.5 font-medium">
+                <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                5. ค่ารถ (ช่องสุดท้ายก่อนรวม):
+              </span>
+              <span class="font-bold" id="bdShippingCost">+฿0</span>
+            </div>
+
+            <div class="flex justify-between items-center text-sm font-bold text-white pt-2 border-t border-slate-700">
+              <span>รวมราคาขายทั้งสิ้น:</span>
+              <span class="text-emerald-400 font-prompt text-base" id="bdGrandTotal">฿0</span>
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS -->
+          <div class="mt-5 space-y-2">
+            <!-- Copy LINE Button -->
+            <button id="btnCopyLineQuote" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 transition flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-5 h-5"></i>
+              <span>คัดลอกข้อความส่ง LINE ลูกค้า</span>
+            </button>
+
+            <!-- Secondary Actions -->
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btnPrintQuote" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span>พิมพ์ใบเสนอราคา</span>
+              </button>
+              <button id="btnSaveQuote" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
+                <span>บันทึกประวัติ</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2 VS 4 TIRES QUICK COMPARISON -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <i data-lucide="git-compare" class="w-4 h-4 text-blue-600"></i>
+            เปรียบเทียบด่วน: 2 เส้น VS 4 เส้น
+          </h3>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+              <p class="text-slate-500 font-medium">เปลี่ยน 2 เส้น</p>
+              <p class="text-base font-bold text-slate-900 font-prompt mt-0.5" id="cmp2Total">฿0</p>
+              <p class="text-[11px] text-slate-500" id="cmp2PerUnit">เส้นละ ฿0</p>
+            </div>
+            <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl">
+              <div class="flex items-center justify-between">
+                <p class="text-blue-800 font-medium">เปลี่ยน 4 เส้น</p>
+                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 rounded">แนะนำ</span>
+              </div>
+              <p class="text-base font-bold text-blue-900 font-prompt mt-0.5" id="cmp4Total">฿0</p>
+              <p class="text-[11px] text-blue-700 font-medium" id="cmp4PerUnit">เส้นละ ฿0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECENT SAVED QUOTES -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
+              ประวัติการเสนอราคาล่าสุด
+            </h3>
+            <button id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-500">ล้างประวัติ</button>
+          </div>
+          <div id="recentQuotesList" class="space-y-1.5 text-xs max-h-48 overflow-y-auto">
+            <!-- Rendered by JS -->
+            <p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= PRINTABLE AREA (FOR IN-STORE QUOTE SLIP) ================= -->
+  <div id="printArea" class="hidden p-8 max-w-lg mx-auto bg-white text-slate-900 border border-slate-300">
+    <div class="text-center pb-4 border-b border-slate-300">
+      <h2 class="text-xl font-bold font-prompt">ใบเสนอราคา / รายการเปลี่ยนยาง</h2>
+      <p class="text-xs text-slate-500 mt-0.5">ศูนย์บริการยางยนต์และช่วงล่าง</p>
+      <p class="text-[11px] text-slate-400" id="printDate"></p>
+    </div>
+
+    <div class="py-4 space-y-2 text-sm">
+      <div class="flex justify-between">
+        <span class="text-slate-500">รายการยาง:</span>
+        <span class="font-bold" id="printTireName">-</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">จำนวน:</span>
+        <span class="font-bold" id="printQty">-</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">ราคาเฉลี่ยต่อเส้น:</span>
+        <span class="font-bold text-blue-600" id="printPricePerUnit">-</span>
+      </div>
+      <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-bold">
+        <span>ราคารวมทั้งสิ้น:</span>
+        <span class="text-emerald-600" id="printGrandTotal">-</span>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-200 pt-3 text-xs text-slate-500 space-y-1">
+      <p>✓ ฟรี ค่าแรงเปลี่ยน ติดตั้ง และถ่วงล้อ</p>
+      <p>✓ ฟรี จุ๊บลมยางใหม่ทุกเส้น</p>
+      <p>✓ รับประกันคุณภาพยางจากโรงงานผู้ผลิต</p>
+    </div>
+
+    <div class="mt-6 pt-4 border-t border-dashed border-slate-300 text-center text-[10px] text-slate-400">
+      ขอบพระคุณที่ไว้วางใจใช้บริการครับ
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none no-print">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-xs sm:text-sm border border-slate-700">
+      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 flex-shrink-0" id="toastIcon"></i>
+      <span id="toastMessage" class="truncate">แจ้งเตือน</span>
+    </div>
+  </div>
+
+  <!-- Script for Calculator Engine -->
+  <script>
+    // State
+    const calcState = {
+      tireName: '',
+      qty: 4,
+      tireCostPerUnit: 0,
+      laborPerUnit: 50, // default 50 THB per tire
+      profitMode: 'per_unit', // 'per_unit', 'total', 'percent'
+      profitVal: 300,
+      includeVat: false,
+      shippingMode: 'per_order', // 'per_order', 'per_unit', 'free'
+      shippingVal: 100,
+      roundedTotal: null,
+      savedHistory: JSON.parse(localStorage.getItem('tire_quote_history') || '[]'),
+      memoryMappings: []
+    };
+
+    // Initialize Lucide Icons
+    function updateIcons() {
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Show Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      if (!toast || !toastMsg) return;
+      toastMsg.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // Profit presets based on mode
+    function renderProfitPresets() {
+      const container = document.getElementById('profitPresetsContainer');
+      const symbol = document.getElementById('profitSymbol');
+      const unitLabel = document.getElementById('profitUnitLabel');
+
+      if (calcState.profitMode === 'per_unit') {
+        symbol.innerText = '฿';
+        unitLabel.innerText = 'บาท / เส้น';
+        container.innerHTML = `
+          <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
+          ${[200, 300, 400, 500, 600].map(p => `
+            <button type="button" class="profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
+          `).join('')}
+        `;
+      } else if (calcState.profitMode === 'total') {
+        symbol.innerText = '฿';
+        unitLabel.innerText = 'บาท / บิล';
+        container.innerHTML = `
+          <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
+          ${[800, 1000, 1200, 1500, 2000].map(p => `
+            <button type="button" class="profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
+          `).join('')}
+        `;
+      } else {
+        symbol.innerText = '%';
+        unitLabel.innerText = '% กำไร';
+        container.innerHTML = `
+          <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
+          ${[10, 15, 20, 25, 30].map(p => `
+            <button type="button" class="profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p}%</button>
+          `).join('')}
+        `;
+      }
+
+      container.querySelectorAll('.profit-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.val);
+          document.getElementById('inputProfitValue').value = val;
+          calcState.profitVal = val;
+          calcState.roundedTotal = null;
+          recalculate();
+        });
+      });
+    }
+
+    // Core Calculation Logic
+    function recalculate() {
+      const qty = calcState.qty;
+      const tireCostUnit = parseFloat(document.getElementById('inputTireCostPerUnit').value) || 0;
+      const laborUnit = parseFloat(document.getElementById('inputLaborPerUnit').value) || 0;
+      const profitVal = parseFloat(document.getElementById('inputProfitValue').value) || 0;
+      const shippingVal = parseFloat(document.getElementById('inputShippingValue')?.value) || 0;
+      const includeVat = calcState.includeVat;
+
+      // 1. Total Tire Cost
+      const totalTireCost = tireCostUnit * qty;
+
+      // 2. Total Labor Cost (Default 50 THB/tire)
+      const totalLaborCost = laborUnit * qty;
+
+      // 3. Profit Calculation
+      let totalProfit = 0;
+      if (calcState.profitMode === 'per_unit') {
+        totalProfit = profitVal * qty;
+      } else if (calcState.profitMode === 'total') {
+        totalProfit = profitVal;
+      } else if (calcState.profitMode === 'percent') {
+        const baseCost = totalTireCost + totalLaborCost;
+        totalProfit = Math.round(baseCost * (profitVal / 100));
+      }
+
+      // Base Subtotal before VAT & Shipping
+      const baseSubtotal = totalTireCost + totalLaborCost + totalProfit;
+
+      // 4. VAT 7%
+      let vatAmount = 0;
+      if (includeVat) {
+        vatAmount = Math.round(baseSubtotal * 0.07);
+      }
+
+      // 5. Shipping / Transport Fee (LAST STEP BEFORE TOTAL AS SPECIFIED)
+      let totalShipping = 0;
+      if (calcState.shippingMode === 'per_order') {
+        totalShipping = shippingVal;
+      } else if (calcState.shippingMode === 'per_unit') {
+        totalShipping = shippingVal * qty;
+      } else {
+        totalShipping = 0;
+      }
+
+      // Grand Total
+      const exactGrandTotal = baseSubtotal + vatAmount + totalShipping;
+      const effectiveGrandTotal = calcState.roundedTotal !== null ? calcState.roundedTotal : exactGrandTotal;
+      const pricePerUnit = qty > 0 ? Math.round(effectiveGrandTotal / qty) : 0;
+      const profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
+      const profitMarginPct = effectiveGrandTotal > 0 ? Math.round((totalProfit / effectiveGrandTotal) * 100) : 0;
+
+      // Shipping average per unit
+      const shippingPerUnit = qty > 0 ? (totalShipping / qty).toFixed(1) : 0;
+
+      // Update UI Elements
+      document.getElementById('displayTotalTireCost').innerText = `฿${totalTireCost.toLocaleString()}`;
+      document.getElementById('displayTotalLaborCost').innerText = `฿${totalLaborCost.toLocaleString()}`;
+      document.getElementById('displayTotalProfit').innerText = `รวมกำไร: ฿${totalProfit.toLocaleString()}`;
+      document.getElementById('displayTotalShipping').innerText = `฿${totalShipping.toLocaleString()}`;
+      document.getElementById('shippingAveragePerUnit').innerText = `ตกเฉลี่ย ฿${shippingPerUnit} / เส้น`;
+
+      // Vat UI
+      const vatRow = document.getElementById('vatAmountRow');
+      const bdVatRow = document.getElementById('bdVatRow');
+      if (includeVat) {
+        vatRow?.classList.remove('hidden');
+        bdVatRow?.classList.remove('hidden');
+        document.getElementById('displayVatAmount').innerText = `฿${vatAmount.toLocaleString()}`;
+        document.getElementById('bdVatCost').innerText = `+฿${vatAmount.toLocaleString()}`;
+      } else {
+        vatRow?.classList.add('hidden');
+        bdVatRow?.classList.add('hidden');
+        document.getElementById('bdVatCost').innerText = `฿0`;
+      }
+
+      // Grand Total UI
+      document.getElementById('displayGrandTotal').innerText = effectiveGrandTotal.toLocaleString();
+      document.getElementById('displayPricePerUnit').innerText = `฿${pricePerUnit.toLocaleString()}`;
+
+      // Breakdown Table
+      document.getElementById('bdTireQty').innerText = qty;
+      document.getElementById('bdTireCost').innerText = `฿${totalTireCost.toLocaleString()}`;
+      document.getElementById('bdLaborRate').innerText = laborUnit;
+      document.getElementById('bdLaborCost').innerText = `฿${totalLaborCost.toLocaleString()}`;
+      document.getElementById('bdProfitCost').innerText = `+฿${totalProfit.toLocaleString()}`;
+      document.getElementById('bdProfitMargin').innerText = `${profitMarginPct}% (${profitPerUnit.toLocaleString()} บ./เส้น)`;
+      document.getElementById('bdShippingCost').innerText = `+฿${totalShipping.toLocaleString()}`;
+      document.getElementById('bdGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
+
+      // Quick 2 vs 4 Comparison
+      updateComparison(tireCostUnit, laborUnit, profitVal, shippingVal, includeVat);
+    }
+
+    // Helper: 2 vs 4 comparison calculation
+    function updateComparison(tireCostUnit, laborUnit, profitVal, shippingVal, includeVat) {
+      if (tireCostUnit <= 0) {
+        document.getElementById('cmp2Total').innerText = '฿0';
+        document.getElementById('cmp2PerUnit').innerText = 'เส้นละ ฿0';
+        document.getElementById('cmp4Total').innerText = '฿0';
+        document.getElementById('cmp4PerUnit').innerText = 'เส้นละ ฿0';
+        return;
+      }
+
+      [2, 4].forEach(testQty => {
+        const cost = tireCostUnit * testQty;
+        const labor = laborUnit * testQty;
+        let profit = 0;
+        if (calcState.profitMode === 'per_unit') profit = profitVal * testQty;
+        else if (calcState.profitMode === 'total') profit = Math.round(profitVal * (testQty / calcState.qty));
+        else profit = Math.round((cost + labor) * (profitVal / 100));
+
+        let vat = 0;
+        if (includeVat) vat = Math.round((cost + labor + profit) * 0.07);
+
+        let ship = 0;
+        if (calcState.shippingMode === 'per_order') ship = shippingVal;
+        else if (calcState.shippingMode === 'per_unit') ship = shippingVal * testQty;
+
+        const total = cost + labor + profit + vat + ship;
+        const perUnit = Math.round(total / testQty);
+
+        if (testQty === 2) {
+          document.getElementById('cmp2Total').innerText = `฿${total.toLocaleString()}`;
+          document.getElementById('cmp2PerUnit').innerText = `เส้นละ ฿${perUnit.toLocaleString()}`;
+        } else {
+          document.getElementById('cmp4Total').innerText = `฿${total.toLocaleString()}`;
+          document.getElementById('cmp4PerUnit').innerText = `เส้นละ ฿${perUnit.toLocaleString()}`;
+        }
+      });
+    }
+
+    // Set Quantity
+    function setQty(q) {
+      calcState.qty = parseInt(q) || 1;
+      calcState.roundedTotal = null;
+      document.getElementById('labelQtyDisplay').innerText = `${calcState.qty} เส้น`;
+      
+      document.querySelectorAll('.qty-btn').forEach(btn => {
+        if (parseInt(btn.dataset.qty) === calcState.qty) {
+          btn.classList.add('border-2', 'border-blue-600', 'bg-blue-50', 'text-blue-700', 'shadow-sm');
+          btn.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
+        } else {
+          btn.classList.remove('border-2', 'border-blue-600', 'bg-blue-50', 'text-blue-700', 'shadow-sm');
+          btn.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+        }
+      });
+
+      if (![1, 2, 4].includes(calcState.qty)) {
+        document.getElementById('inputCustomQty').value = calcState.qty;
+      } else {
+        document.getElementById('inputCustomQty').value = '';
+      }
+
+      recalculate();
+    }
+
+    // Set Shipping Mode
+    function setShippingMode(mode) {
+      calcState.shippingMode = mode;
+      calcState.roundedTotal = null;
+      document.querySelectorAll('.shipping-mode-btn').forEach(btn => {
+        if (btn.dataset.mode === mode) {
+          btn.classList.add('bg-white', 'text-amber-900', 'shadow-sm');
+          btn.classList.remove('text-amber-800');
+        } else {
+          btn.classList.remove('bg-white', 'text-amber-900', 'shadow-sm');
+          btn.classList.add('text-amber-800');
+        }
+      });
+
+      const inputGroup = document.getElementById('shippingInputGroup');
+      const label = document.getElementById('shippingUnitLabel');
+
+      if (mode === 'free') {
+        inputGroup.classList.add('hidden');
+      } else {
+        inputGroup.classList.remove('hidden');
+        label.innerText = mode === 'per_order' ? 'บาท / รอบเรียก' : 'บาท / เส้น';
+      }
+
+      recalculate();
+    }
+
+    // Rounding
+    function applyRounding(step) {
+      const grandTotalText = document.getElementById('bdGrandTotal').innerText.replace(/[^0-9]/g, '');
+      const exact = parseInt(grandTotalText) || 0;
+      if (exact <= 0) return;
+      const rounded = Math.ceil(exact / step) * step;
+      calcState.roundedTotal = rounded;
+      recalculate();
+      showToast(`ปัดราคาขายเป็น ฿${rounded.toLocaleString()} (ปัดหลัก ${step})`);
+    }
+
+    // Copy LINE Quotation text
+    function copyLineQuote() {
+      const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
+      const qty = calcState.qty;
+      const grandTotal = document.getElementById('displayGrandTotal').innerText;
+      const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
+      const laborRate = document.getElementById('inputLaborPerUnit').value;
+
+      const message = 
+`🚗 ข้อเสนอราคาพิเศษ (หน้าร้าน)
+━━━━━━━━━━━━━━━━━━━━
+📦 สินค้า: ${tireName}
+🔢 จำนวน: ${qty} เส้น
+💰 ราคาเส้นละ: ${pricePerUnit} บาท
+🏷️ ยอดรวมทั้งสิ้น: ฿${grandTotal} บาท
+
+✨ บริการพร้อมในชุด:
+  • ฟรี ค่าแรงติดตั้ง ถอด-ใส่-ถ่วงล้อ
+  • ฟรี เปลี่ยนจุ๊บลมใหม่
+  • ฟรี ตรวจเช็กระบบเบรกและช่วงล่างเบื้องต้น
+
+📞 สนใจล็อกราคา หรือนัดคิวติดตั้งแจ้งได้เลยครับผม!`;
+
+      navigator.clipboard.writeText(message).then(() => {
+        showToast('คัดลอกข้อความเสนอราคาสำหรับส่ง LINE เรียบร้อยแล้ว!');
+      }).catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = message;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('คัดลอกข้อความสำหรับส่ง LINE เรียบร้อยแล้ว!');
+      });
+    }
+
+    // Save Quote History
+    function saveQuoteHistory() {
+      const tireName = document.getElementById('inputTireName').value.trim() || 'ไม่ระบุชื่อรุ่น';
+      const grandTotal = document.getElementById('displayGrandTotal').innerText;
+      const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
+
+      const quote = {
+        id: Date.now(),
+        date: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        tireName,
+        qty: calcState.qty,
+        grandTotal,
+        pricePerUnit,
+        costUnit: document.getElementById('inputTireCostPerUnit').value,
+        profitVal: document.getElementById('inputProfitValue').value,
+        shippingVal: document.getElementById('inputShippingValue').value
+      };
+
+      calcState.savedHistory.unshift(quote);
+      if (calcState.savedHistory.length > 15) calcState.savedHistory.pop();
+      localStorage.setItem('tire_quote_history', JSON.stringify(calcState.savedHistory));
+      renderHistoryList();
+      showToast('บันทึกรายการเสนอราคาลงประวัติแล้ว');
+    }
+
+    // Render History List
+    function renderHistoryList() {
+      const container = document.getElementById('recentQuotesList');
+      if (!container) return;
+      if (calcState.savedHistory.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก</p>';
+        return;
+      }
+
+      container.innerHTML = calcState.savedHistory.map(item => `
+        <div class="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer transition" onclick="loadHistoryItem(${item.id})">
+          <div class="min-w-0 pr-2">
+            <p class="font-bold text-slate-800 truncate">${item.tireName}</p>
+            <p class="text-[10px] text-slate-500">${item.qty} เส้น • เส้นละ ${item.pricePerUnit} (${item.date})</p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <span class="font-bold text-emerald-600 font-prompt">฿${item.grandTotal}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load History Item
+    window.loadHistoryItem = function(id) {
+      const item = calcState.savedHistory.find(h => h.id === id);
+      if (!item) return;
+      document.getElementById('inputTireName').value = item.tireName;
+      document.getElementById('inputTireCostPerUnit').value = item.costUnit;
+      document.getElementById('inputProfitValue').value = item.profitVal;
+      if (item.shippingVal) document.getElementById('inputShippingValue').value = item.shippingVal;
+      setQty(item.qty);
+      showToast(`โหลดข้อมูล: ${item.tireName}`);
+    };
+
+    // Print Quotation
+    function printQuote() {
+      const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
+      const qty = calcState.qty;
+      const grandTotal = document.getElementById('displayGrandTotal').innerText;
+      const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
+
+      document.getElementById('printTireName').innerText = tireName;
+      document.getElementById('printQty').innerText = `${qty} เส้น`;
+      document.getElementById('printPricePerUnit').innerText = pricePerUnit;
+      document.getElementById('printGrandTotal').innerText = `฿${grandTotal} บาท`;
+      document.getElementById('printDate').innerText = `วันที่ ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')}`;
+
+      const printArea = document.getElementById('printArea');
+      printArea.classList.remove('hidden');
+      window.print();
+      setTimeout(() => {
+        printArea.classList.add('hidden');
+      }, 500);
+    }
+
+    // Fetch memory mappings from server if available
+    async function loadMappings() {
+      try {
+        const res = await fetch('/api/mappings');
+        const json = await res.json();
+        if (json.success && json.data) {
+          calcState.memoryMappings = json.data;
+          renderQuickLookup();
+        }
+      } catch (err) {
+        console.log('No backend mappings available or running offline');
+      }
+    }
+
+    function renderQuickLookup() {
+      const list = document.getElementById('quickLookupList');
+      if (!list || calcState.memoryMappings.length === 0) {
+        document.getElementById('btnQuickLookup')?.classList.add('hidden');
+        return;
+      }
+      document.getElementById('btnQuickLookup')?.classList.remove('hidden');
+      list.innerHTML = calcState.memoryMappings.map(m => `
+        <div class="p-2 hover:bg-slate-100 rounded-lg cursor-pointer transition border border-transparent hover:border-slate-200" onclick="applyMapping('${m.id}')">
+          <p class="font-bold text-slate-800">${m.pattern}</p>
+          <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+            <span>ซับ: ${m.supplier || '-'}</span>
+            <span class="text-blue-600 font-bold">ทุน ฿${(m.pricePerUnit || 0).toLocaleString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.applyMapping = function(id) {
+      const m = calcState.memoryMappings.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('inputTireName').value = m.pattern;
+      document.getElementById('inputTireCostPerUnit').value = m.pricePerUnit || 0;
+      if (m.shippingFee) {
+        document.getElementById('inputShippingValue').value = m.shippingFee;
+      }
+      document.getElementById('quickLookupDropdown')?.classList.add('hidden');
+      recalculate();
+      showToast(`ดึงทุน ${m.pattern}: ฿${m.pricePerUnit} เรียบร้อย`);
+    };
+
+    // Event Listeners Setup
+    document.addEventListener('DOMContentLoaded', () => {
+      updateIcons();
+      renderProfitPresets();
+      renderHistoryList();
+      loadMappings();
+
+      // Qty Buttons
+      document.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', () => setQty(btn.dataset.qty));
+      });
+
+      document.getElementById('inputCustomQty')?.addEventListener('input', (e) => {
+        if (e.target.value) setQty(e.target.value);
+      });
+
+      // Inputs real-time change
+      ['inputTireCostPerUnit', 'inputLaborPerUnit', 'inputProfitValue', 'inputShippingValue'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () => {
+          calcState.roundedTotal = null;
+          recalculate();
+        });
+      });
+
+      // Reset Labor to 50
+      document.getElementById('btnResetLabor50')?.addEventListener('click', () => {
+        document.getElementById('inputLaborPerUnit').value = 50;
+        recalculate();
+        showToast('ตั้งค่าแรงเป็นมาตรฐาน 50 บ./เส้น');
+      });
+
+      // Labor Free
+      document.getElementById('btnLaborFree')?.addEventListener('click', () => {
+        document.getElementById('inputLaborPerUnit').value = 0;
+        recalculate();
+        showToast('ตั้งค่าแรงเป็น ฟรี (0 บ.)');
+      });
+
+      // Profit Mode Buttons
+      document.querySelectorAll('.profit-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          calcState.profitMode = btn.dataset.mode;
+          calcState.roundedTotal = null;
+          document.querySelectorAll('.profit-mode-btn').forEach(b => {
+            b.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
+            b.classList.add('text-slate-600');
+          });
+          btn.classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+          btn.classList.remove('text-slate-600');
+
+          if (calcState.profitMode === 'percent') {
+            document.getElementById('inputProfitValue').value = 20;
+          } else if (calcState.profitMode === 'total') {
+            document.getElementById('inputProfitValue').value = 1000;
+          } else {
+            document.getElementById('inputProfitValue').value = 300;
+          }
+          renderProfitPresets();
+          recalculate();
+        });
+      });
+
+      // Shipping Mode Buttons
+      document.querySelectorAll('.shipping-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => setShippingMode(btn.dataset.mode));
+      });
+
+      // Shipping Preset Buttons
+      document.querySelectorAll('.ship-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.val);
+          document.getElementById('inputShippingValue').value = val;
+          if (val === 0) setShippingMode('free');
+          else if (calcState.shippingMode === 'free') setShippingMode('per_order');
+          recalculate();
+        });
+      });
+
+      // VAT Toggle
+      const toggleVat = document.getElementById('toggleVat');
+      toggleVat?.addEventListener('change', (e) => {
+        calcState.includeVat = e.target.checked;
+        calcState.roundedTotal = null;
+        document.getElementById('labelVatStatus').innerText = calcState.includeVat ? 'คิด VAT 7%' : 'ไม่คิด VAT';
+        recalculate();
+      });
+
+      // Rounding Buttons
+      document.querySelectorAll('.round-btn').forEach(btn => {
+        btn.addEventListener('click', () => applyRounding(parseInt(btn.dataset.round)));
+      });
+
+      document.getElementById('btnResetRounding')?.addEventListener('click', () => {
+        calcState.roundedTotal = null;
+        recalculate();
+        showToast('กลับสู่ยอดคำนวณจริงตามสูตร');
+      });
+
+      // Copy LINE Quote
+      document.getElementById('btnCopyLineQuote')?.addEventListener('click', copyLineQuote);
+
+      // Print Quote
+      document.getElementById('btnPrintQuote')?.addEventListener('click', printQuote);
+
+      // Save Quote
+      document.getElementById('btnSaveQuote')?.addEventListener('click', saveQuoteHistory);
+
+      // Clear History
+      document.getElementById('btnClearHistory')?.addEventListener('click', () => {
+        calcState.savedHistory = [];
+        localStorage.removeItem('tire_quote_history');
+        renderHistoryList();
+        showToast('ล้างประวัติแล้ว');
+      });
+
+      // Quick Lookup Toggle
+      const btnQuick = document.getElementById('btnQuickLookup');
+      const dropdown = document.getElementById('quickLookupDropdown');
+      btnQuick?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown?.classList.toggle('hidden');
+      });
+      document.addEventListener('click', () => dropdown?.classList.add('hidden'));
+
+      // Reset All
+      document.getElementById('btnResetCalc')?.addEventListener('click', () => {
+        document.getElementById('inputTireName').value = '';
+        document.getElementById('inputTireCostPerUnit').value = '';
+        document.getElementById('inputLaborPerUnit').value = 50;
+        document.getElementById('inputProfitValue').value = 300;
+        document.getElementById('inputShippingValue').value = 100;
+        toggleVat.checked = false;
+        calcState.includeVat = false;
+        document.getElementById('labelVatStatus').innerText = 'ไม่คิด VAT';
+        setQty(4);
+        setShippingMode('per_order');
+        calcState.roundedTotal = null;
+        recalculate();
+        showToast('ล้างข้อมูลเริ่มต้นใหม่');
+      });
+
+      // Initial calculation
+      recalculate();
+
+      // Register Service Worker for PWA / Offline
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+      }
+
+      // PWA Install Prompt
+      let deferredPrompt = null;
+      const btnInstall = document.getElementById('btnInstallPwaCalc');
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (btnInstall) btnInstall.classList.remove('hidden');
+      });
+
+      btnInstall?.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            showToast('ติดตั้งแอป GGavity เรียบร้อยแล้ว!');
+          }
+          deferredPrompt = null;
+          btnInstall.classList.add('hidden');
+        } else {
+          showToast('วิธีติดตั้งบน iPhone/iPad: กดปุ่ม Share [⎋] แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
