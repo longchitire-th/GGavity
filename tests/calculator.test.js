@@ -13,6 +13,8 @@ const express = require('express');
 
   const browser = await chromium.launch();
   const page = await browser.newPage();
+  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+  page.on('pageerror', err => console.error('PAGE ERROR:', err.stack || err.message));
   await page.goto(`${baseUrl}/calculator.html`);
 
   console.log('Testing public/calculator.html...');
@@ -108,7 +110,76 @@ const express = require('express');
     process.exit(1);
   }
 
-  // Test Case 5: Test in index.html (Tab calculator)
+  // Test Case 5: Storefront Reverse Calculation Mode (e.g. Selling price 8,800 THB)
+  console.log('--- TEST CASE 5 (STOREFRONT REVERSE CALCULATION) ---');
+  await page.click('#btnModeStore');
+  await page.click('#btnDirReverse');
+  await page.click('button[data-mode="per_order"].shipping-mode-btn');
+
+  // Input costs: Tire Cost 1850 per unit (1850 * 4 = 7400), Labor 50 (50 * 4 = 200), Shipping 100
+  await page.fill('#inputTireCostPerUnit', '1850');
+  await page.fill('#inputLaborPerUnit', '50');
+  await page.fill('#inputShippingValue', '100');
+  await page.fill('#inputTargetSellingPrice', '8800');
+
+  // Calculation (VAT OFF):
+  // Selling Price = 8800
+  // Shipping = 100
+  // Base without ship = 8700
+  // Tire Cost = 7400
+  // Labor Cost = 200
+  // Profit = 8700 - 7400 - 200 = 1,100 THB (Profit per unit = 1100 / 4 = 275 THB/tire)
+  const reverseProfitTotal = await page.innerText('#displayGrandTotal');
+  const reverseProfitPerUnit = await page.innerText('#displayPricePerUnit');
+  const reverseBannerText = await page.innerText('#reverseStatusBanner');
+
+  console.log('Reverse Net Profit Total:', reverseProfitTotal);
+  console.log('Reverse Net Profit Per Unit:', reverseProfitPerUnit);
+  console.log('Reverse Banner Status:', reverseBannerText);
+
+  if (reverseProfitTotal === '1,100' && reverseProfitPerUnit === '฿275') {
+    console.log('✓ TEST 5A PASSED: Selling 8,800 gives net profit 1,100 THB (275 THB/tire)!');
+  } else {
+    console.error('✗ TEST 5A FAILED! Expected profit 1,100, got', reverseProfitTotal);
+    process.exit(1);
+  }
+
+  // Test 5B: Turn on VAT 7% in Reverse Mode
+  // Base without ship = 8800 - 100 = 8700
+  // Pre-VAT base = 8700 / 1.07 = 8130.84
+  // VAT = 8700 - 8130.84 = 569.16 -> 569 THB
+  // Net Profit = 8130.84 - 7400 - 200 = 530.84 -> 531 THB
+  // Profit per unit = 531 / 4 = 132.75 -> 133 THB
+  await page.click('#toggleVat', { force: true });
+  const reverseProfitVat = await page.innerText('#displayGrandTotal');
+  const reverseVatAmount = await page.innerText('#displayVatAmount');
+  console.log('Reverse Net Profit with VAT:', reverseProfitVat);
+  console.log('Reverse VAT Amount:', reverseVatAmount);
+
+  if (reverseProfitVat === '531' && reverseVatAmount === '฿569') {
+    console.log('✓ TEST 5B PASSED: Reverse mode with VAT 7% properly extracts VAT 569 and leaves 531 profit!');
+  } else {
+    console.error('✗ TEST 5B FAILED! Expected profit 531, got', reverseProfitVat, 'VAT:', reverseVatAmount);
+    process.exit(1);
+  }
+
+  // Test 5C: Loss scenario (Selling price 7000, VAT off)
+  await page.click('#toggleVat', { force: true });
+  await page.fill('#inputTargetSellingPrice', '7000');
+  // 7000 - 100 - 7400 - 200 = -700 THB
+  const reverseLossTotal = await page.innerText('#displayGrandTotal');
+  const reverseLossBanner = await page.innerText('#reverseStatusBanner');
+  console.log('Reverse Loss Total:', reverseLossTotal);
+  console.log('Reverse Loss Banner:', reverseLossBanner);
+
+  if (reverseLossTotal === '-700' && reverseLossBanner.includes('ระวัง! ขายราคานี้เข้าเนื้อ/ขาดทุน')) {
+    console.log('✓ TEST 5C PASSED: Loss warning displayed correctly for negative profit -700 THB!');
+  } else {
+    console.error('✗ TEST 5C FAILED! Expected -700, got', reverseLossTotal);
+    process.exit(1);
+  }
+
+  // Test Case 6: Test in index.html (Tab calculator)
   await page.goto(`${baseUrl}/`);
   await page.waitForLoadState('networkidle');
   await page.click('button[data-tab="tab-calculator"]');
