@@ -76,7 +76,39 @@ const express = require('express');
     process.exit(1);
   }
 
-  // Test Case 4: Test in index.html (Tab calculator)
+  // Test Case 4: Dual Mode - Online Marketplace GP% Mode
+  console.log('--- TEST CASE 4 (ONLINE PLATFORM GP%) ---');
+  await page.click('#btnModeOnline');
+  // Turn off VAT for pure GP calculation check
+  await page.click('#toggleVat', { force: true });
+  await page.fill('#inputTireCostPerUnit', '1500');
+  await page.fill('#inputProfitValue', '300');
+  await page.fill('#inputOnlineShipPerUnit', '0');
+  await page.fill('#inputGpPercent', '15.0');
+
+  // Base = 1500*4 (cost) + 0 (ship) + 300*4 (profit) = 7200
+  // Target Required = 7200
+  // Listing Price = 7200 / (1 - 0.15) = 8470.58 -> 8,471 THB
+  // GP Deduction = 8471 * 0.15 = 1270.65 -> 1,271 THB
+  // Net Payout = 8471 - 1271 = 7,200 THB
+  const onlineListingPrice = await page.innerText('#displayGrandTotal');
+  const onlineNetPayout = await page.innerText('#bdNetPayout');
+  const onlineProfit = await page.innerText('#bdProfitCost');
+  const onlineGpAmount = await page.innerText('#bdGpAmount');
+
+  console.log('Online Listing Price:', onlineListingPrice);
+  console.log('Online Net Payout to Shop:', onlineNetPayout);
+  console.log('Online Profit:', onlineProfit);
+  console.log('Online GP Deduction:', onlineGpAmount);
+
+  if (onlineListingPrice === '8,471' && onlineNetPayout === '฿7,200' && onlineProfit === '+฿1,200') {
+    console.log('✓ TEST 4 PASSED: Online Listing 8,471 with Net Payout 7,200 perfectly covers cost and profit without loss!');
+  } else {
+    console.error('✗ TEST 4 FAILED! Listing:', onlineListingPrice, 'Payout:', onlineNetPayout);
+    process.exit(1);
+  }
+
+  // Test Case 5: Test in index.html (Tab calculator)
   await page.goto(`${baseUrl}/`);
   await page.waitForLoadState('networkidle');
   await page.click('button[data-tab="tab-calculator"]');

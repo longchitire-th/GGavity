@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>เครื่องคิดราคาขายยาง & คำนวณกำไรหน้าร้าน | GGavity</title>
+  <title>เครื่องคิดราคาขายยาง & คำนวณกำไรหน้าร้าน & ออนไลน์ | GGavity</title>
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#2563eb">
   <meta name="mobile-web-app-capable" content="yes">
@@ -20,12 +20,18 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap');
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
     body {
       font-family: 'Sarabun', sans-serif;
+      overflow-x: hidden;
     }
-    h1, h2, h3, .font-prompt {
+    h1, h2, h3, h4, .font-prompt {
       font-family: 'Prompt', sans-serif;
     }
+    /* Prevent iOS auto-zoom on inputs */
     @media screen and (max-width: 768px) {
       input, select, textarea {
         font-size: 16px !important;
@@ -50,40 +56,43 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen pb-16 antialiased">
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-28 lg:pb-16 antialiased selection:bg-blue-200">
 
   <!-- ================= TOP HEADER ================= -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
-      <div class="flex items-center justify-between h-16">
-        <div class="flex items-center space-x-3">
-          <a href="/" class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-200 hover:bg-blue-700 transition" title="กลับหน้าหลัก">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    <div class="max-w-6xl mx-auto px-3 sm:px-6">
+      <div class="flex items-center justify-between h-14 sm:h-16">
+        <!-- Brand & Back -->
+        <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          <a href="/" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-200 hover:bg-blue-700 transition flex-shrink-0" title="กลับหน้าหลัก">
+            <i data-lucide="arrow-left" class="w-4 h-4 sm:w-5 sm:h-5"></i>
           </a>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-base sm:text-lg font-bold text-slate-900 font-prompt">เครื่องคิดราคาขาย & กำไรหน้าร้าน</h1>
-              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                <i data-lucide="zap" class="w-3 h-3"></i> เสนอราคาเร็ว
-              </span>
-            </div>
-            <p class="text-xs text-slate-500">สูตร: ทุนยาง + ค่าแรงช่าง 50 บ. + กำไร + VAT 7% + ค่ารถ</p>
+          <div class="min-w-0">
+            <h1 class="text-sm sm:text-base font-bold text-slate-900 font-prompt truncate">
+              เครื่องคิดราคาขาย & กำไร
+            </h1>
+            <p class="text-[10px] sm:text-xs text-slate-500 truncate">
+              ระบบหน้าร้าน & แพลตฟอร์มออนไลน์ (GP%)
+            </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <!-- Header Actions -->
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <!-- Install App Button -->
-          <button id="btnInstallPwaCalc" class="hidden px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition flex items-center gap-1 shadow-sm" title="ติดตั้งเป็นแอปบนมือถือ / แท็บเล็ต">
+          <button id="btnInstallPwaCalc" class="hidden px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition flex items-center gap-1 shadow-sm">
             <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-emerald-600"></i>
-            <span class="hidden sm:inline">ติดตั้งแอป</span>
+            <span class="hidden xs:inline">ติดตั้งแอป</span>
           </button>
-          <button id="btnResetCalc" class="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center gap-1">
+          <!-- Reset Button -->
+          <button id="btnResetCalc" class="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center gap-1" title="ล้างข้อมูล">
             <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">ล้างข้อมูล</span>
           </button>
-          <a href="/" class="px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition flex items-center gap-1">
+          <!-- Back to Orders link -->
+          <a href="/" class="px-2.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition flex items-center gap-1">
             <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
-            <span>ระบบออเดอร์</span>
+            <span class="hidden sm:inline">ระบบออเดอร์</span>
           </a>
         </div>
       </div>
@@ -91,133 +100,181 @@
   </header>
 
   <!-- ================= MAIN CONTAINER ================= -->
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 no-print">
-    
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+  <main class="max-w-6xl mx-auto px-3 sm:px-6 mt-3 sm:mt-6 no-print">
+
+    <!-- ================= MODE SWITCHER (หน้าร้าน VS ออนไลน์) ================= -->
+    <div class="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm mb-4">
+      <div class="grid grid-cols-2 gap-1.5">
+        <!-- Mode 1: Storefront Button -->
+        <button type="button" id="btnModeStore" class="app-mode-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-blue-600 text-white shadow-md shadow-blue-200" data-mode="storefront">
+          <i data-lucide="store" class="w-4 h-4"></i>
+          <span>1. ระบบหน้าร้าน</span>
+          <span class="hidden sm:inline-block px-1.5 py-0.2 rounded text-[10px] bg-white/20 text-white font-normal">เปลี่ยน/ติดตั้งที่ร้าน</span>
+        </button>
+
+        <!-- Mode 2: Online Platform Button -->
+        <button type="button" id="btnModeOnline" class="app-mode-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-slate-100 text-slate-600 hover:text-slate-900" data-mode="online">
+          <i data-lucide="shopping-bag" class="w-4 h-4 text-orange-500"></i>
+          <span>2. แพลตฟอร์มออนไลน์</span>
+          <span class="px-1.5 py-0.2 rounded text-[10px] bg-orange-100 text-orange-800 font-semibold">คิดค่า GP %</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
       
       <!-- ================= LEFT COLUMN: INPUT FORM (7 COLS) ================= -->
-      <div class="lg:col-span-7 space-y-4">
+      <div class="lg:col-span-7 space-y-3.5 sm:space-y-4">
         
-        <!-- CARD 1: ข้อมูลยาง & จำนวน -->
+        <!-- CARD 1: ข้อมูลยาง & จำนวนเส้น -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
-              <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</span>
+          <div class="flex items-center justify-between mb-2.5">
+            <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+              <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</span>
               ข้อมูลยาง & จำนวนเส้น
             </h2>
             <div class="relative">
               <button id="btnQuickLookup" class="text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1">
                 <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                <span>ดึงทุนที่เคยบันทึก</span>
+                <span class="hidden xs:inline">ดึงทุนที่บันทึกไว้</span>
+                <span class="xs:hidden">ดึงทุน</span>
               </button>
               <!-- Dropdown Quick Lookup -->
               <div id="quickLookupDropdown" class="hidden absolute right-0 mt-1 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-20 p-2 max-h-60 overflow-y-auto">
                 <p class="text-[11px] font-semibold text-slate-400 px-2 py-1">เลือกรายการที่เคยบันทึกราคาไว้:</p>
-                <div id="quickLookupList" class="space-y-1 text-xs">
-                  <!-- Populated by JS -->
-                </div>
+                <div id="quickLookupList" class="space-y-1 text-xs"></div>
               </div>
             </div>
           </div>
 
-          <div class="space-y-3">
+          <div class="space-y-2.5">
+            <!-- Tire Name / Model -->
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">
-                ยี่ห้อ / รุ่น / ขนาดยาง (สำหรับออกใบเสนอราคาให้ลูกค้า)
+              <label class="block text-xs font-semibold text-slate-600 mb-1">
+                ยี่ห้อ / รุ่น / ขนาดยาง (สำหรับออกใบเสนอราคา)
               </label>
-              <div class="relative">
-                <i data-lucide="disc" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
-                <input type="text" id="inputTireName" placeholder="เช่น 205/55R16 Michelin Primacy 4 หรือ 195/65R15 Otani" 
-                  class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+              <div class="flex items-center rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition px-3 py-2">
+                <i data-lucide="disc" class="w-4 h-4 text-slate-400 flex-shrink-0 mr-2"></i>
+                <input type="text" id="inputTireName" placeholder="เช่น 205/55R16 Michelin Primacy 4" 
+                  class="w-full bg-transparent text-xs sm:text-sm font-medium focus:outline-none text-slate-800">
               </div>
             </div>
 
-            <!-- จำนวนเส้น -->
+            <!-- จำนวนเส้น (Quick Buttons) -->
             <div>
               <div class="flex items-center justify-between mb-1">
-                <label class="text-xs font-semibold text-slate-700">จำนวนเส้นที่ลูกค้าต้องการ</label>
-                <span class="text-xs text-blue-600 font-bold" id="labelQtyDisplay">4 เส้น</span>
+                <label class="text-xs font-semibold text-slate-600">จำนวนเส้น</label>
+                <span class="text-xs text-blue-600 font-bold" id="labelQtyDisplay">4 เส้น (ชุด)</span>
               </div>
-              <div class="grid grid-cols-4 gap-2">
-                <button type="button" class="qty-btn py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="1">1 เส้น</button>
-                <button type="button" class="qty-btn py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="2">2 เส้น</button>
-                <button type="button" class="qty-btn py-2 text-sm font-semibold rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 transition shadow-sm" data-qty="4">4 เส้น (ชุด)</button>
-                <div class="relative">
+              <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
+                <button type="button" class="qty-btn py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="1">1 เส้น</button>
+                <button type="button" class="qty-btn py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition" data-qty="2">2 เส้น</button>
+                <button type="button" class="qty-btn py-2 text-xs sm:text-sm font-semibold rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 transition shadow-sm" data-qty="4">4 เส้น</button>
+                <div>
                   <input type="number" id="inputCustomQty" min="1" max="100" placeholder="ระบุเอง" 
-                    class="w-full py-2 px-2 text-center text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="w-full py-2 px-1 text-center text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- CARD 2: ทุนค่ายาง & ค่าแรงช่าง -->
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          
-          <!-- STEP 1: ทุนค่ายาง -->
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
-                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
-                ทุนค่ายาง (Tire Cost)
-              </h2>
-              <span class="text-xs text-slate-500 font-medium">รวมทุนยาง: <span id="displayTotalTireCost" class="font-bold text-slate-800">฿0</span></span>
-            </div>
-
-            <div class="relative">
-              <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">฿</span>
-              <input type="number" id="inputTireCostPerUnit" min="0" step="10" placeholder="ใส่ราคาทุนต่อเส้น เช่น 1500" 
-                class="w-full pl-8 pr-16 py-2.5 text-base font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
-              <span class="absolute right-3.5 top-3 text-xs text-slate-400 font-medium">บาท / เส้น</span>
-            </div>
+        <!-- CARD 2: ทุนค่ายาง -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-1.5">
+            <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+              <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
+              ทุนค่ายาง (Tire Cost)
+            </h2>
+            <span class="text-xs text-slate-500">รวมทุนยาง: <span id="displayTotalTireCost" class="font-bold text-slate-800">฿0</span></span>
           </div>
 
-          <!-- STEP 2: ค่าแรงมือช่าง (Default 50 บ./เส้น) -->
-          <div class="pt-3 border-t border-slate-100">
+          <!-- Safe Flex Input Group -->
+          <div class="flex items-center rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition px-3 py-2">
+            <span class="text-slate-400 font-bold text-sm mr-2 flex-shrink-0">฿</span>
+            <input type="number" id="inputTireCostPerUnit" min="0" step="10" placeholder="ใส่ราคาทุนต่อเส้น เช่น 1500" 
+              class="w-full bg-transparent text-sm sm:text-base font-bold text-slate-800 focus:outline-none">
+            <span class="text-xs text-slate-400 font-medium ml-2 whitespace-nowrap flex-shrink-0">บาท / เส้น</span>
+          </div>
+        </div>
+
+        <!-- CARD 3: ค่าแรงมือช่าง (เฉพาะโหมดหน้าร้าน) / ค่าส่งพัสดุ (เฉพาะโหมดออนไลน์) -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+          
+          <!-- SECTION 3A: ค่าแรงช่าง (แสดงเฉพาะโหมดหน้าร้าน) -->
+          <div id="sectionLaborStorefront">
             <div class="flex items-center justify-between mb-1.5">
-              <div class="flex items-center gap-2">
-                <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
-                  <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
-                  ค่าแรงมือช่าง
+              <div class="flex items-center gap-1.5">
+                <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+                  <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
+                  ค่าแรงมือช่างหน้าร้าน
                 </h2>
-                <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-amber-100 text-amber-800">เส้นละ 50 บาท</span>
+                <span class="px-2 py-0.2 text-[10px] sm:text-[11px] font-bold rounded bg-amber-100 text-amber-800">เส้นละ 50 บาท</span>
               </div>
-              <span class="text-xs text-slate-500 font-medium">รวมค่าแรงช่าง: <span id="displayTotalLaborCost" class="font-bold text-slate-800">฿200</span></span>
+              <span class="text-xs text-slate-500">รวมค่าแรง: <span id="displayTotalLaborCost" class="font-bold text-slate-800">฿200</span></span>
             </div>
 
             <div class="flex items-center gap-2">
-              <div class="relative flex-1">
-                <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-400">฿</span>
+              <div class="flex-1 flex items-center rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition px-3 py-2">
+                <span class="text-slate-400 font-bold text-sm mr-2 flex-shrink-0">฿</span>
                 <input type="number" id="inputLaborPerUnit" value="50" min="0" step="5" 
-                  class="w-full pl-8 pr-16 py-2 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <span class="absolute right-3 top-2.5 text-xs text-slate-400">บาท / เส้น</span>
+                  class="w-full bg-transparent text-sm font-semibold text-slate-800 focus:outline-none">
+                <span class="text-xs text-slate-400 font-medium ml-2 whitespace-nowrap flex-shrink-0">บาท / เส้น</span>
               </div>
-              <button type="button" id="btnResetLabor50" class="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition" title="รีเซ็ตเป็น 50 บ.">
-                50 บ./เส้น
+              <button type="button" id="btnResetLabor50" class="px-2.5 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex-shrink-0">
+                50 บ.
               </button>
-              <button type="button" id="btnLaborFree" class="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition" title="ฟรีค่าแรง">
-                ฟรี (0 บ.)
+              <button type="button" id="btnLaborFree" class="px-2.5 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex-shrink-0">
+                ฟรี 0 บ.
               </button>
             </div>
-            <p class="text-[11px] text-slate-400 mt-1">* ค่าแรงมือช่างมาตรฐานเส้นละ 50 บาท (คำนวณคูณตามจำนวนเส้นอัตโนมัติ)</p>
+            <p class="text-[11px] text-slate-400 mt-1">* ค่าแรงมือช่างหน้าร้าน 50 บ./เส้น (คูณตามจำนวนเส้นอัตโนมัติ)</p>
           </div>
+
+          <!-- SECTION 3B: ค่าจัดส่งพัสดุ (แสดงเฉพาะโหมดออนไลน์) -->
+          <div id="sectionShippingOnline" class="hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-1.5">
+                <h2 class="font-bold text-orange-950 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+                  <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">3</span>
+                  ค่าส่งพัสดุที่ร้านออกให้ (โปรส่งฟรี)
+                </h2>
+              </div>
+              <span class="text-xs text-orange-900 font-semibold">รวมค่าส่ง: <span id="displayOnlineTotalShip" class="font-bold text-orange-700">฿0</span></span>
+            </div>
+
+            <div class="flex items-center rounded-xl bg-orange-50/50 border border-orange-200 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-100 focus-within:bg-white transition px-3 py-2 mb-2">
+              <span class="text-orange-500 font-bold text-sm mr-2 flex-shrink-0">฿</span>
+              <input type="number" id="inputOnlineShipPerUnit" value="0" min="0" step="10" placeholder="ใส่ค่าส่งพัสดุต่อเส้น" 
+                class="w-full bg-transparent text-sm font-bold text-orange-900 focus:outline-none">
+              <span class="text-xs text-orange-700 font-medium ml-2 whitespace-nowrap flex-shrink-0">บาท / เส้น</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <span class="text-[11px] text-slate-500">ทางลัด:</span>
+              <button type="button" class="online-ship-preset px-2 py-0.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-medium text-slate-700" data-val="0">ลูกค้าจ่ายเอง (0 บ.)</button>
+              <button type="button" class="online-ship-preset px-2 py-0.5 rounded-lg border border-orange-200 bg-orange-50 hover:bg-orange-100 font-medium text-orange-800" data-val="50">ร้านช่วยออก 50 บ./เส้น</button>
+              <button type="button" class="online-ship-preset px-2 py-0.5 rounded-lg border border-orange-200 bg-orange-50 hover:bg-orange-100 font-medium text-orange-800" data-val="80">ร้านช่วยออก 80 บ./เส้น</button>
+            </div>
+          </div>
+
         </div>
 
-        <!-- CARD 3: กำไรที่อยากได้ & VAT 7% -->
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          
-          <!-- STEP 3: กำไรที่อยากได้ -->
+        <!-- CARD 4: กำไรที่อยากได้ & VAT 7% -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3.5 sm:space-y-4">
+          <!-- กำไรที่อยากได้ -->
           <div>
-            <div class="flex items-center justify-between mb-2">
-              <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
-                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">4</span>
-                กำไรที่อยากได้ (Profit)
+            <div class="flex items-center justify-between mb-1.5">
+              <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+                <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">4</span>
+                กำไรที่ต้องการได้เข้ากระเป๋าจริง (Profit)
               </h2>
               <span class="text-xs text-emerald-600 font-bold" id="displayTotalProfit">รวมกำไร: ฿0</span>
             </div>
 
-            <!-- Profit Type Selector -->
-            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl mb-2.5 text-xs font-semibold">
+            <!-- Profit Mode Switcher -->
+            <div class="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-xl mb-2 text-xs font-semibold">
               <button type="button" class="profit-mode-btn py-1.5 rounded-lg bg-white text-emerald-700 shadow-sm transition" data-mode="per_unit">
                 บาท / เส้น
               </button>
@@ -225,72 +282,58 @@
                 บาทยอดรวม
               </button>
               <button type="button" class="profit-mode-btn py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition" data-mode="percent">
-                % กำไร (Margin)
+                % กำไร
               </button>
             </div>
 
-            <!-- Input Profit Amount -->
-            <div class="relative mb-2">
-              <span class="absolute left-3.5 top-2.5 text-sm font-bold text-emerald-500" id="profitSymbol">฿</span>
-              <input type="number" id="inputProfitValue" value="300" min="0" step="10" placeholder="ใส่กำไรที่ต้องการ เช่น 300" 
-                class="w-full pl-8 pr-20 py-2.5 text-base font-bold text-emerald-700 bg-emerald-50/40 border border-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
-              <span class="absolute right-3.5 top-3 text-xs text-emerald-600 font-medium" id="profitUnitLabel">บาท / เส้น</span>
+            <!-- Safe Profit Input Group -->
+            <div class="flex items-center rounded-xl bg-emerald-50/40 border border-emerald-200 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100 focus-within:bg-white transition px-3 py-2 mb-2">
+              <span class="text-emerald-500 font-bold text-sm mr-2 flex-shrink-0" id="profitSymbol">฿</span>
+              <input type="number" id="inputProfitValue" value="300" min="0" step="10" placeholder="ใส่กำไรที่ต้องการ" 
+                class="w-full bg-transparent text-sm sm:text-base font-bold text-emerald-700 focus:outline-none">
+              <span class="text-xs text-emerald-600 font-medium ml-2 whitespace-nowrap flex-shrink-0" id="profitUnitLabel">บาท / เส้น</span>
             </div>
 
-            <!-- Quick Profit Presets -->
-            <div class="flex flex-wrap items-center gap-1.5" id="profitPresetsContainer">
-              <!-- Rendered by JS based on mode -->
-            </div>
+            <!-- Presets -->
+            <div class="flex flex-wrap items-center gap-1.5" id="profitPresetsContainer"></div>
           </div>
 
-          <!-- STEP 4: VAT 7% -->
-          <div class="pt-3 border-t border-slate-100">
-            <div class="flex items-center justify-between">
-              <div>
-                <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2 font-prompt">
-                  <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">5</span>
-                  ภาษีมูลค่าเพิ่ม VAT 7%
-                </h2>
-                <p class="text-[11px] text-slate-500">เปิดเมื่อลูกค้าต้องการใบกำกับภาษีเต็มรูป</p>
-              </div>
-
-              <!-- Switch Toggle -->
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="toggleVat" class="sr-only peer">
-                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                <span class="ml-2 text-xs font-bold text-slate-700" id="labelVatStatus">ไม่คิด VAT</span>
-              </label>
+          <!-- VAT 7% -->
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5 font-prompt">
+                <i data-lucide="receipt" class="w-4 h-4 text-blue-600"></i>
+                <span>ภาษีมูลค่าเพิ่ม VAT 7%</span>
+              </h3>
+              <p class="text-[11px] text-slate-400">สำหรับลูกค้าขอใบกำกับภาษีเต็มรูป</p>
             </div>
 
-            <!-- VAT Amount Row -->
-            <div id="vatAmountRow" class="hidden mt-2 p-2.5 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center justify-between text-xs">
-              <span class="text-blue-800 font-medium">ยอดภาษี VAT 7%:</span>
-              <span class="font-bold text-blue-700 text-sm" id="displayVatAmount">฿0</span>
-            </div>
+            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <input type="checkbox" id="toggleVat" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <span class="ml-2 text-xs font-bold text-slate-700" id="labelVatStatus">ไม่คิด VAT</span>
+            </label>
+          </div>
+
+          <!-- Live VAT Amount Box -->
+          <div id="vatAmountRow" class="hidden p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
+            <span class="text-blue-800 font-medium">ยอดภาษี VAT 7%:</span>
+            <span class="font-bold text-blue-700 text-sm" id="displayVatAmount">฿0</span>
           </div>
         </div>
 
-        <!-- CARD 4: ค่ารถ (ช่องสุดท้าย ก่อนรวมเป็นราคาขายให้ลูกค้า ตามโจทย์เป๊ะ) -->
-        <div class="bg-amber-50/60 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 shadow-sm space-y-3 relative overflow-hidden">
-          <div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-xl uppercase tracking-wider">
-            ขั้นตอนสุดท้ายก่อนรวมราคาขาย
-          </div>
-
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <h2 class="font-bold text-amber-950 text-sm sm:text-base flex items-center gap-2 font-prompt">
-                <span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">6</span>
-                ค่ารถ / ค่าขนส่งรับยาง (Transport Fee)
-              </h2>
-              <span class="text-xs text-amber-900 font-bold" id="displayTotalShipping">฿0</span>
-            </div>
-            <p class="text-xs text-amber-800/80 mb-2">
-              ค่ารถต่อรอบการเรียก อาจเป็นต่อเส้น ต่ออเดอร์ หรือต่อซับพลายเออร์
-            </p>
+        <!-- CARD 5A: ค่ารถหน้าร้าน (แสดงเฉพาะโหมดหน้าร้าน - ขั้นตอนสุดท้ายก่อนรวมราคาขาย) -->
+        <div id="cardShippingStorefront" class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 shadow-sm space-y-3 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <h2 class="font-bold text-amber-950 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+              <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">5</span>
+              ค่ารถ / ค่าจัดส่งรับยาง (ช่องสุดท้ายก่อนรวมราคาขาย)
+            </h2>
+            <span class="text-xs text-amber-900 font-bold" id="displayTotalShipping">฿100</span>
           </div>
 
           <!-- Transport Mode Selector -->
-          <div class="grid grid-cols-3 gap-1.5 p-1 bg-amber-100/70 rounded-xl text-xs font-semibold">
+          <div class="grid grid-cols-3 gap-1 p-1 bg-amber-100/70 rounded-xl text-xs font-semibold">
             <button type="button" class="shipping-mode-btn py-1.5 rounded-lg bg-white text-amber-900 shadow-sm transition" data-mode="per_order">
               ต่อรอบ / ต่อซับ
             </button>
@@ -302,53 +345,105 @@
             </button>
           </div>
 
-          <!-- Input Shipping Amount -->
-          <div id="shippingInputGroup" class="relative">
-            <span class="absolute left-3.5 top-2.5 text-sm font-bold text-amber-600">฿</span>
-            <input type="number" id="inputShippingValue" value="100" min="0" step="10" placeholder="ใส่ค่ารถ เช่น 100" 
-              class="w-full pl-8 pr-28 py-2.5 text-base font-bold text-amber-900 bg-white border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
-            <span class="absolute right-3.5 top-3 text-xs text-amber-700 font-medium" id="shippingUnitLabel">บาท / รอบเรียก</span>
+          <!-- Safe Shipping Input Group -->
+          <div id="shippingInputGroup" class="flex items-center rounded-xl bg-white border border-amber-300 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-100 transition px-3 py-2">
+            <span class="text-amber-600 font-bold text-sm mr-2 flex-shrink-0">฿</span>
+            <input type="number" id="inputShippingValue" value="100" min="0" step="10" placeholder="ใส่ค่ารถ" 
+              class="w-full bg-transparent text-sm sm:text-base font-bold text-amber-950 focus:outline-none">
+            <span class="text-xs text-amber-700 font-medium ml-2 whitespace-nowrap flex-shrink-0" id="shippingUnitLabel">บาท / รอบเรียก</span>
           </div>
 
-          <!-- Quick Shipping Presets -->
-          <div class="flex flex-wrap items-center gap-1.5 pt-1">
-            <span class="text-[11px] font-medium text-amber-800 mr-1">ทางลัด:</span>
-            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="0">ฟรี (0 บ.)</button>
-            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="50">50 บ.</button>
-            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="100">100 บ.</button>
-            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="150">150 บ.</button>
-            <button type="button" class="ship-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 transition" data-val="200">200 บ.</button>
+          <!-- Quick Presets -->
+          <div class="flex flex-wrap items-center gap-1.5 text-xs">
+            <span class="text-[11px] text-amber-800">ทางลัด:</span>
+            <button type="button" class="ship-preset-btn px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 font-semibold" data-val="0">ฟรี (0 บ.)</button>
+            <button type="button" class="ship-preset-btn px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 font-semibold" data-val="50">50 บ.</button>
+            <button type="button" class="ship-preset-btn px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 font-semibold" data-val="100">100 บ.</button>
+            <button type="button" class="ship-preset-btn px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-900 hover:bg-amber-100 font-semibold" data-val="150">150 บ.</button>
           </div>
 
-          <!-- เฉลี่ยต่อเส้น -->
           <div class="text-[11px] text-amber-900/80 flex items-center justify-between pt-1 border-t border-amber-200/60">
-            <span>การกระจายต้นทุนค่ารถ:</span>
-            <span class="font-bold" id="shippingAveragePerUnit">ตกเฉลี่ย ฿25 / เส้น</span>
+            <span>เฉลี่ยกระจายต่อเส้น:</span>
+            <span class="font-bold" id="shippingAveragePerUnit">ตกเส้นละ ฿25</span>
+          </div>
+        </div>
+
+        <!-- CARD 5B: ค่า GP แพลตฟอร์มออนไลน์ (แสดงเฉพาะโหมดออนไลน์) -->
+        <div id="cardGpOnline" class="hidden bg-orange-50/70 p-4 sm:p-5 rounded-2xl border-2 border-orange-300 shadow-sm space-y-3 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <h2 class="font-bold text-orange-950 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+              <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">5</span>
+              ค่า GP / คอมมิชชั่นแพลตฟอร์มออนไลน์ (%)
+            </h2>
+            <span class="text-xs text-orange-900 font-bold" id="displayGpSummary">หัก ~14%</span>
+          </div>
+
+          <!-- Quick Platform Presets -->
+          <div class="grid grid-cols-3 gap-1.5 text-xs font-bold">
+            <button type="button" class="platform-preset-btn py-2 px-2 rounded-xl border-2 border-orange-500 bg-white text-orange-700 shadow-sm flex items-center justify-center gap-1" data-gp="13.91" data-name="Shopee">
+              <span>🧡 Shopee</span>
+              <span class="text-[10px] font-normal">(14%)</span>
+            </button>
+            <button type="button" class="platform-preset-btn py-2 px-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1" data-gp="12.84" data-name="Lazada">
+              <span>💙 Lazada</span>
+              <span class="text-[10px] font-normal">(13%)</span>
+            </button>
+            <button type="button" class="platform-preset-btn py-2 px-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1" data-gp="14.00" data-name="TikTok Shop">
+              <span>🖤 TikTok</span>
+              <span class="text-[10px] font-normal">(14%)</span>
+            </button>
+          </div>
+
+          <!-- Safe GP % Input Group -->
+          <div class="flex items-center rounded-xl bg-white border border-orange-300 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-100 transition px-3 py-2">
+            <span class="text-orange-500 font-bold text-sm mr-2 flex-shrink-0">%</span>
+            <input type="number" id="inputGpPercent" value="14.0" min="0" max="99" step="0.1" placeholder="เช่น 14.0" 
+              class="w-full bg-transparent text-sm sm:text-base font-bold text-orange-950 focus:outline-none">
+            <span class="text-xs text-orange-700 font-medium ml-2 whitespace-nowrap flex-shrink-0">% GP แพลตฟอร์ม</span>
+          </div>
+
+          <!-- Quick GP % shortcuts -->
+          <div class="flex flex-wrap items-center gap-1.5 text-xs">
+            <span class="text-[11px] text-orange-800">เลือก %:</span>
+            <button type="button" class="gp-rate-preset px-2 py-1 rounded-lg bg-white border border-orange-200 text-orange-900 font-semibold" data-val="10">10%</button>
+            <button type="button" class="gp-rate-preset px-2 py-1 rounded-lg bg-white border border-orange-200 text-orange-900 font-semibold" data-val="12">12%</button>
+            <button type="button" class="gp-rate-preset px-2 py-1 rounded-lg bg-white border border-orange-200 text-orange-900 font-semibold" data-val="13">13%</button>
+            <button type="button" class="gp-rate-preset px-2 py-1 rounded-lg bg-white border border-orange-200 text-orange-900 font-semibold" data-val="14">14%</button>
+            <button type="button" class="gp-rate-preset px-2 py-1 rounded-lg bg-white border border-orange-200 text-orange-900 font-semibold" data-val="15">15%</button>
+            <button type="button" class="gp-rate-preset px-2 py-1 rounded-lg bg-white border border-orange-200 text-orange-900 font-semibold" data-val="18">18%</button>
+          </div>
+
+          <!-- Formula Info Tip -->
+          <div class="p-2.5 rounded-xl bg-orange-100/70 text-[11px] text-orange-950 space-y-0.5">
+            <p class="font-bold flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+              ระบบคำนวณย้อนกลับอัตโนมัติ (ไม่ขาดทุนค่า GP):
+            </p>
+            <p class="text-orange-900/80">ระบบคำนวณราคาตั้งขายหน้าแอป เพื่อให้หลังแพลตฟอร์มหัก GP แล้ว เงินสุทธิที่ได้รับจะครอบคลุมต้นทุนและกำไรตามเป้าหมาย 100%</p>
           </div>
         </div>
 
       </div>
 
-
-      <!-- ================= RIGHT COLUMN: RESULT & CUSTOMER QUOTE (5 COLS) ================= -->
-      <div class="lg:col-span-5 space-y-4">
+      <!-- ================= RIGHT COLUMN: RESULT & QUOTE CARD (5 COLS) ================= -->
+      <div class="lg:col-span-5 space-y-3.5 sm:space-y-4">
         
-        <!-- MAIN QUOTE CARD (STICKY) -->
-        <div class="bg-gradient-to-b from-slate-900 to-slate-800 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-slate-700 sticky top-20">
+        <!-- MAIN RESULT CARD -->
+        <div id="mainResultCard" class="bg-gradient-to-b from-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-3xl shadow-xl border border-slate-700 sticky top-20">
           
           <div class="flex items-center justify-between pb-3 border-b border-slate-700/80">
-            <span class="text-xs font-medium text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
-              <i data-lucide="calculator" class="w-4 h-4 text-emerald-400"></i>
-              ราคาขายสำหรับเสนอลูกค้า
+            <span class="text-xs font-medium text-slate-300 flex items-center gap-1.5 uppercase tracking-wider" id="resultCardTitle">
+              <i data-lucide="store" class="w-4 h-4 text-emerald-400"></i>
+              <span>ราคาขายสำหรับหน้าร้าน</span>
             </span>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              หน้าร้านพร้อมเปลี่ยน
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" id="badgeResultStatus">
+              รวมติดตั้งฟรี
             </span>
           </div>
 
           <!-- GRAND TOTAL (HERO PRICE) -->
-          <div class="my-5 text-center">
-            <p class="text-xs text-slate-400 font-medium mb-1">ยอดรวมทั้งสิ้นที่แจ้งลูกค้า</p>
+          <div class="my-4 sm:my-5 text-center">
+            <p class="text-xs text-slate-400 font-medium mb-1" id="labelGrandTotalTitle">ยอดรวมทั้งสิ้นที่แจ้งลูกค้า</p>
             <div class="flex items-center justify-center gap-1 text-emerald-400 font-prompt">
               <span class="text-2xl font-bold">฿</span>
               <span class="text-4xl sm:text-5xl font-black tracking-tight" id="displayGrandTotal">0</span>
@@ -356,53 +451,61 @@
             
             <!-- Price Per Unit Badge -->
             <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-200 text-xs sm:text-sm font-semibold">
-              <span>เฉลี่ยเส้นละ:</span>
+              <span id="labelPerUnitText">เฉลี่ยเส้นละ:</span>
               <span class="text-emerald-400 font-bold font-prompt text-base" id="displayPricePerUnit">฿0</span>
-              <span class="text-slate-400 text-xs">(ฟรีค่าแรง)</span>
+              <span class="text-slate-400 text-xs" id="subPerUnitText">(ฟรีค่าแรง)</span>
             </div>
           </div>
 
-          <!-- QUICK ROUNDING BUTTONS (สำหรับหน้าร้านบอกราคาง่าย) -->
-          <div class="bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 mb-4">
+          <!-- QUICK ROUNDING BUTTONS -->
+          <div class="bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 mb-3.5">
             <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
-              <span>ปัดเศษราคาขาย (หน้าร้านจำง่าย):</span>
+              <span>ปัดเศษราคาขาย (จำและบอกง่าย):</span>
               <button id="btnResetRounding" class="text-blue-400 hover:underline">ยอดจริง</button>
             </div>
-            <div class="grid grid-cols-3 gap-1.5 text-xs">
-              <button type="button" class="round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="10">ปัดหลัก 10</button>
-              <button type="button" class="round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="50">ปัดหลัก 50</button>
-              <button type="button" class="round-btn py-1 px-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium transition" data-round="100">ปัดหลัก 100</button>
+            <div class="grid grid-cols-4 gap-1 text-xs">
+              <button type="button" class="round-btn py-1 px-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium" data-round="10">หลัก 10</button>
+              <button type="button" class="round-btn py-1 px-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium" data-round="50">หลัก 50</button>
+              <button type="button" class="round-btn py-1 px-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 text-center font-medium" data-round="100">หลัก 100</button>
+              <button type="button" class="round-btn py-1 px-1.5 rounded-lg bg-orange-950/60 hover:bg-orange-900/80 text-orange-300 border border-orange-500/30 text-center font-medium" data-round="9">ลงท้าย 9</button>
             </div>
           </div>
 
-          <!-- COST BREAKDOWN TABLE -->
-          <div class="space-y-2 text-xs border-t border-slate-700/80 pt-3">
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">แจกแจงโครงสร้างราคา:</div>
+          <!-- BREAKDOWN TABLE -->
+          <div class="space-y-1.5 text-xs border-t border-slate-700/80 pt-3">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex justify-between">
+              <span>แจกแจงโครงสร้างราคา:</span>
+              <span id="labelBreakdownMode" class="text-blue-400">โหมดหน้าร้าน</span>
+            </div>
 
+            <!-- ทุนยาง -->
             <div class="flex justify-between items-center text-slate-300">
               <span class="flex items-center gap-1.5">
                 <i data-lucide="disc" class="w-3.5 h-3.5 text-slate-500"></i>
-                1. ทุนค่ายาง (<span id="bdTireQty">4</span> เส้น):
+                1. ทุนยาง (<span id="bdTireQty">4</span> เส้น):
               </span>
               <span class="font-semibold text-slate-200" id="bdTireCost">฿0</span>
             </div>
 
-            <div class="flex justify-between items-center text-slate-300">
-              <span class="flex items-center gap-1.5">
+            <!-- ค่าแรงช่าง (หน้าร้าน) หรือ ค่าส่งพัสดุ (ออนไลน์) -->
+            <div class="flex justify-between items-center text-slate-300" id="bdRowLaborOrOnlineShip">
+              <span class="flex items-center gap-1.5" id="bdLabelLaborOrShip">
                 <i data-lucide="wrench" class="w-3.5 h-3.5 text-amber-500"></i>
                 2. ค่าแรงมือช่าง (<span id="bdLaborRate">50</span> บ./เส้น):
               </span>
-              <span class="font-semibold text-slate-200" id="bdLaborCost">฿0</span>
+              <span class="font-semibold text-slate-200" id="bdCostLaborOrShip">฿0</span>
             </div>
 
+            <!-- กำไรที่อยากได้ -->
             <div class="flex justify-between items-center text-emerald-400">
               <span class="flex items-center gap-1.5">
                 <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
-                3. กำไรที่อยากได้ (<span id="bdProfitMargin">0%</span>):
+                3. กำไรที่ต้องการ (<span id="bdProfitMargin">0%</span>):
               </span>
               <span class="font-bold" id="bdProfitCost">+฿0</span>
             </div>
 
+            <!-- VAT 7% -->
             <div class="flex justify-between items-center text-blue-400" id="bdVatRow">
               <span class="flex items-center gap-1.5">
                 <i data-lucide="percent" class="w-3.5 h-3.5"></i>
@@ -411,29 +514,49 @@
               <span class="font-semibold" id="bdVatCost">+฿0</span>
             </div>
 
-            <div class="flex justify-between items-center text-amber-300 bg-amber-950/40 px-2 py-1 rounded-lg border border-amber-500/20">
+            <!-- ค่ารถหน้าร้าน (เฉพาะหน้าร้าน) -->
+            <div class="flex justify-between items-center text-amber-300 bg-amber-950/40 px-2 py-1 rounded-lg border border-amber-500/20" id="bdStoreShippingRow">
               <span class="flex items-center gap-1.5 font-medium">
                 <i data-lucide="truck" class="w-3.5 h-3.5"></i>
-                5. ค่ารถ (ช่องสุดท้ายก่อนรวม):
+                5. ค่ารถรับยาง (ขั้นตอนสุดท้าย):
               </span>
               <span class="font-bold" id="bdShippingCost">+฿0</span>
             </div>
 
+            <!-- ค่า GP แพลตฟอร์ม (เฉพาะออนไลน์) -->
+            <div class="hidden flex justify-between items-center text-orange-300 bg-orange-950/40 px-2 py-1.5 rounded-lg border border-orange-500/30" id="bdOnlineGpRow">
+              <span class="flex items-center gap-1.5 font-medium">
+                <i data-lucide="percent" class="w-3.5 h-3.5 text-orange-400"></i>
+                โดนแพลตฟอร์มหัก GP (<span id="bdGpPct">14%</span>):
+              </span>
+              <span class="font-bold text-orange-300" id="bdGpAmount">-฿0</span>
+            </div>
+
+            <!-- ยอดสุทธิเข้าบัญชี (เฉพาะออนไลน์) -->
+            <div class="hidden flex justify-between items-center text-xs text-slate-300 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700" id="bdOnlinePayoutRow">
+              <span class="flex items-center gap-1.5 font-medium">
+                <i data-lucide="wallet" class="w-3.5 h-3.5 text-emerald-400"></i>
+                ยอดเงินสุทธิโอนเข้าบัญชีร้าน:
+              </span>
+              <span class="font-bold text-emerald-400" id="bdNetPayout">฿0</span>
+            </div>
+
+            <!-- ราคารวมทั้งสิ้น -->
             <div class="flex justify-between items-center text-sm font-bold text-white pt-2 border-t border-slate-700">
-              <span>รวมราคาขายทั้งสิ้น:</span>
+              <span id="bdGrandTotalLabel">รวมราคาขายทั้งสิ้น:</span>
               <span class="text-emerald-400 font-prompt text-base" id="bdGrandTotal">฿0</span>
             </div>
           </div>
 
           <!-- ACTION BUTTONS -->
-          <div class="mt-5 space-y-2">
-            <!-- Copy LINE Button -->
-            <button id="btnCopyLineQuote" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 transition flex items-center justify-center gap-2">
-              <i data-lucide="message-circle" class="w-5 h-5"></i>
-              <span>คัดลอกข้อความส่ง LINE ลูกค้า</span>
+          <div class="mt-4 sm:mt-5 space-y-2">
+            <!-- Copy Quote Button -->
+            <button id="btnCopyQuote" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 transition flex items-center justify-center gap-2">
+              <i data-lucide="copy" class="w-5 h-5"></i>
+              <span id="btnCopyQuoteText">คัดลอกข้อความเสนอราคา LINE</span>
             </button>
 
-            <!-- Secondary Actions -->
+            <!-- Secondary Action Buttons -->
             <div class="grid grid-cols-2 gap-2">
               <button id="btnPrintQuote" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
                 <i data-lucide="printer" class="w-4 h-4"></i>
@@ -449,39 +572,38 @@
         </div>
 
         <!-- 2 VS 4 TIRES QUICK COMPARISON -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <i data-lucide="git-compare" class="w-4 h-4 text-blue-600"></i>
             เปรียบเทียบด่วน: 2 เส้น VS 4 เส้น
           </h3>
           <div class="grid grid-cols-2 gap-2 text-xs">
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+            <div class="p-2 sm:p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
               <p class="text-slate-500 font-medium">เปลี่ยน 2 เส้น</p>
-              <p class="text-base font-bold text-slate-900 font-prompt mt-0.5" id="cmp2Total">฿0</p>
+              <p class="text-sm sm:text-base font-bold text-slate-900 font-prompt mt-0.5" id="cmp2Total">฿0</p>
               <p class="text-[11px] text-slate-500" id="cmp2PerUnit">เส้นละ ฿0</p>
             </div>
-            <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl">
+            <div class="p-2 sm:p-2.5 bg-blue-50 border border-blue-200 rounded-xl">
               <div class="flex items-center justify-between">
                 <p class="text-blue-800 font-medium">เปลี่ยน 4 เส้น</p>
-                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 rounded">แนะนำ</span>
+                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-1 rounded">แนะนำ</span>
               </div>
-              <p class="text-base font-bold text-blue-900 font-prompt mt-0.5" id="cmp4Total">฿0</p>
+              <p class="text-sm sm:text-base font-bold text-blue-900 font-prompt mt-0.5" id="cmp4Total">฿0</p>
               <p class="text-[11px] text-blue-700 font-medium" id="cmp4PerUnit">เส้นละ ฿0</p>
             </div>
           </div>
         </div>
 
         <!-- RECENT SAVED QUOTES -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
               <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
-              ประวัติการเสนอราคาล่าสุด
+              ประวัติราคาล่าสุด
             </h3>
             <button id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-500">ล้างประวัติ</button>
           </div>
           <div id="recentQuotesList" class="space-y-1.5 text-xs max-h-48 overflow-y-auto">
-            <!-- Rendered by JS -->
             <p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก</p>
           </div>
         </div>
@@ -492,10 +614,32 @@
 
   </main>
 
-  <!-- ================= PRINTABLE AREA (FOR IN-STORE QUOTE SLIP) ================= -->
+  <!-- ================= MOBILE STICKY BOTTOM BAR (จอมือถือ) ================= -->
+  <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-2.5 shadow-2xl flex items-center justify-between text-white no-print">
+    <div class="min-w-0 pr-2">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider" id="mobileStickyModeBadge" style="background: rgba(37,99,235,0.2); color: #60a5fa;">
+          หน้าร้าน
+        </span>
+        <span class="text-[11px] text-slate-400" id="mobileStickyQty">4 เส้น</span>
+      </div>
+      <div class="flex items-baseline gap-1 mt-0.5">
+        <span class="text-lg sm:text-xl font-bold font-prompt text-emerald-400" id="mobileStickyGrandTotal">฿0</span>
+        <span class="text-[11px] text-slate-400" id="mobileStickyPerUnit">(฿0/เส้น)</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <button id="btnMobileCopy" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-900/40">
+        <i data-lucide="copy" class="w-4 h-4"></i>
+        <span>คัดลอก LINE</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= PRINTABLE AREA ================= -->
   <div id="printArea" class="hidden p-8 max-w-lg mx-auto bg-white text-slate-900 border border-slate-300">
     <div class="text-center pb-4 border-b border-slate-300">
-      <h2 class="text-xl font-bold font-prompt">ใบเสนอราคา / รายการเปลี่ยนยาง</h2>
+      <h2 class="text-xl font-bold font-prompt" id="printHeaderTitle">ใบเสนอราคา / รายการเปลี่ยนยาง</h2>
       <p class="text-xs text-slate-500 mt-0.5">ศูนย์บริการยางยนต์และช่วงล่าง</p>
       <p class="text-[11px] text-slate-400" id="printDate"></p>
     </div>
@@ -519,7 +663,7 @@
       </div>
     </div>
 
-    <div class="border-t border-slate-200 pt-3 text-xs text-slate-500 space-y-1">
+    <div class="border-t border-slate-200 pt-3 text-xs text-slate-500 space-y-1" id="printFooterNotes">
       <p>✓ ฟรี ค่าแรงเปลี่ยน ติดตั้ง และถ่วงล้อ</p>
       <p>✓ ฟรี จุ๊บลมยางใหม่ทุกเส้น</p>
       <p>✓ รับประกันคุณภาพยางจากโรงงานผู้ผลิต</p>
@@ -531,46 +675,153 @@
   </div>
 
   <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none no-print">
+  <div id="toast" class="fixed top-4 left-4 right-4 sm:left-auto sm:right-6 z-50 transform transition-all duration-300 -translate-y-20 opacity-0 pointer-events-none no-print">
     <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-xs sm:text-sm border border-slate-700">
       <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 flex-shrink-0" id="toastIcon"></i>
-      <span id="toastMessage" class="truncate">แจ้งเตือน</span>
+      <span id="toastMessage" class="truncate font-medium">แจ้งเตือน</span>
     </div>
   </div>
 
-  <!-- Script for Calculator Engine -->
+  <!-- Script for Dual Mode Engine -->
   <script>
     // State
     const calcState = {
+      appMode: 'storefront', // 'storefront' or 'online'
       tireName: '',
       qty: 4,
       tireCostPerUnit: 0,
-      laborPerUnit: 50, // default 50 THB per tire
+      
+      // Storefront specifics
+      laborPerUnit: 50,
       profitMode: 'per_unit', // 'per_unit', 'total', 'percent'
       profitVal: 300,
       includeVat: false,
       shippingMode: 'per_order', // 'per_order', 'per_unit', 'free'
       shippingVal: 100,
+
+      // Online specifics
+      onlineShipPerUnit: 0,
+      gpPercent: 14.0,
+      gpPlatformName: 'Shopee',
+      
       roundedTotal: null,
       savedHistory: JSON.parse(localStorage.getItem('tire_quote_history') || '[]'),
       memoryMappings: []
     };
 
-    // Initialize Lucide Icons
     function updateIcons() {
       if (window.lucide) lucide.createIcons();
     }
 
-    // Show Toast
     function showToast(msg) {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toastMessage');
       if (!toast || !toastMsg) return;
       toastMsg.innerText = msg;
-      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.remove('-translate-y-20', 'opacity-0');
       setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.add('-translate-y-20', 'opacity-0');
       }, 2500);
+    }
+
+    // Switch App Mode (Storefront VS Online)
+    function setAppMode(mode) {
+      calcState.appMode = mode;
+      calcState.roundedTotal = null;
+
+      const btnStore = document.getElementById('btnModeStore');
+      const btnOnline = document.getElementById('btnModeOnline');
+
+      const secLabor = document.getElementById('sectionLaborStorefront');
+      const secShipOnline = document.getElementById('sectionShippingOnline');
+      const cardShipStore = document.getElementById('cardShippingStorefront');
+      const cardGpOnline = document.getElementById('cardGpOnline');
+
+      const bdRowLaborOrOnlineShip = document.getElementById('bdRowLaborOrOnlineShip');
+      const bdLabelLaborOrShip = document.getElementById('bdLabelLaborOrShip');
+      const bdStoreShippingRow = document.getElementById('bdStoreShippingRow');
+      const bdOnlineGpRow = document.getElementById('bdOnlineGpRow');
+      const bdOnlinePayoutRow = document.getElementById('bdOnlinePayoutRow');
+
+      const resultCardTitle = document.getElementById('resultCardTitle');
+      const badgeResultStatus = document.getElementById('badgeResultStatus');
+      const labelGrandTotalTitle = document.getElementById('labelGrandTotalTitle');
+      const labelPerUnitText = document.getElementById('labelPerUnitText');
+      const subPerUnitText = document.getElementById('subPerUnitText');
+      const labelBreakdownMode = document.getElementById('labelBreakdownMode');
+      const bdGrandTotalLabel = document.getElementById('bdGrandTotalLabel');
+      const btnCopyQuoteText = document.getElementById('btnCopyQuoteText');
+      const mobileStickyModeBadge = document.getElementById('mobileStickyModeBadge');
+
+      if (mode === 'storefront') {
+        // UI Tabs
+        btnStore.className = 'app-mode-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-blue-600 text-white shadow-md shadow-blue-200';
+        btnOnline.className = 'app-mode-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-slate-100 text-slate-600 hover:text-slate-900';
+
+        // Sections visibility
+        secLabor.classList.remove('hidden');
+        secShipOnline.classList.add('hidden');
+        cardShipStore.classList.remove('hidden');
+        cardGpOnline.classList.add('hidden');
+
+        // Breakdown rows
+        bdRowLaborOrOnlineShip.classList.remove('hidden');
+        bdLabelLaborOrShip.innerHTML = '<i data-lucide="wrench" class="w-3.5 h-3.5 text-amber-500"></i> 2. ค่าแรงช่าง (' + calcState.laborPerUnit + ' บ./เส้น):';
+        bdStoreShippingRow.classList.remove('hidden');
+        bdOnlineGpRow.classList.add('hidden');
+        bdOnlinePayoutRow.classList.add('hidden');
+
+        // Result Card Titles
+        resultCardTitle.innerHTML = '<i data-lucide="store" class="w-4 h-4 text-emerald-400"></i> <span>ราคาขายสำหรับหน้าร้าน</span>';
+        badgeResultStatus.innerText = 'รวมติดตั้งฟรี';
+        badgeResultStatus.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        labelGrandTotalTitle.innerText = 'ยอดรวมทั้งสิ้นที่แจ้งลูกค้า';
+        labelPerUnitText.innerText = 'เฉลี่ยเส้นละ:';
+        subPerUnitText.innerText = '(ฟรีค่าแรง)';
+        labelBreakdownMode.innerText = 'โหมดหน้าร้าน';
+        labelBreakdownMode.className = 'text-blue-400';
+        bdGrandTotalLabel.innerText = 'รวมราคาขายทั้งสิ้น:';
+        btnCopyQuoteText.innerText = 'คัดลอกข้อความเสนอราคา LINE';
+
+        // Mobile sticky
+        mobileStickyModeBadge.innerText = 'หน้าร้าน';
+        mobileStickyModeBadge.style = 'background: rgba(37,99,235,0.2); color: #60a5fa;';
+      } else {
+        // Online Mode
+        btnStore.className = 'app-mode-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-slate-100 text-slate-600 hover:text-slate-900';
+        btnOnline.className = 'app-mode-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-orange-500 text-white shadow-md shadow-orange-200';
+
+        // Sections visibility
+        secLabor.classList.add('hidden');
+        secShipOnline.classList.remove('hidden');
+        cardShipStore.classList.add('hidden');
+        cardGpOnline.classList.remove('hidden');
+
+        // Breakdown rows
+        bdLabelLaborOrShip.innerHTML = '<i data-lucide="package" class="w-3.5 h-3.5 text-orange-400"></i> 2. ค่าส่งที่ร้านออก:';
+        bdStoreShippingRow.classList.add('hidden');
+        bdOnlineGpRow.classList.remove('hidden');
+        bdOnlinePayoutRow.classList.remove('hidden');
+
+        // Result Card Titles
+        resultCardTitle.innerHTML = '<i data-lucide="shopping-bag" class="w-4 h-4 text-orange-400"></i> <span>ราคาตั้งขายบนแพลตฟอร์ม (' + calcState.gpPlatformName + ')</span>';
+        badgeResultStatus.innerText = 'หัก GP ' + calcState.gpPercent + '%';
+        badgeResultStatus.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30';
+        labelGrandTotalTitle.innerText = 'ราคาที่ต้องตั้งขายบนแอป (Listing Price)';
+        labelPerUnitText.innerText = 'ตั้งราคาเส้นละ:';
+        subPerUnitText.innerText = '(ก่อนหัก GP)';
+        labelBreakdownMode.innerText = 'โหมดขายออนไลน์';
+        labelBreakdownMode.className = 'text-orange-400';
+        bdGrandTotalLabel.innerText = 'ราคาตั้งขายบนแอป:';
+        btnCopyQuoteText.innerText = 'คัดลอกราคาขายออนไลน์';
+
+        // Mobile sticky
+        mobileStickyModeBadge.innerText = 'ออนไลน์ ' + calcState.gpPercent + '%';
+        mobileStickyModeBadge.style = 'background: rgba(249,115,22,0.2); color: #fb923c;';
+      }
+
+      updateIcons();
+      recalculate();
     }
 
     // Profit presets based on mode
@@ -585,7 +836,7 @@
         container.innerHTML = `
           <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
           ${[200, 300, 400, 500, 600].map(p => `
-            <button type="button" class="profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
+            <button type="button" class="profit-preset-btn px-2 py-0.5 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
           `).join('')}
         `;
       } else if (calcState.profitMode === 'total') {
@@ -594,7 +845,7 @@
         container.innerHTML = `
           <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
           ${[800, 1000, 1200, 1500, 2000].map(p => `
-            <button type="button" class="profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
+            <button type="button" class="profit-preset-btn px-2 py-0.5 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p} บ.</button>
           `).join('')}
         `;
       } else {
@@ -603,7 +854,7 @@
         container.innerHTML = `
           <span class="text-[11px] font-medium text-slate-500 mr-1">ทางลัด:</span>
           ${[10, 15, 20, 25, 30].map(p => `
-            <button type="button" class="profit-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p}%</button>
+            <button type="button" class="profit-preset-btn px-2 py-0.5 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" data-val="${p}">+${p}%</button>
           `).join('')}
         `;
       }
@@ -619,20 +870,26 @@
       });
     }
 
-    // Core Calculation Logic
+    // Core Calculation Logic (Dual Mode)
     function recalculate() {
+      const isStorefront = calcState.appMode === 'storefront';
       const qty = calcState.qty;
       const tireCostUnit = parseFloat(document.getElementById('inputTireCostPerUnit').value) || 0;
-      const laborUnit = parseFloat(document.getElementById('inputLaborPerUnit').value) || 0;
+      const laborUnit = isStorefront ? (parseFloat(document.getElementById('inputLaborPerUnit').value) || 0) : 0;
       const profitVal = parseFloat(document.getElementById('inputProfitValue').value) || 0;
-      const shippingVal = parseFloat(document.getElementById('inputShippingValue')?.value) || 0;
       const includeVat = calcState.includeVat;
 
       // 1. Total Tire Cost
       const totalTireCost = tireCostUnit * qty;
 
-      // 2. Total Labor Cost (Default 50 THB/tire)
-      const totalLaborCost = laborUnit * qty;
+      // 2. Labor or Online Shipping absorbed by shop
+      let laborOrShipCost = 0;
+      if (isStorefront) {
+        laborOrShipCost = laborUnit * qty;
+      } else {
+        const onlineShipUnit = parseFloat(document.getElementById('inputOnlineShipPerUnit').value) || 0;
+        laborOrShipCost = onlineShipUnit * qty;
+      }
 
       // 3. Profit Calculation
       let totalProfit = 0;
@@ -641,12 +898,12 @@
       } else if (calcState.profitMode === 'total') {
         totalProfit = profitVal;
       } else if (calcState.profitMode === 'percent') {
-        const baseCost = totalTireCost + totalLaborCost;
+        const baseCost = totalTireCost + laborOrShipCost;
         totalProfit = Math.round(baseCost * (profitVal / 100));
       }
 
-      // Base Subtotal before VAT & Shipping
-      const baseSubtotal = totalTireCost + totalLaborCost + totalProfit;
+      // Base Subtotal before VAT & Shipping / GP
+      const baseSubtotal = totalTireCost + laborOrShipCost + totalProfit;
 
       // 4. VAT 7%
       let vatAmount = 0;
@@ -654,44 +911,80 @@
         vatAmount = Math.round(baseSubtotal * 0.07);
       }
 
-      // 5. Shipping / Transport Fee (LAST STEP BEFORE TOTAL AS SPECIFIED)
-      let totalShipping = 0;
-      if (calcState.shippingMode === 'per_order') {
-        totalShipping = shippingVal;
-      } else if (calcState.shippingMode === 'per_unit') {
-        totalShipping = shippingVal * qty;
+      let grandTotal = 0;
+      let effectiveGrandTotal = 0;
+      let pricePerUnit = 0;
+      let profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
+      let gpDeduction = 0;
+      let netPayout = 0;
+
+      if (isStorefront) {
+        // ================= MODE 1: STOREFRONT =================
+        // 5. Storefront Shipping / ค่ารถรับยาง (ขั้นตอนสุดท้าย)
+        const shippingVal = parseFloat(document.getElementById('inputShippingValue')?.value) || 0;
+        let totalShipping = 0;
+        if (calcState.shippingMode === 'per_order') {
+          totalShipping = shippingVal;
+        } else if (calcState.shippingMode === 'per_unit') {
+          totalShipping = shippingVal * qty;
+        } else {
+          totalShipping = 0;
+        }
+
+        grandTotal = baseSubtotal + vatAmount + totalShipping;
+        effectiveGrandTotal = calcState.roundedTotal !== null ? calcState.roundedTotal : grandTotal;
+        pricePerUnit = qty > 0 ? Math.round(effectiveGrandTotal / qty) : 0;
+
+        const shippingPerUnit = qty > 0 ? (totalShipping / qty).toFixed(1) : 0;
+        document.getElementById('displayTotalShipping').innerText = `฿${totalShipping.toLocaleString()}`;
+        document.getElementById('shippingAveragePerUnit').innerText = `ตกเส้นละ ฿${shippingPerUnit}`;
+        document.getElementById('bdShippingCost').innerText = `+฿${totalShipping.toLocaleString()}`;
+        document.getElementById('bdLaborRate').innerText = laborUnit;
+        document.getElementById('bdCostLaborOrShip').innerText = `฿${laborOrShipCost.toLocaleString()}`;
       } else {
-        totalShipping = 0;
+        // ================= MODE 2: ONLINE PLATFORMS WITH GP% =================
+        // Target required net payout to cover costs + profit + vat:
+        const targetNetRequired = baseSubtotal + vatAmount;
+        const gpPercent = parseFloat(document.getElementById('inputGpPercent').value) || 0;
+        const gpRate = Math.min(Math.max(gpPercent / 100, 0), 0.95);
+
+        // Real Payout Reverse Formula: ListingPrice = TargetRequired / (1 - GP%)
+        grandTotal = gpRate < 1 ? Math.round(targetNetRequired / (1 - gpRate)) : targetNetRequired;
+        effectiveGrandTotal = calcState.roundedTotal !== null ? calcState.roundedTotal : grandTotal;
+        pricePerUnit = qty > 0 ? Math.round(effectiveGrandTotal / qty) : 0;
+
+        // GP deduction amount
+        gpDeduction = Math.round(effectiveGrandTotal * gpRate);
+        netPayout = effectiveGrandTotal - gpDeduction;
+
+        document.getElementById('displayOnlineTotalShip').innerText = `฿${laborOrShipCost.toLocaleString()}`;
+        document.getElementById('displayGpSummary').innerText = `หัก ${gpPercent}% (~฿${gpDeduction.toLocaleString()})`;
+        document.getElementById('bdGpPct').innerText = `${gpPercent}%`;
+        document.getElementById('bdGpAmount').innerText = `-฿${gpDeduction.toLocaleString()}`;
+        document.getElementById('bdNetPayout').innerText = `฿${netPayout.toLocaleString()}`;
+        document.getElementById('bdCostLaborOrShip').innerText = `฿${laborOrShipCost.toLocaleString()}`;
       }
 
-      // Grand Total
-      const exactGrandTotal = baseSubtotal + vatAmount + totalShipping;
-      const effectiveGrandTotal = calcState.roundedTotal !== null ? calcState.roundedTotal : exactGrandTotal;
-      const pricePerUnit = qty > 0 ? Math.round(effectiveGrandTotal / qty) : 0;
-      const profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
       const profitMarginPct = effectiveGrandTotal > 0 ? Math.round((totalProfit / effectiveGrandTotal) * 100) : 0;
 
-      // Shipping average per unit
-      const shippingPerUnit = qty > 0 ? (totalShipping / qty).toFixed(1) : 0;
-
-      // Update UI Elements
+      // Update Shared UI Elements
       document.getElementById('displayTotalTireCost').innerText = `฿${totalTireCost.toLocaleString()}`;
-      document.getElementById('displayTotalLaborCost').innerText = `฿${totalLaborCost.toLocaleString()}`;
+      document.getElementById('displayTotalLaborCost').innerText = `฿${laborOrShipCost.toLocaleString()}`;
       document.getElementById('displayTotalProfit').innerText = `รวมกำไร: ฿${totalProfit.toLocaleString()}`;
-      document.getElementById('displayTotalShipping').innerText = `฿${totalShipping.toLocaleString()}`;
-      document.getElementById('shippingAveragePerUnit').innerText = `ตกเฉลี่ย ฿${shippingPerUnit} / เส้น`;
 
-      // Vat UI
-      const vatRow = document.getElementById('vatAmountRow');
+      // VAT UI
       const bdVatRow = document.getElementById('bdVatRow');
+      const vatAmountRow = document.getElementById('vatAmountRow');
+      const displayVatAmount = document.getElementById('displayVatAmount');
       if (includeVat) {
-        vatRow?.classList.remove('hidden');
         bdVatRow?.classList.remove('hidden');
-        document.getElementById('displayVatAmount').innerText = `฿${vatAmount.toLocaleString()}`;
+        vatAmountRow?.classList.remove('hidden');
+        if (displayVatAmount) displayVatAmount.innerText = `฿${vatAmount.toLocaleString()}`;
         document.getElementById('bdVatCost').innerText = `+฿${vatAmount.toLocaleString()}`;
       } else {
-        vatRow?.classList.add('hidden');
         bdVatRow?.classList.add('hidden');
+        vatAmountRow?.classList.add('hidden');
+        if (displayVatAmount) displayVatAmount.innerText = `฿0`;
         document.getElementById('bdVatCost').innerText = `฿0`;
       }
 
@@ -702,19 +995,21 @@
       // Breakdown Table
       document.getElementById('bdTireQty').innerText = qty;
       document.getElementById('bdTireCost').innerText = `฿${totalTireCost.toLocaleString()}`;
-      document.getElementById('bdLaborRate').innerText = laborUnit;
-      document.getElementById('bdLaborCost').innerText = `฿${totalLaborCost.toLocaleString()}`;
       document.getElementById('bdProfitCost').innerText = `+฿${totalProfit.toLocaleString()}`;
       document.getElementById('bdProfitMargin').innerText = `${profitMarginPct}% (${profitPerUnit.toLocaleString()} บ./เส้น)`;
-      document.getElementById('bdShippingCost').innerText = `+฿${totalShipping.toLocaleString()}`;
       document.getElementById('bdGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
 
-      // Quick 2 vs 4 Comparison
-      updateComparison(tireCostUnit, laborUnit, profitVal, shippingVal, includeVat);
+      // Mobile Sticky Summary Bar Update
+      document.getElementById('mobileStickyGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
+      document.getElementById('mobileStickyPerUnit').innerText = `(฿${pricePerUnit.toLocaleString()}/เส้น)`;
+      document.getElementById('mobileStickyQty').innerText = `${qty} เส้น`;
+
+      // 2 vs 4 Comparison
+      updateComparison(tireCostUnit, isStorefront, includeVat);
     }
 
     // Helper: 2 vs 4 comparison calculation
-    function updateComparison(tireCostUnit, laborUnit, profitVal, shippingVal, includeVat) {
+    function updateComparison(tireCostUnit, isStorefront, includeVat) {
       if (tireCostUnit <= 0) {
         document.getElementById('cmp2Total').innerText = '฿0';
         document.getElementById('cmp2PerUnit').innerText = 'เส้นละ ฿0';
@@ -723,22 +1018,35 @@
         return;
       }
 
+      const laborUnit = isStorefront ? (parseFloat(document.getElementById('inputLaborPerUnit').value) || 0) : 0;
+      const profitVal = parseFloat(document.getElementById('inputProfitValue').value) || 0;
+      const shippingVal = isStorefront ? (parseFloat(document.getElementById('inputShippingValue')?.value) || 0) : 0;
+      const onlineShipUnit = !isStorefront ? (parseFloat(document.getElementById('inputOnlineShipPerUnit')?.value) || 0) : 0;
+      const gpRate = !isStorefront ? (parseFloat(document.getElementById('inputGpPercent')?.value) || 0) / 100 : 0;
+
       [2, 4].forEach(testQty => {
         const cost = tireCostUnit * testQty;
-        const labor = laborUnit * testQty;
+        const extraLaborOrShip = isStorefront ? (laborUnit * testQty) : (onlineShipUnit * testQty);
+        
         let profit = 0;
         if (calcState.profitMode === 'per_unit') profit = profitVal * testQty;
         else if (calcState.profitMode === 'total') profit = Math.round(profitVal * (testQty / calcState.qty));
-        else profit = Math.round((cost + labor) * (profitVal / 100));
+        else profit = Math.round((cost + extraLaborOrShip) * (profitVal / 100));
 
         let vat = 0;
-        if (includeVat) vat = Math.round((cost + labor + profit) * 0.07);
+        if (includeVat) vat = Math.round((cost + extraLaborOrShip + profit) * 0.07);
 
-        let ship = 0;
-        if (calcState.shippingMode === 'per_order') ship = shippingVal;
-        else if (calcState.shippingMode === 'per_unit') ship = shippingVal * testQty;
+        let total = 0;
+        if (isStorefront) {
+          let ship = 0;
+          if (calcState.shippingMode === 'per_order') ship = shippingVal;
+          else if (calcState.shippingMode === 'per_unit') ship = shippingVal * testQty;
+          total = cost + extraLaborOrShip + profit + vat + ship;
+        } else {
+          const targetRequired = cost + extraLaborOrShip + profit + vat;
+          total = gpRate < 1 ? Math.round(targetRequired / (1 - gpRate)) : targetRequired;
+        }
 
-        const total = cost + labor + profit + vat + ship;
         const perUnit = Math.round(total / testQty);
 
         if (testQty === 2) {
@@ -776,7 +1084,7 @@
       recalculate();
     }
 
-    // Set Shipping Mode
+    // Set Storefront Shipping Mode
     function setShippingMode(mode) {
       calcState.shippingMode = mode;
       calcState.roundedTotal = null;
@@ -803,26 +1111,37 @@
       recalculate();
     }
 
-    // Rounding
+    // Apply Rounding
     function applyRounding(step) {
       const grandTotalText = document.getElementById('bdGrandTotal').innerText.replace(/[^0-9]/g, '');
       const exact = parseInt(grandTotalText) || 0;
       if (exact <= 0) return;
-      const rounded = Math.ceil(exact / step) * step;
+      
+      let rounded = exact;
+      if (step === 9) {
+        // e.g. 2145 -> 2149 or 2190
+        rounded = Math.ceil(exact / 10) * 10 - 1;
+        if (rounded < exact) rounded += 10;
+      } else {
+        rounded = Math.ceil(exact / step) * step;
+      }
+
       calcState.roundedTotal = rounded;
       recalculate();
-      showToast(`ปัดราคาขายเป็น ฿${rounded.toLocaleString()} (ปัดหลัก ${step})`);
+      showToast(`ปัดราคาขายเป็น ฿${rounded.toLocaleString()}`);
     }
 
-    // Copy LINE Quotation text
-    function copyLineQuote() {
+    // Copy Quote Message
+    function copyQuoteMessage() {
+      const isStorefront = calcState.appMode === 'storefront';
       const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
       const qty = calcState.qty;
       const grandTotal = document.getElementById('displayGrandTotal').innerText;
       const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
-      const laborRate = document.getElementById('inputLaborPerUnit').value;
 
-      const message = 
+      let message = '';
+      if (isStorefront) {
+        message = 
 `🚗 ข้อเสนอราคาพิเศษ (หน้าร้าน)
 ━━━━━━━━━━━━━━━━━━━━
 📦 สินค้า: ${tireName}
@@ -832,22 +1151,37 @@
 
 ✨ บริการพร้อมในชุด:
   • ฟรี ค่าแรงติดตั้ง ถอด-ใส่-ถ่วงล้อ
-  • ฟรี เปลี่ยนจุ๊บลมใหม่
+  • ฟรี เปลี่ยนจุ๊บลมใหม่ทุกเส้น
   • ฟรี ตรวจเช็กระบบเบรกและช่วงล่างเบื้องต้น
 
 📞 สนใจล็อกราคา หรือนัดคิวติดตั้งแจ้งได้เลยครับผม!`;
+      } else {
+        const platform = calcState.gpPlatformName || 'ออนไลน์';
+        const gp = document.getElementById('inputGpPercent').value;
+        message = 
+`🛒 ข้อมูลตั้งราคาขายออนไลน์ (${platform})
+━━━━━━━━━━━━━━━━━━━━
+📦 สินค้า: ${tireName} (${qty} เส้น)
+🏷️ ราคาตั้งขายหน้าแอป: ฿${grandTotal} บาท
+💰 เฉลี่ยตั้งขายเส้นละ: ${pricePerUnit} บาท
+📊 หักค่าธรรมเนียม GP: ${gp}%
+📥 ยอดเงินสุทธิร้านรับ: ${document.getElementById('bdNetPayout').innerText} บาท
+💵 กำไรสุทธิเข้ากระเป๋า: ${document.getElementById('bdProfitCost').innerText} บาท`;
+      }
 
-      navigator.clipboard.writeText(message).then(() => {
-        showToast('คัดลอกข้อความเสนอราคาสำหรับส่ง LINE เรียบร้อยแล้ว!');
-      }).catch(() => {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(message).then(() => {
+          showToast('คัดลอกข้อความเรียบร้อยแล้ว!');
+        });
+      } else {
         const textarea = document.createElement('textarea');
         textarea.value = message;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showToast('คัดลอกข้อความสำหรับส่ง LINE เรียบร้อยแล้ว!');
-      });
+        showToast('คัดลอกข้อความเรียบร้อยแล้ว!');
+      }
     }
 
     // Save Quote History
@@ -858,14 +1192,14 @@
 
       const quote = {
         id: Date.now(),
+        mode: calcState.appMode,
         date: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
         tireName,
         qty: calcState.qty,
         grandTotal,
         pricePerUnit,
         costUnit: document.getElementById('inputTireCostPerUnit').value,
-        profitVal: document.getElementById('inputProfitValue').value,
-        shippingVal: document.getElementById('inputShippingValue').value
+        profitVal: document.getElementById('inputProfitValue').value
       };
 
       calcState.savedHistory.unshift(quote);
@@ -887,8 +1221,13 @@
       container.innerHTML = calcState.savedHistory.map(item => `
         <div class="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer transition" onclick="loadHistoryItem(${item.id})">
           <div class="min-w-0 pr-2">
-            <p class="font-bold text-slate-800 truncate">${item.tireName}</p>
-            <p class="text-[10px] text-slate-500">${item.qty} เส้น • เส้นละ ${item.pricePerUnit} (${item.date})</p>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[9px] px-1 py-0.2 rounded font-bold uppercase ${item.mode === 'online' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}">
+                ${item.mode === 'online' ? 'ออนไลน์' : 'หน้าร้าน'}
+              </span>
+              <p class="font-bold text-slate-800 truncate">${item.tireName}</p>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-0.5">${item.qty} เส้น • เส้นละ ${item.pricePerUnit} (${item.date})</p>
           </div>
           <div class="text-right flex-shrink-0">
             <span class="font-bold text-emerald-600 font-prompt">฿${item.grandTotal}</span>
@@ -897,25 +1236,28 @@
       `).join('');
     }
 
-    // Load History Item
     window.loadHistoryItem = function(id) {
       const item = calcState.savedHistory.find(h => h.id === id);
       if (!item) return;
+      if (item.mode && item.mode !== calcState.appMode) {
+        setAppMode(item.mode);
+      }
       document.getElementById('inputTireName').value = item.tireName;
       document.getElementById('inputTireCostPerUnit').value = item.costUnit;
       document.getElementById('inputProfitValue').value = item.profitVal;
-      if (item.shippingVal) document.getElementById('inputShippingValue').value = item.shippingVal;
       setQty(item.qty);
       showToast(`โหลดข้อมูล: ${item.tireName}`);
     };
 
     // Print Quotation
     function printQuote() {
+      const isStorefront = calcState.appMode === 'storefront';
       const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
       const qty = calcState.qty;
       const grandTotal = document.getElementById('displayGrandTotal').innerText;
       const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
 
+      document.getElementById('printHeaderTitle').innerText = isStorefront ? 'ใบเสนอราคา / รายการเปลี่ยนยางหน้าร้าน' : 'ใบสรุปโครงสร้างราคาขายออนไลน์';
       document.getElementById('printTireName').innerText = tireName;
       document.getElementById('printQty').innerText = `${qty} เส้น`;
       document.getElementById('printPricePerUnit').innerText = pricePerUnit;
@@ -940,7 +1282,7 @@
           renderQuickLookup();
         }
       } catch (err) {
-        console.log('No backend mappings available or running offline');
+        console.log('Running offline or standalone');
       }
     }
 
@@ -975,12 +1317,16 @@
       showToast(`ดึงทุน ${m.pattern}: ฿${m.pricePerUnit} เรียบร้อย`);
     };
 
-    // Event Listeners Setup
+    // Event Listeners
     document.addEventListener('DOMContentLoaded', () => {
       updateIcons();
       renderProfitPresets();
       renderHistoryList();
       loadMappings();
+
+      // Mode Switchers
+      document.getElementById('btnModeStore')?.addEventListener('click', () => setAppMode('storefront'));
+      document.getElementById('btnModeOnline')?.addEventListener('click', () => setAppMode('online'));
 
       // Qty Buttons
       document.querySelectorAll('.qty-btn').forEach(btn => {
@@ -991,26 +1337,65 @@
         if (e.target.value) setQty(e.target.value);
       });
 
-      // Inputs real-time change
-      ['inputTireCostPerUnit', 'inputLaborPerUnit', 'inputProfitValue', 'inputShippingValue'].forEach(id => {
+      // Inputs real-time recalculation
+      ['inputTireCostPerUnit', 'inputLaborPerUnit', 'inputProfitValue', 'inputShippingValue', 'inputOnlineShipPerUnit', 'inputGpPercent'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () => {
           calcState.roundedTotal = null;
           recalculate();
         });
       });
 
-      // Reset Labor to 50
+      // Storefront Labor Buttons
       document.getElementById('btnResetLabor50')?.addEventListener('click', () => {
         document.getElementById('inputLaborPerUnit').value = 50;
         recalculate();
-        showToast('ตั้งค่าแรงเป็นมาตรฐาน 50 บ./เส้น');
+        showToast('ตั้งค่าแรงช่างเป็น 50 บ./เส้น');
       });
 
-      // Labor Free
       document.getElementById('btnLaborFree')?.addEventListener('click', () => {
         document.getElementById('inputLaborPerUnit').value = 0;
         recalculate();
-        showToast('ตั้งค่าแรงเป็น ฟรี (0 บ.)');
+        showToast('ตั้งค่าแรงช่างเป็น ฟรี (0 บ.)');
+      });
+
+      // Online Shipping Presets
+      document.querySelectorAll('.online-ship-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.val);
+          document.getElementById('inputOnlineShipPerUnit').value = val;
+          calcState.roundedTotal = null;
+          recalculate();
+        });
+      });
+
+      // Platform GP Presets
+      document.querySelectorAll('.platform-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const gp = parseFloat(btn.dataset.gp);
+          const name = btn.dataset.name;
+          calcState.gpPercent = gp;
+          calcState.gpPlatformName = name;
+          document.getElementById('inputGpPercent').value = gp;
+
+          document.querySelectorAll('.platform-preset-btn').forEach(b => {
+            b.className = 'platform-preset-btn py-2 px-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1';
+          });
+          btn.className = 'platform-preset-btn py-2 px-2 rounded-xl border-2 border-orange-500 bg-white text-orange-700 shadow-sm flex items-center justify-center gap-1';
+
+          setAppMode('online');
+          showToast(`เลือกแพลตฟอร์ม ${name} (GP ~${gp}%)`);
+        });
+      });
+
+      // GP Rate % Shortcuts
+      document.querySelectorAll('.gp-rate-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.val);
+          document.getElementById('inputGpPercent').value = val;
+          calcState.gpPercent = val;
+          calcState.roundedTotal = null;
+          recalculate();
+        });
       });
 
       // Profit Mode Buttons
@@ -1037,12 +1422,12 @@
         });
       });
 
-      // Shipping Mode Buttons
+      // Shipping Mode Buttons (Storefront)
       document.querySelectorAll('.shipping-mode-btn').forEach(btn => {
         btn.addEventListener('click', () => setShippingMode(btn.dataset.mode));
       });
 
-      // Shipping Preset Buttons
+      // Shipping Presets (Storefront)
       document.querySelectorAll('.ship-preset-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const val = parseFloat(btn.dataset.val);
@@ -1073,8 +1458,9 @@
         showToast('กลับสู่ยอดคำนวณจริงตามสูตร');
       });
 
-      // Copy LINE Quote
-      document.getElementById('btnCopyLineQuote')?.addEventListener('click', copyLineQuote);
+      // Copy Quote
+      document.getElementById('btnCopyQuote')?.addEventListener('click', copyQuoteMessage);
+      document.getElementById('btnMobileCopy')?.addEventListener('click', copyQuoteMessage);
 
       // Print Quote
       document.getElementById('btnPrintQuote')?.addEventListener('click', printQuote);
@@ -1106,11 +1492,14 @@
         document.getElementById('inputLaborPerUnit').value = 50;
         document.getElementById('inputProfitValue').value = 300;
         document.getElementById('inputShippingValue').value = 100;
+        document.getElementById('inputOnlineShipPerUnit').value = 0;
+        document.getElementById('inputGpPercent').value = 14.0;
         toggleVat.checked = false;
         calcState.includeVat = false;
         document.getElementById('labelVatStatus').innerText = 'ไม่คิด VAT';
         setQty(4);
         setShippingMode('per_order');
+        setAppMode('storefront');
         calcState.roundedTotal = null;
         recalculate();
         showToast('ล้างข้อมูลเริ่มต้นใหม่');
