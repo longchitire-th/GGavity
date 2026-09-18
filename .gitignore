@@ -18,6 +18,8 @@ Thumbs.db
 
 # Large promo images
 savetyre_promo.png
+test_report.html
+scratch/
 
 # Debug / test scripts
 debug_*.js
