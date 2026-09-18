@@ -204,15 +204,15 @@
           
           <!-- SECTION 3A: ค่าแรงช่าง (แสดงเฉพาะโหมดหน้าร้าน) -->
           <div id="sectionLaborStorefront">
-            <div class="flex items-center justify-between mb-1.5">
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 mb-1.5">
               <div class="flex items-center gap-1.5">
-                <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+                <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5 font-prompt">
                   <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
                   ค่าแรงมือช่างหน้าร้าน
                 </h2>
-                <span class="px-2 py-0.2 text-[10px] sm:text-[11px] font-bold rounded bg-amber-100 text-amber-800">เส้นละ 50 บาท</span>
+                <span class="px-2 py-0.5 text-[10px] sm:text-[11px] font-bold rounded bg-amber-100 text-amber-800 whitespace-nowrap">50 บ./เส้น</span>
               </div>
-              <span class="text-xs text-slate-500">รวมค่าแรง: <span id="displayTotalLaborCost" class="font-bold text-slate-800">฿200</span></span>
+              <span class="text-xs text-slate-500 whitespace-nowrap ml-auto sm:ml-0">รวมค่าแรง: <span id="displayTotalLaborCost" class="font-bold text-slate-800">฿200</span></span>
             </div>
 
             <div class="flex items-center gap-2">
@@ -263,8 +263,20 @@
 
         <!-- CARD 4: กำไรที่อยากได้ & VAT 7% -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3.5 sm:space-y-4">
-          <!-- กำไรที่อยากได้ -->
-          <div>
+          <!-- Direction Switcher (เฉพาะโหมดหน้าร้าน: คิดราคาขายปกติ VS คิดย้อนกลับจากราคาขาย) -->
+          <div id="storeDirectionSelector" class="flex items-center justify-between p-1 bg-slate-100 rounded-xl mb-1 text-xs font-bold">
+            <button type="button" id="btnDirForward" class="dir-btn flex-1 py-1.5 px-2 rounded-lg bg-white text-blue-700 shadow-sm transition flex items-center justify-center gap-1.5" data-dir="forward">
+              <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+              <span>1. คิดราคาขาย (ระบุกำไร)</span>
+            </button>
+            <button type="button" id="btnDirReverse" class="dir-btn flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5" data-dir="reverse">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-purple-600"></i>
+              <span>2. คิดย้อนกลับ (เช่น ขาย 8,800)</span>
+            </button>
+          </div>
+
+          <!-- SECTION 4A: กำไรที่ต้องการ (แสดงเมื่อคิดราคาขายปกติ) -->
+          <div id="containerForwardProfit">
             <div class="flex items-center justify-between mb-1.5">
               <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
                 <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">4</span>
@@ -298,6 +310,37 @@
             <div class="flex flex-wrap items-center gap-1.5" id="profitPresetsContainer"></div>
           </div>
 
+          <!-- SECTION 4B: ราคาขายที่ต้องการตั้ง (แสดงเมื่อคิดย้อนกลับจากราคาขาย เช่น 8,800) -->
+          <div id="containerReverseSellingPrice" class="hidden">
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 mb-1.5">
+              <h2 class="font-bold text-purple-950 text-xs sm:text-sm flex items-center gap-1.5 font-prompt">
+                <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold">4</span>
+                ราคาขายที่ตั้งใจขาย / ลูกค้าต่อรอง
+              </h2>
+              <span class="text-[11px] sm:text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 font-bold whitespace-nowrap ml-auto sm:ml-0" id="displayReversePrompt">คิดย้อนกลับ</span>
+            </div>
+
+            <!-- Safe Reverse Selling Price Input Group -->
+            <div class="flex items-center rounded-xl bg-purple-50/50 border border-purple-300 focus-within:border-purple-600 focus-within:ring-2 focus-within:ring-purple-100 focus-within:bg-white transition px-3 py-2 mb-2">
+              <span class="text-purple-600 font-bold text-sm mr-2 flex-shrink-0">฿</span>
+              <input type="number" id="inputTargetSellingPrice" value="8800" min="0" step="50" placeholder="ใส่ราคาขาย เช่น 8800" 
+                class="w-full bg-transparent text-sm sm:text-base font-bold text-purple-950 focus:outline-none">
+              <span class="text-xs text-purple-700 font-bold ml-2 whitespace-nowrap flex-shrink-0">บาท (ยอดรวมขาย)</span>
+            </div>
+
+            <!-- Presets -->
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <span class="text-[11px] text-slate-500">ทางลัดราคาขาย:</span>
+              <button type="button" class="reverse-price-preset px-2 py-0.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 font-semibold text-purple-800" data-val="7500">7,500</button>
+              <button type="button" class="reverse-price-preset px-2 py-0.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 font-semibold text-purple-800" data-val="8000">8,000</button>
+              <button type="button" class="reverse-price-preset px-2 py-0.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 font-semibold text-purple-800" data-val="8500">8,500</button>
+              <button type="button" class="reverse-price-preset px-2 py-0.5 rounded-lg border-2 border-purple-500 bg-purple-100 font-bold text-purple-900 shadow-sm" data-val="8800">8,800</button>
+              <button type="button" class="reverse-price-preset px-2 py-0.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 font-semibold text-purple-800" data-val="9000">9,000</button>
+              <button type="button" class="reverse-price-preset px-2 py-0.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 font-semibold text-purple-800" data-val="9500">9,500</button>
+              <button type="button" class="reverse-price-preset px-2 py-0.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 font-semibold text-purple-800" data-val="10000">10,000</button>
+            </div>
+          </div>
+
           <!-- VAT 7% -->
           <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
             <div>
@@ -324,12 +367,12 @@
 
         <!-- CARD 5A: ค่ารถหน้าร้าน (แสดงเฉพาะโหมดหน้าร้าน - ขั้นตอนสุดท้ายก่อนรวมราคาขาย) -->
         <div id="cardShippingStorefront" class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 shadow-sm space-y-3 relative overflow-hidden">
-          <div class="flex items-center justify-between">
-            <h2 class="font-bold text-amber-950 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+          <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1">
+            <h2 class="font-bold text-amber-950 text-xs sm:text-sm flex items-center gap-1.5 font-prompt">
               <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">5</span>
-              ค่ารถ / ค่าจัดส่งรับยาง (ช่องสุดท้ายก่อนรวมราคาขาย)
+              ค่ารถ / จัดส่งรับยาง (ขั้นตอนสุดท้าย)
             </h2>
-            <span class="text-xs text-amber-900 font-bold" id="displayTotalShipping">฿100</span>
+            <span class="text-xs text-amber-900 font-bold ml-auto sm:ml-0" id="displayTotalShipping">฿100</span>
           </div>
 
           <!-- Transport Mode Selector -->
@@ -426,10 +469,10 @@
       </div>
 
       <!-- ================= RIGHT COLUMN: RESULT & QUOTE CARD (5 COLS) ================= -->
-      <div class="lg:col-span-5 space-y-3.5 sm:space-y-4">
+      <div class="lg:col-span-5 space-y-3.5 sm:space-y-4 lg:sticky lg:top-6 self-start">
         
         <!-- MAIN RESULT CARD -->
-        <div id="mainResultCard" class="bg-gradient-to-b from-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-3xl shadow-xl border border-slate-700 sticky top-20">
+        <div id="mainResultCard" class="bg-gradient-to-b from-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-3xl shadow-xl border border-slate-700">
           
           <div class="flex items-center justify-between pb-3 border-b border-slate-700/80">
             <span class="text-xs font-medium text-slate-300 flex items-center gap-1.5 uppercase tracking-wider" id="resultCardTitle">
@@ -455,10 +498,13 @@
               <span class="text-emerald-400 font-bold font-prompt text-base" id="displayPricePerUnit">฿0</span>
               <span class="text-slate-400 text-xs" id="subPerUnitText">(ฟรีค่าแรง)</span>
             </div>
+
+            <!-- Reverse Status Banner -->
+            <div id="reverseStatusBanner" class="hidden mt-2.5 p-2 rounded-xl text-center text-xs font-bold transition"></div>
           </div>
 
           <!-- QUICK ROUNDING BUTTONS -->
-          <div class="bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 mb-3.5">
+          <div id="cardRoundingContainer" class="bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 mb-3.5">
             <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
               <span>ปัดเศษราคาขาย (จำและบอกง่าย):</span>
               <button id="btnResetRounding" class="text-blue-400 hover:underline">ยอดจริง</button>
@@ -476,6 +522,15 @@
             <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex justify-between">
               <span>แจกแจงโครงสร้างราคา:</span>
               <span id="labelBreakdownMode" class="text-blue-400">โหมดหน้าร้าน</span>
+            </div>
+
+            <!-- ราคาขายที่ตั้งใจขาย (เฉพาะคิดย้อนกลับ) -->
+            <div class="hidden flex justify-between items-center text-purple-300 bg-purple-950/40 px-2 py-1.5 rounded-lg border border-purple-500/30 mb-1" id="bdReverseSellingPriceRow">
+              <span class="flex items-center gap-1.5 font-medium">
+                <i data-lucide="tag" class="w-3.5 h-3.5 text-purple-400"></i>
+                ราคาขายที่ตั้งไว้ (ยอดรับจากลูกค้า):
+              </span>
+              <span class="font-bold text-purple-200 text-sm" id="bdReverseSellingPriceVal">฿8,800</span>
             </div>
 
             <!-- ทุนยาง -->
@@ -687,6 +742,8 @@
     // State
     const calcState = {
       appMode: 'storefront', // 'storefront' or 'online'
+      storeCalcDirection: 'forward', // 'forward' (คิดราคาขาย) or 'reverse' (คิดย้อนกลับหากำไร)
+      targetSellingPrice: 8800,
       tireName: '',
       qty: 4,
       tireCostPerUnit: 0,
@@ -724,6 +781,41 @@
       }, 2500);
     }
 
+    // Switch Storefront Direction (Forward Profit VS Reverse Selling Price)
+    function setStoreCalcDirection(dir) {
+      calcState.storeCalcDirection = dir;
+      calcState.roundedTotal = null;
+
+      const btnFwd = document.getElementById('btnDirForward');
+      const btnRev = document.getElementById('btnDirReverse');
+      const contFwd = document.getElementById('containerForwardProfit');
+      const contRev = document.getElementById('containerReverseSellingPrice');
+      const cardRounding = document.getElementById('cardRoundingContainer');
+      const reverseBanner = document.getElementById('reverseStatusBanner');
+      const bdRevRow = document.getElementById('bdReverseSellingPriceRow');
+
+      if (dir === 'forward') {
+        if (btnFwd) btnFwd.className = 'dir-btn flex-1 py-1.5 px-2 rounded-lg bg-white text-blue-700 shadow-sm transition flex items-center justify-center gap-1.5';
+        if (btnRev) btnRev.className = 'dir-btn flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5';
+        contFwd?.classList.remove('hidden');
+        contRev?.classList.add('hidden');
+        cardRounding?.classList.remove('hidden');
+        reverseBanner?.classList.add('hidden');
+        bdRevRow?.classList.add('hidden');
+      } else {
+        if (btnFwd) btnFwd.className = 'dir-btn flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5';
+        if (btnRev) btnRev.className = 'dir-btn flex-1 py-1.5 px-2 rounded-lg bg-purple-600 text-white shadow-sm transition flex items-center justify-center gap-1.5';
+        contFwd?.classList.add('hidden');
+        contRev?.classList.remove('hidden');
+        cardRounding?.classList.add('hidden');
+        reverseBanner?.classList.remove('hidden');
+        bdRevRow?.classList.remove('hidden');
+      }
+
+      updateIcons();
+      recalculate();
+    }
+
     // Switch App Mode (Storefront VS Online)
     function setAppMode(mode) {
       calcState.appMode = mode;
@@ -743,15 +835,7 @@
       const bdOnlineGpRow = document.getElementById('bdOnlineGpRow');
       const bdOnlinePayoutRow = document.getElementById('bdOnlinePayoutRow');
 
-      const resultCardTitle = document.getElementById('resultCardTitle');
-      const badgeResultStatus = document.getElementById('badgeResultStatus');
-      const labelGrandTotalTitle = document.getElementById('labelGrandTotalTitle');
-      const labelPerUnitText = document.getElementById('labelPerUnitText');
-      const subPerUnitText = document.getElementById('subPerUnitText');
-      const labelBreakdownMode = document.getElementById('labelBreakdownMode');
-      const bdGrandTotalLabel = document.getElementById('bdGrandTotalLabel');
-      const btnCopyQuoteText = document.getElementById('btnCopyQuoteText');
-      const mobileStickyModeBadge = document.getElementById('mobileStickyModeBadge');
+      const storeDirSelector = document.getElementById('storeDirectionSelector');
 
       if (mode === 'storefront') {
         // UI Tabs
@@ -763,29 +847,16 @@
         secShipOnline.classList.add('hidden');
         cardShipStore.classList.remove('hidden');
         cardGpOnline.classList.add('hidden');
+        storeDirSelector?.classList.remove('hidden');
 
         // Breakdown rows
         bdRowLaborOrOnlineShip.classList.remove('hidden');
-        bdLabelLaborOrShip.innerHTML = '<i data-lucide="wrench" class="w-3.5 h-3.5 text-amber-500"></i> 2. ค่าแรงช่าง (' + calcState.laborPerUnit + ' บ./เส้น):';
+        bdLabelLaborOrShip.innerHTML = '<i data-lucide="wrench" class="w-3.5 h-3.5 text-amber-500"></i> 2. ค่าแรงมือช่าง (<span id="bdLaborRate">' + calcState.laborPerUnit + '</span> บ./เส้น):';
         bdStoreShippingRow.classList.remove('hidden');
         bdOnlineGpRow.classList.add('hidden');
         bdOnlinePayoutRow.classList.add('hidden');
 
-        // Result Card Titles
-        resultCardTitle.innerHTML = '<i data-lucide="store" class="w-4 h-4 text-emerald-400"></i> <span>ราคาขายสำหรับหน้าร้าน</span>';
-        badgeResultStatus.innerText = 'รวมติดตั้งฟรี';
-        badgeResultStatus.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-        labelGrandTotalTitle.innerText = 'ยอดรวมทั้งสิ้นที่แจ้งลูกค้า';
-        labelPerUnitText.innerText = 'เฉลี่ยเส้นละ:';
-        subPerUnitText.innerText = '(ฟรีค่าแรง)';
-        labelBreakdownMode.innerText = 'โหมดหน้าร้าน';
-        labelBreakdownMode.className = 'text-blue-400';
-        bdGrandTotalLabel.innerText = 'รวมราคาขายทั้งสิ้น:';
-        btnCopyQuoteText.innerText = 'คัดลอกข้อความเสนอราคา LINE';
-
-        // Mobile sticky
-        mobileStickyModeBadge.innerText = 'หน้าร้าน';
-        mobileStickyModeBadge.style = 'background: rgba(37,99,235,0.2); color: #60a5fa;';
+        setStoreCalcDirection(calcState.storeCalcDirection || 'forward');
       } else {
         // Online Mode
         btnStore.className = 'app-mode-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-slate-100 text-slate-600 hover:text-slate-900';
@@ -796,6 +867,11 @@
         secShipOnline.classList.remove('hidden');
         cardShipStore.classList.add('hidden');
         cardGpOnline.classList.remove('hidden');
+        storeDirSelector?.classList.add('hidden');
+        document.getElementById('containerReverseSellingPrice')?.classList.add('hidden');
+        document.getElementById('reverseStatusBanner')?.classList.add('hidden');
+        document.getElementById('bdReverseSellingPriceRow')?.classList.add('hidden');
+        document.getElementById('cardRoundingContainer')?.classList.remove('hidden');
 
         // Breakdown rows
         bdLabelLaborOrShip.innerHTML = '<i data-lucide="package" class="w-3.5 h-3.5 text-orange-400"></i> 2. ค่าส่งที่ร้านออก:';
@@ -804,6 +880,16 @@
         bdOnlinePayoutRow.classList.remove('hidden');
 
         // Result Card Titles
+        const resultCardTitle = document.getElementById('resultCardTitle');
+        const badgeResultStatus = document.getElementById('badgeResultStatus');
+        const labelGrandTotalTitle = document.getElementById('labelGrandTotalTitle');
+        const labelPerUnitText = document.getElementById('labelPerUnitText');
+        const subPerUnitText = document.getElementById('subPerUnitText');
+        const labelBreakdownMode = document.getElementById('labelBreakdownMode');
+        const bdGrandTotalLabel = document.getElementById('bdGrandTotalLabel');
+        const btnCopyQuoteText = document.getElementById('btnCopyQuoteText');
+        const mobileStickyModeBadge = document.getElementById('mobileStickyModeBadge');
+
         resultCardTitle.innerHTML = '<i data-lucide="shopping-bag" class="w-4 h-4 text-orange-400"></i> <span>ราคาตั้งขายบนแพลตฟอร์ม (' + calcState.gpPlatformName + ')</span>';
         badgeResultStatus.innerText = 'หัก GP ' + calcState.gpPercent + '%';
         badgeResultStatus.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30';
@@ -870,9 +956,10 @@
       });
     }
 
-    // Core Calculation Logic (Dual Mode)
+    // Core Calculation Logic (Dual Mode & Reverse Calculation)
     function recalculate() {
       const isStorefront = calcState.appMode === 'storefront';
+      const isReverse = isStorefront && calcState.storeCalcDirection === 'reverse';
       const qty = calcState.qty;
       const tireCostUnit = parseFloat(document.getElementById('inputTireCostPerUnit').value) || 0;
       const laborUnit = isStorefront ? (parseFloat(document.getElementById('inputLaborPerUnit').value) || 0) : 0;
@@ -891,69 +978,166 @@
         laborOrShipCost = onlineShipUnit * qty;
       }
 
-      // 3. Profit Calculation
       let totalProfit = 0;
-      if (calcState.profitMode === 'per_unit') {
-        totalProfit = profitVal * qty;
-      } else if (calcState.profitMode === 'total') {
-        totalProfit = profitVal;
-      } else if (calcState.profitMode === 'percent') {
-        const baseCost = totalTireCost + laborOrShipCost;
-        totalProfit = Math.round(baseCost * (profitVal / 100));
-      }
-
-      // Base Subtotal before VAT & Shipping / GP
-      const baseSubtotal = totalTireCost + laborOrShipCost + totalProfit;
-
-      // 4. VAT 7%
       let vatAmount = 0;
-      if (includeVat) {
-        vatAmount = Math.round(baseSubtotal * 0.07);
-      }
-
       let grandTotal = 0;
       let effectiveGrandTotal = 0;
       let pricePerUnit = 0;
-      let profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
+      let profitPerUnit = 0;
       let gpDeduction = 0;
       let netPayout = 0;
 
-      if (isStorefront) {
-        // ================= MODE 1: STOREFRONT =================
-        // 5. Storefront Shipping / ค่ารถรับยาง (ขั้นตอนสุดท้าย)
+      const resultCardTitle = document.getElementById('resultCardTitle');
+      const badgeResultStatus = document.getElementById('badgeResultStatus');
+      const labelGrandTotalTitle = document.getElementById('labelGrandTotalTitle');
+      const labelPerUnitText = document.getElementById('labelPerUnitText');
+      const subPerUnitText = document.getElementById('subPerUnitText');
+      const labelBreakdownMode = document.getElementById('labelBreakdownMode');
+      const bdGrandTotalLabel = document.getElementById('bdGrandTotalLabel');
+      const btnCopyQuoteText = document.getElementById('btnCopyQuoteText');
+      const mobileStickyModeBadge = document.getElementById('mobileStickyModeBadge');
+      const reverseBanner = document.getElementById('reverseStatusBanner');
+      const heroPriceContainer = document.getElementById('displayGrandTotal').parentElement;
+
+      if (isStorefront && !isReverse) {
+        // ================= MODE 1A: STOREFRONT FORWARD (คิดราคาขาย) =================
+        if (calcState.profitMode === 'per_unit') {
+          totalProfit = profitVal * qty;
+        } else if (calcState.profitMode === 'total') {
+          totalProfit = profitVal;
+        } else if (calcState.profitMode === 'percent') {
+          const baseCost = totalTireCost + laborOrShipCost;
+          totalProfit = Math.round(baseCost * (profitVal / 100));
+        }
+
+        const baseSubtotal = totalTireCost + laborOrShipCost + totalProfit;
+        if (includeVat) {
+          vatAmount = Math.round(baseSubtotal * 0.07);
+        }
+
         const shippingVal = parseFloat(document.getElementById('inputShippingValue')?.value) || 0;
         let totalShipping = 0;
-        if (calcState.shippingMode === 'per_order') {
-          totalShipping = shippingVal;
-        } else if (calcState.shippingMode === 'per_unit') {
-          totalShipping = shippingVal * qty;
-        } else {
-          totalShipping = 0;
-        }
+        if (calcState.shippingMode === 'per_order') totalShipping = shippingVal;
+        else if (calcState.shippingMode === 'per_unit') totalShipping = shippingVal * qty;
+        else totalShipping = 0;
 
         grandTotal = baseSubtotal + vatAmount + totalShipping;
         effectiveGrandTotal = calcState.roundedTotal !== null ? calcState.roundedTotal : grandTotal;
         pricePerUnit = qty > 0 ? Math.round(effectiveGrandTotal / qty) : 0;
+        profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
 
         const shippingPerUnit = qty > 0 ? (totalShipping / qty).toFixed(1) : 0;
         document.getElementById('displayTotalShipping').innerText = `฿${totalShipping.toLocaleString()}`;
         document.getElementById('shippingAveragePerUnit').innerText = `ตกเส้นละ ฿${shippingPerUnit}`;
         document.getElementById('bdShippingCost').innerText = `+฿${totalShipping.toLocaleString()}`;
-        document.getElementById('bdLaborRate').innerText = laborUnit;
+        const bdLaborRateFwd = document.getElementById('bdLaborRate');
+        if (bdLaborRateFwd) bdLaborRateFwd.innerText = laborUnit;
         document.getElementById('bdCostLaborOrShip').innerText = `฿${laborOrShipCost.toLocaleString()}`;
+
+        resultCardTitle.innerHTML = '<i data-lucide="store" class="w-4 h-4 text-emerald-400"></i> <span>ราคาขายสำหรับหน้าร้าน</span>';
+        badgeResultStatus.innerText = 'รวมติดตั้งฟรี';
+        badgeResultStatus.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        labelGrandTotalTitle.innerText = 'ยอดรวมทั้งสิ้นที่แจ้งลูกค้า';
+        labelPerUnitText.innerText = 'เฉลี่ยเส้นละ:';
+        subPerUnitText.innerText = '(ฟรีค่าแรง)';
+        labelBreakdownMode.innerText = 'โหมดหน้าร้าน (คำนวณราคาขาย)';
+        labelBreakdownMode.className = 'text-blue-400';
+        bdGrandTotalLabel.innerText = 'รวมราคาขายทั้งสิ้น:';
+        btnCopyQuoteText.innerText = 'คัดลอกข้อความเสนอราคา LINE';
+        mobileStickyModeBadge.innerText = 'หน้าร้าน';
+        mobileStickyModeBadge.style = 'background: rgba(37,99,235,0.2); color: #60a5fa;';
+        heroPriceContainer.className = 'flex items-center justify-center gap-1 text-emerald-400 font-prompt';
+        reverseBanner?.classList.add('hidden');
+
+      } else if (isStorefront && isReverse) {
+        // ================= MODE 1B: STOREFRONT REVERSE (คิดย้อนกลับหากำไร เช่น ขาย 8,800) =================
+        const targetSellPrice = parseFloat(document.getElementById('inputTargetSellingPrice')?.value) || 0;
+        effectiveGrandTotal = targetSellPrice;
+        pricePerUnit = qty > 0 ? Math.round(targetSellPrice / qty) : 0;
+
+        const shippingVal = parseFloat(document.getElementById('inputShippingValue')?.value) || 0;
+        let totalShipping = 0;
+        if (calcState.shippingMode === 'per_order') totalShipping = shippingVal;
+        else if (calcState.shippingMode === 'per_unit') totalShipping = shippingVal * qty;
+        else totalShipping = 0;
+
+        const baseWithoutShip = targetSellPrice - totalShipping;
+        if (includeVat) {
+          const preVatBase = baseWithoutShip / 1.07;
+          vatAmount = Math.round(baseWithoutShip - preVatBase);
+          totalProfit = Math.round(preVatBase - totalTireCost - laborOrShipCost);
+        } else {
+          vatAmount = 0;
+          totalProfit = Math.round(baseWithoutShip - totalTireCost - laborOrShipCost);
+        }
+
+        profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
+
+        const shippingPerUnit = qty > 0 ? (totalShipping / qty).toFixed(1) : 0;
+        document.getElementById('displayTotalShipping').innerText = `฿${totalShipping.toLocaleString()}`;
+        document.getElementById('shippingAveragePerUnit').innerText = `ตกเส้นละ ฿${shippingPerUnit}`;
+        document.getElementById('bdShippingCost').innerText = `-฿${totalShipping.toLocaleString()}`;
+        const bdLaborRateRev = document.getElementById('bdLaborRate');
+        if (bdLaborRateRev) bdLaborRateRev.innerText = laborUnit;
+        document.getElementById('bdCostLaborOrShip').innerText = `-฿${laborOrShipCost.toLocaleString()}`;
+        document.getElementById('bdReverseSellingPriceVal').innerText = `฿${targetSellPrice.toLocaleString()}`;
+
+        resultCardTitle.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4 text-purple-400"></i> <span>กำไรคงเหลือ (คิดย้อนกลับ)</span>';
+        badgeResultStatus.innerText = `ขาย ฿${targetSellPrice.toLocaleString()}`;
+        badgeResultStatus.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40';
+        labelGrandTotalTitle.innerText = 'เหลือกำไรสุทธิเข้ากระเป๋าจริง';
+        labelPerUnitText.innerText = 'เหลือกำไรเส้นละ:';
+        labelBreakdownMode.innerText = 'โหมดหน้าร้าน (คิดย้อนกลับ)';
+        labelBreakdownMode.className = 'text-purple-400';
+        bdGrandTotalLabel.innerText = 'เหลือกำไรสุทธิทั้งสิ้น:';
+        btnCopyQuoteText.innerText = 'คัดลอกสรุปกำไร LINE';
+        mobileStickyModeBadge.innerText = 'คิดย้อนกลับ';
+        mobileStickyModeBadge.style = 'background: rgba(168,85,247,0.2); color: #c084fc;';
+
+        if (totalProfit >= 0) {
+          heroPriceContainer.className = 'flex items-center justify-center gap-1 text-emerald-400 font-prompt';
+        } else {
+          heroPriceContainer.className = 'flex items-center justify-center gap-1 text-rose-500 font-prompt';
+        }
+
+        if (reverseBanner) {
+          reverseBanner.classList.remove('hidden');
+          if (totalProfit <= 0) {
+            reverseBanner.className = 'mt-2.5 p-2 rounded-xl text-center text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+            reverseBanner.innerHTML = `⚠️ ระวัง! ขายราคานี้เข้าเนื้อ/ขาดทุน ฿${Math.abs(totalProfit).toLocaleString()} (เส้นละ -฿${Math.abs(profitPerUnit).toLocaleString()})`;
+          } else if (profitPerUnit >= 300) {
+            reverseBanner.className = 'mt-2.5 p-2 rounded-xl text-center text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            reverseBanner.innerHTML = `🎉 ยอดเยี่ยม! กำไรดีมาก ฿${totalProfit.toLocaleString()} (เส้นละ +฿${profitPerUnit.toLocaleString()})`;
+          } else {
+            reverseBanner.className = 'mt-2.5 p-2 rounded-xl text-center text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            reverseBanner.innerHTML = `✅ คุ้มค่า ปิดการขายได้ กำไร ฿${totalProfit.toLocaleString()} (เส้นละ +฿${profitPerUnit.toLocaleString()})`;
+          }
+        }
       } else {
         // ================= MODE 2: ONLINE PLATFORMS WITH GP% =================
-        // Target required net payout to cover costs + profit + vat:
+        if (calcState.profitMode === 'per_unit') {
+          totalProfit = profitVal * qty;
+        } else if (calcState.profitMode === 'total') {
+          totalProfit = profitVal;
+        } else if (calcState.profitMode === 'percent') {
+          const baseCost = totalTireCost + laborOrShipCost;
+          totalProfit = Math.round(baseCost * (profitVal / 100));
+        }
+
+        const baseSubtotal = totalTireCost + laborOrShipCost + totalProfit;
+        if (includeVat) {
+          vatAmount = Math.round(baseSubtotal * 0.07);
+        }
+
         const targetNetRequired = baseSubtotal + vatAmount;
         const gpPercent = parseFloat(document.getElementById('inputGpPercent').value) || 0;
         const gpRate = Math.min(Math.max(gpPercent / 100, 0), 0.95);
 
-        // Real Payout Reverse Formula: ListingPrice = TargetRequired / (1 - GP%)
         grandTotal = gpRate < 1 ? Math.round(targetNetRequired / (1 - gpRate)) : targetNetRequired;
         effectiveGrandTotal = calcState.roundedTotal !== null ? calcState.roundedTotal : grandTotal;
         pricePerUnit = qty > 0 ? Math.round(effectiveGrandTotal / qty) : 0;
+        profitPerUnit = qty > 0 ? Math.round(totalProfit / qty) : 0;
 
-        // GP deduction amount
         gpDeduction = Math.round(effectiveGrandTotal * gpRate);
         netPayout = effectiveGrandTotal - gpDeduction;
 
@@ -963,6 +1147,21 @@
         document.getElementById('bdGpAmount').innerText = `-฿${gpDeduction.toLocaleString()}`;
         document.getElementById('bdNetPayout').innerText = `฿${netPayout.toLocaleString()}`;
         document.getElementById('bdCostLaborOrShip').innerText = `฿${laborOrShipCost.toLocaleString()}`;
+
+        resultCardTitle.innerHTML = '<i data-lucide="shopping-bag" class="w-4 h-4 text-orange-400"></i> <span>ราคาตั้งขายบนแพลตฟอร์ม (' + calcState.gpPlatformName + ')</span>';
+        badgeResultStatus.innerText = 'หัก GP ' + calcState.gpPercent + '%';
+        badgeResultStatus.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30';
+        labelGrandTotalTitle.innerText = 'ราคาที่ต้องตั้งขายบนแอป (Listing Price)';
+        labelPerUnitText.innerText = 'ตั้งราคาเส้นละ:';
+        subPerUnitText.innerText = '(ก่อนหัก GP)';
+        labelBreakdownMode.innerText = 'โหมดขายออนไลน์';
+        labelBreakdownMode.className = 'text-orange-400';
+        bdGrandTotalLabel.innerText = 'ราคาตั้งขายบนแอป:';
+        btnCopyQuoteText.innerText = 'คัดลอกราคาขายออนไลน์';
+        mobileStickyModeBadge.innerText = 'ออนไลน์ ' + calcState.gpPercent + '%';
+        mobileStickyModeBadge.style = 'background: rgba(249,115,22,0.2); color: #fb923c;';
+        heroPriceContainer.className = 'flex items-center justify-center gap-1 text-emerald-400 font-prompt';
+        reverseBanner?.classList.add('hidden');
       }
 
       const profitMarginPct = effectiveGrandTotal > 0 ? Math.round((totalProfit / effectiveGrandTotal) * 100) : 0;
@@ -980,7 +1179,7 @@
         bdVatRow?.classList.remove('hidden');
         vatAmountRow?.classList.remove('hidden');
         if (displayVatAmount) displayVatAmount.innerText = `฿${vatAmount.toLocaleString()}`;
-        document.getElementById('bdVatCost').innerText = `+฿${vatAmount.toLocaleString()}`;
+        document.getElementById('bdVatCost').innerText = isReverse ? `-฿${vatAmount.toLocaleString()}` : `+฿${vatAmount.toLocaleString()}`;
       } else {
         bdVatRow?.classList.add('hidden');
         vatAmountRow?.classList.add('hidden');
@@ -988,28 +1187,38 @@
         document.getElementById('bdVatCost').innerText = `฿0`;
       }
 
-      // Grand Total UI
-      document.getElementById('displayGrandTotal').innerText = effectiveGrandTotal.toLocaleString();
-      document.getElementById('displayPricePerUnit').innerText = `฿${pricePerUnit.toLocaleString()}`;
+      // Grand Total UI & Per Unit Display
+      if (isReverse) {
+        document.getElementById('displayGrandTotal').innerText = totalProfit.toLocaleString();
+        document.getElementById('displayPricePerUnit').innerText = `฿${profitPerUnit.toLocaleString()}`;
+        subPerUnitText.innerText = `(Margin ${profitMarginPct}%)`;
+        document.getElementById('bdGrandTotal').innerText = `฿${totalProfit.toLocaleString()}`;
+        document.getElementById('bdGrandTotal').className = totalProfit >= 0 ? 'text-emerald-400 font-prompt text-base' : 'text-rose-400 font-prompt text-base';
+        document.getElementById('mobileStickyGrandTotal').innerText = `กำไร ฿${totalProfit.toLocaleString()}`;
+        document.getElementById('mobileStickyPerUnit').innerText = `(฿${profitPerUnit.toLocaleString()}/เส้น)`;
+        document.getElementById('mobileStickyQty').innerText = `ขาย ฿${effectiveGrandTotal.toLocaleString()} (${qty} เส้น)`;
+      } else {
+        document.getElementById('displayGrandTotal').innerText = effectiveGrandTotal.toLocaleString();
+        document.getElementById('displayPricePerUnit').innerText = `฿${pricePerUnit.toLocaleString()}`;
+        document.getElementById('bdGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
+        document.getElementById('bdGrandTotal').className = 'text-emerald-400 font-prompt text-base';
+        document.getElementById('mobileStickyGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
+        document.getElementById('mobileStickyPerUnit').innerText = `(฿${pricePerUnit.toLocaleString()}/เส้น)`;
+        document.getElementById('mobileStickyQty').innerText = `${qty} เส้น`;
+      }
 
-      // Breakdown Table
+      // Breakdown Table Shared values
       document.getElementById('bdTireQty').innerText = qty;
-      document.getElementById('bdTireCost').innerText = `฿${totalTireCost.toLocaleString()}`;
+      document.getElementById('bdTireCost').innerText = isReverse ? `-฿${totalTireCost.toLocaleString()}` : `฿${totalTireCost.toLocaleString()}`;
       document.getElementById('bdProfitCost').innerText = `+฿${totalProfit.toLocaleString()}`;
       document.getElementById('bdProfitMargin').innerText = `${profitMarginPct}% (${profitPerUnit.toLocaleString()} บ./เส้น)`;
-      document.getElementById('bdGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
-
-      // Mobile Sticky Summary Bar Update
-      document.getElementById('mobileStickyGrandTotal').innerText = `฿${effectiveGrandTotal.toLocaleString()}`;
-      document.getElementById('mobileStickyPerUnit').innerText = `(฿${pricePerUnit.toLocaleString()}/เส้น)`;
-      document.getElementById('mobileStickyQty').innerText = `${qty} เส้น`;
 
       // 2 vs 4 Comparison
-      updateComparison(tireCostUnit, isStorefront, includeVat);
+      updateComparison(tireCostUnit, isStorefront, isReverse, includeVat);
     }
 
     // Helper: 2 vs 4 comparison calculation
-    function updateComparison(tireCostUnit, isStorefront, includeVat) {
+    function updateComparison(tireCostUnit, isStorefront, isReverse, includeVat) {
       if (tireCostUnit <= 0) {
         document.getElementById('cmp2Total').innerText = '฿0';
         document.getElementById('cmp2PerUnit').innerText = 'เส้นละ ฿0';
@@ -1023,38 +1232,67 @@
       const shippingVal = isStorefront ? (parseFloat(document.getElementById('inputShippingValue')?.value) || 0) : 0;
       const onlineShipUnit = !isStorefront ? (parseFloat(document.getElementById('inputOnlineShipPerUnit')?.value) || 0) : 0;
       const gpRate = !isStorefront ? (parseFloat(document.getElementById('inputGpPercent')?.value) || 0) / 100 : 0;
+      const targetSellPrice = parseFloat(document.getElementById('inputTargetSellingPrice')?.value) || 0;
 
       [2, 4].forEach(testQty => {
         const cost = tireCostUnit * testQty;
         const extraLaborOrShip = isStorefront ? (laborUnit * testQty) : (onlineShipUnit * testQty);
         
         let profit = 0;
-        if (calcState.profitMode === 'per_unit') profit = profitVal * testQty;
-        else if (calcState.profitMode === 'total') profit = Math.round(profitVal * (testQty / calcState.qty));
-        else profit = Math.round((cost + extraLaborOrShip) * (profitVal / 100));
-
-        let vat = 0;
-        if (includeVat) vat = Math.round((cost + extraLaborOrShip + profit) * 0.07);
-
         let total = 0;
-        if (isStorefront) {
+        let perUnit = 0;
+
+        if (isReverse) {
+          const testSellPrice = Math.round(targetSellPrice * (testQty / calcState.qty));
           let ship = 0;
           if (calcState.shippingMode === 'per_order') ship = shippingVal;
           else if (calcState.shippingMode === 'per_unit') ship = shippingVal * testQty;
+
+          const baseWithoutShip = testSellPrice - ship;
+          if (includeVat) {
+            const preVatBase = baseWithoutShip / 1.07;
+            profit = Math.round(preVatBase - cost - extraLaborOrShip);
+          } else {
+            profit = Math.round(baseWithoutShip - cost - extraLaborOrShip);
+          }
+          total = profit;
+          perUnit = Math.round(profit / testQty);
+        } else if (isStorefront) {
+          if (calcState.profitMode === 'per_unit') profit = profitVal * testQty;
+          else if (calcState.profitMode === 'total') profit = Math.round(profitVal * (testQty / calcState.qty));
+          else profit = Math.round((cost + extraLaborOrShip) * (profitVal / 100));
+
+          let vat = 0;
+          if (includeVat) vat = Math.round((cost + extraLaborOrShip + profit) * 0.07);
+
+          let ship = 0;
+          if (calcState.shippingMode === 'per_order') ship = shippingVal;
+          else if (calcState.shippingMode === 'per_unit') ship = shippingVal * testQty;
+
           total = cost + extraLaborOrShip + profit + vat + ship;
+          perUnit = Math.round(total / testQty);
         } else {
+          if (calcState.profitMode === 'per_unit') profit = profitVal * testQty;
+          else if (calcState.profitMode === 'total') profit = Math.round(profitVal * (testQty / calcState.qty));
+          else profit = Math.round((cost + extraLaborOrShip) * (profitVal / 100));
+
+          let vat = 0;
+          if (includeVat) vat = Math.round((cost + extraLaborOrShip + profit) * 0.07);
+
           const targetRequired = cost + extraLaborOrShip + profit + vat;
           total = gpRate < 1 ? Math.round(targetRequired / (1 - gpRate)) : targetRequired;
+          perUnit = Math.round(total / testQty);
         }
 
-        const perUnit = Math.round(total / testQty);
+        const prefix = isReverse ? 'กำไร ฿' : '฿';
+        const perPrefix = isReverse ? 'กำไรเส้นละ ฿' : 'เส้นละ ฿';
 
         if (testQty === 2) {
-          document.getElementById('cmp2Total').innerText = `฿${total.toLocaleString()}`;
-          document.getElementById('cmp2PerUnit').innerText = `เส้นละ ฿${perUnit.toLocaleString()}`;
+          document.getElementById('cmp2Total').innerText = `${prefix}${total.toLocaleString()}`;
+          document.getElementById('cmp2PerUnit').innerText = `${perPrefix}${perUnit.toLocaleString()}`;
         } else {
-          document.getElementById('cmp4Total').innerText = `฿${total.toLocaleString()}`;
-          document.getElementById('cmp4PerUnit').innerText = `เส้นละ ฿${perUnit.toLocaleString()}`;
+          document.getElementById('cmp4Total').innerText = `${prefix}${total.toLocaleString()}`;
+          document.getElementById('cmp4PerUnit').innerText = `${perPrefix}${perUnit.toLocaleString()}`;
         }
       });
     }
@@ -1134,13 +1372,41 @@
     // Copy Quote Message
     function copyQuoteMessage() {
       const isStorefront = calcState.appMode === 'storefront';
+      const isReverse = isStorefront && calcState.storeCalcDirection === 'reverse';
       const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
       const qty = calcState.qty;
       const grandTotal = document.getElementById('displayGrandTotal').innerText;
       const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
 
       let message = '';
-      if (isStorefront) {
+      if (isReverse) {
+        const targetSellPrice = parseFloat(document.getElementById('inputTargetSellingPrice')?.value) || 0;
+        const tireCostUnit = parseFloat(document.getElementById('inputTireCostPerUnit').value) || 0;
+        const laborUnit = parseFloat(document.getElementById('inputLaborPerUnit').value) || 0;
+        const totalTire = (tireCostUnit * qty).toLocaleString();
+        const totalLabor = (laborUnit * qty).toLocaleString();
+        const shipCost = document.getElementById('bdShippingCost').innerText.replace(/^[+-]/, '');
+        const vatCost = calcState.includeVat ? `\n  • ภาษี VAT 7%: -${document.getElementById('bdVatCost').innerText.replace(/^[+-]/, '')} บาท` : '';
+        const profitTotal = grandTotal;
+        const profitUnit = pricePerUnit;
+        const profitMargin = document.getElementById('bdProfitMargin').innerText;
+        const isLoss = parseFloat(profitTotal.replace(/,/g, '')) < 0;
+
+        message = 
+`🚗 สรุปวิเคราะห์กำไรขายหน้าร้าน (คิดย้อนกลับ)
+━━━━━━━━━━━━━━━━━━━━
+📦 สินค้า: ${tireName} (${qty} เส้น)
+🏷️ ราคาขายที่ตั้งไว้: ฿${targetSellPrice.toLocaleString()} บาท (เฉลี่ยเส้นละ ฿${Math.round(targetSellPrice / qty).toLocaleString()} บ.)
+━━━━━━━━━━━━━━━━━━━━
+📊 รายการหักต้นทุน:
+  • ทุนยาง (${qty} เส้น @${tireCostUnit.toLocaleString()}): -฿${totalTire} บาท
+  • ค่าแรงช่าง (@${laborUnit} บ./เส้น): -฿${totalLabor} บาท
+  • ค่ารถรับยาง: -${shipCost} บาท${vatCost}
+━━━━━━━━━━━━━━━━━━━━
+💵 เหลือกำไรสุทธิ: ฿${profitTotal} บาท (เส้นละ ${profitUnit} บาท)
+📈 อัตรากำไร: ${profitMargin}
+${isLoss ? '⚠️ ขายราคานี้เข้าเนื้อ/ขาดทุน กรุณาพิจารณาราคาใหม่' : '✅ ผ่านเกณฑ์ มีกำไรสุทธิเข้ากระเป๋า'}`;
+      } else if (isStorefront) {
         message = 
 `🚗 ข้อเสนอราคาพิเศษ (หน้าร้าน)
 ━━━━━━━━━━━━━━━━━━━━
@@ -1328,6 +1594,10 @@
       document.getElementById('btnModeStore')?.addEventListener('click', () => setAppMode('storefront'));
       document.getElementById('btnModeOnline')?.addEventListener('click', () => setAppMode('online'));
 
+      // Storefront Direction Switchers (Forward vs Reverse)
+      document.getElementById('btnDirForward')?.addEventListener('click', () => setStoreCalcDirection('forward'));
+      document.getElementById('btnDirReverse')?.addEventListener('click', () => setStoreCalcDirection('reverse'));
+
       // Qty Buttons
       document.querySelectorAll('.qty-btn').forEach(btn => {
         btn.addEventListener('click', () => setQty(btn.dataset.qty));
@@ -1338,9 +1608,27 @@
       });
 
       // Inputs real-time recalculation
-      ['inputTireCostPerUnit', 'inputLaborPerUnit', 'inputProfitValue', 'inputShippingValue', 'inputOnlineShipPerUnit', 'inputGpPercent'].forEach(id => {
+      ['inputTireCostPerUnit', 'inputLaborPerUnit', 'inputProfitValue', 'inputShippingValue', 'inputOnlineShipPerUnit', 'inputGpPercent', 'inputTargetSellingPrice'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () => {
           calcState.roundedTotal = null;
+          recalculate();
+        });
+      });
+
+      // Reverse Price Presets
+      document.querySelectorAll('.reverse-price-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.val);
+          const inp = document.getElementById('inputTargetSellingPrice');
+          if (inp) inp.value = val;
+          calcState.targetSellingPrice = val;
+          calcState.roundedTotal = null;
+
+          document.querySelectorAll('.reverse-price-preset').forEach(b => {
+            b.className = 'reverse-price-preset px-2 py-0.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 font-semibold text-purple-800';
+          });
+          btn.className = 'reverse-price-preset px-2 py-0.5 rounded-lg border-2 border-purple-500 bg-purple-100 font-bold text-purple-900 shadow-sm';
+
           recalculate();
         });
       });
@@ -1494,11 +1782,15 @@
         document.getElementById('inputShippingValue').value = 100;
         document.getElementById('inputOnlineShipPerUnit').value = 0;
         document.getElementById('inputGpPercent').value = 14.0;
+        if (document.getElementById('inputTargetSellingPrice')) {
+          document.getElementById('inputTargetSellingPrice').value = 8800;
+        }
         toggleVat.checked = false;
         calcState.includeVat = false;
         document.getElementById('labelVatStatus').innerText = 'ไม่คิด VAT';
         setQty(4);
         setShippingMode('per_order');
+        setStoreCalcDirection('forward');
         setAppMode('storefront');
         calcState.roundedTotal = null;
         recalculate();
