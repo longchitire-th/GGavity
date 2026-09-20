@@ -276,7 +276,127 @@ const express = require('express');
     process.exit(1);
   }
 
+  // ================= TEST CASE 8: BACK-OFFICE SETTINGS & FORMAL A4 QUOTATION =================
+  console.log('--- TEST CASE 8 (BACK-OFFICE & FORMAL A4 QUOTATION) ---');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`${baseUrl}/calculator.html`);
+  await page.waitForLoadState('networkidle');
+
+  // 1. Open Back-Office Modal
+  await page.click('#btnOpenBackOffice');
+  const isBoVisible = await page.isVisible('#modalBackOfficeSettings');
+  const defaultShopName = await page.inputValue('#boInputShopName');
+  const defaultTaxId = await page.inputValue('#boInputShopTaxId');
+
+  if (isBoVisible && defaultShopName.includes('หลงจื่อ กรุ๊ป') && defaultTaxId.includes('0105568120110')) {
+    console.log('✓ TEST 8A PASSED: Back-Office opened with default Long Ci Group profile & Tax ID!');
+  } else {
+    console.error('✗ TEST 8A FAILED! Shop Name:', defaultShopName, 'Tax ID:', defaultTaxId);
+    process.exit(1);
+  }
+
+  // 2. Add Bank Account row & edit phone in Back-Office
+  await page.fill('#boInputShopTel', '099-888-7766');
+  await page.click('#btnAddBankRow');
+  const bankRowsCount = await page.locator('#boBankRowsContainer .bank-row').count();
+  if (bankRowsCount >= 3) {
+    console.log('✓ TEST 8B PASSED: Successfully added dynamic bank account row (Total: ' + bankRowsCount + ')!');
+  } else {
+    console.error('✗ TEST 8B FAILED! Expected >= 3 bank rows, got', bankRowsCount);
+    process.exit(1);
+  }
+
+  // Fill in the new bank
+  const lastBankNameInput = page.locator('#boBankRowsContainer .bank-row .bo-bank-name').last();
+  const lastBankAccInput = page.locator('#boBankRowsContainer .bank-row .bo-bank-acc').last();
+  const lastBankAccNameInput = page.locator('#boBankRowsContainer .bank-row .bo-bank-accname').last();
+  await lastBankNameInput.fill('ธ.กสิกรไทย (KBANK)');
+  await lastBankAccInput.fill('012-3-45678-9');
+  await lastBankAccNameInput.fill('บจก. หหลงจื่อ กรุ๊ป');
+
+  // Save Shop Profile
+  await page.click('#btnSaveShopProfile');
+
+  // 3. Switch to Tab 2: Customer Reply Templates
+  await page.click('#btnTabBoTemplates');
+  const isTabTplsActive = await page.isVisible('#boTabPaneTemplates');
+  const tplBody = await page.inputValue('#boInputTemplateBody');
+  const livePreview = await page.innerText('#boTemplateLivePreview');
+
+  if (isTabTplsActive && tplBody.includes('{tire_name}') && livePreview.includes('ข้อเสนอราคาพิเศษ')) {
+    console.log('✓ TEST 8C PASSED: Template editor active with dynamic chips and real-time live preview!');
+  } else {
+    console.error('✗ TEST 8C FAILED! Template pane active:', isTabTplsActive);
+    process.exit(1);
+  }
+
+  // Test inserting chip
+  await page.click('.bo-var-chip[data-var="{note}"]');
+  const updatedTplBody = await page.inputValue('#boInputTemplateBody');
+  if (updatedTplBody.includes('{note}')) {
+    console.log('✓ TEST 8D PASSED: Variable chip {note} inserted into template body!');
+  } else {
+    console.error('✗ TEST 8D FAILED! Note chip not found in template');
+    process.exit(1);
+  }
+
+  // Close Back-Office Modal
+  await page.click('#btnCloseBackOffice');
+
+  // 4. Test Formal Quotation Document (7,900 THB total matching user request)
+  await page.fill('#inputTireName', 'ยาง 225/50R18 MICHELIN รุ่น E PRIMACY');
+  await page.fill('#inputTireCostPerUnit', '1600');
+  await page.fill('#inputLaborPerUnit', '50');
+  await page.fill('#inputProfitValue', '300');
+  await page.fill('#inputShippingValue', '100');
+  // With 4 qty: cost=6400, labor=200, profit=1200, ship=100 => 7,900 THB
+  const currentTotal = await page.innerText('#displayGrandTotal');
+  if (currentTotal !== '7,900') {
+    console.log('Adjusting to match 7,900 for quotation check (Current:', currentTotal, ')');
+  }
+
+  // Click Formal Quotation Button
+  await page.click('#btnPrintQuote');
+  const isQuoModalVisible = await page.isVisible('#modalQuotationPreview');
+  const qoShopName = await page.innerText('#qoDisplayShopName');
+  const qoShopTel = await page.innerText('#qoDisplayShopTel');
+  const qoBahtText = await page.innerText('#qoDisplayBahtText');
+  const qoGrandTotalRight = await page.innerText('#qoDisplayGrandTotalRight');
+
+  console.log('Quotation Shop Name:', qoShopName);
+  console.log('Quotation Shop Phone:', qoShopTel);
+  console.log('Quotation Grand Total:', qoGrandTotalRight);
+  console.log('Quotation Thai Baht Text:', qoBahtText);
+
+  if (isQuoModalVisible && qoShopTel === '099-888-7766' && qoBahtText === 'เจ็ดพันเก้าร้อยบาทถ้วน') {
+    console.log('✓ TEST 8E PASSED: Formal Quotation rendered with custom shop phone and exact Thai Baht text "เจ็ดพันเก้าร้อยบาทถ้วน"!');
+  } else {
+    console.error('✗ TEST 8E FAILED! Modal visible:', isQuoModalVisible, 'Baht Text:', qoBahtText, 'Tel:', qoShopTel);
+    process.exit(1);
+  }
+
+  // 5. Test Quick Customer Input Live Sync
+  await page.click('#modalQuotationPreview details summary');
+  await page.fill('#qoInputCustomerName', 'บริษัท ทดสอบการค้า จำกัด');
+  const syncedCustomerName = await page.innerText('#qoDisplayCustomerName');
+  if (syncedCustomerName === 'บริษัท ทดสอบการค้า จำกัด') {
+    console.log('✓ TEST 8F PASSED: Customer name input live-synced to quotation document view!');
+  } else {
+    console.error('✗ TEST 8F FAILED! Expected synced customer name, got', syncedCustomerName);
+    process.exit(1);
+  }
+
+  // Close Quotation Preview Modal
+  await page.click('#btnCloseQuotationPreview');
+  const isQuoModalClosed = !(await page.isVisible('#modalQuotationPreview'));
+  if (isQuoModalClosed) {
+    console.log('✓ TEST 8G PASSED: Formal quotation modal closed cleanly!');
+  } else {
+    console.error('✗ TEST 8G FAILED! Quotation modal not hidden.');
+    process.exit(1);
+  }
+
   await browser.close();
   server.close();
-  console.log('🎉 ALL AUTOMATED TESTS COMPLETED SUCCESSFULLY!');
+  console.log('🎉 ALL AUTOMATED TESTS (1-8) COMPLETED SUCCESSFULLY!');
 })();
