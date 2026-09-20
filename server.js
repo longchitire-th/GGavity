@@ -6,6 +6,7 @@ const multer = require('multer');
 const cron = require('node-cron');
 const os = require('os');
 const QRCode = require('qrcode');
+const crypto = require('crypto');
 
 const db = require('./services/db');
 const bigsellerBot = require('./bot/bigseller_bot');
@@ -529,6 +530,115 @@ app.put('/api/settings', (req, res) => {
     res.json({ success: true, data: updated });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- PEAK Account Integration API Proxy ---
+const peakTokenCache = new Map();
+
+function getPeakTimestamp() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  return `${y}${m}${d}${hh}${mm}${ss}`;
+}
+
+function getPeakSignature(timeStamp, connectId) {
+  return crypto.createHmac('sha1', connectId).update(timeStamp).digest('base64');
+}
+
+async function getPeakClientToken(baseUrl, connectId) {
+  const cached = peakTokenCache.get(connectId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.token;
+  }
+
+  const timeStamp = getPeakTimestamp();
+  const signature = getPeakSignature(timeStamp, connectId);
+
+  const response = await fetch(`${baseUrl}/api/v1/ClientToken`, {
+    method: 'POST',
+    headers: {
+      'Time-Stamp': timeStamp,
+      'Time-Signature': signature,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  });
+
+  const data = await response.json();
+  if (data && data.data && data.data.clientToken) {
+    const token = data.data.clientToken;
+    const expiresInMs = (data.data.expiresIn || 86400) * 1000 - 60000;
+    peakTokenCache.set(connectId, { token, expiresAt: Date.now() + expiresInMs });
+    return token;
+  }
+  throw new Error(data.message || 'Failed to obtain ClientToken from PEAK');
+}
+
+app.post('/api/peak/test', async (req, res) => {
+  try {
+    const { peakEnv, connectId, userToken } = req.body;
+    if (!connectId || !userToken) {
+      return res.status(400).json({ success: false, message: 'กรุณาระบุ Connect ID และ User Token' });
+    }
+    const baseUrl = peakEnv === 'uat' 
+      ? 'https://peakengineapidev.azurewebsites.net' 
+      : 'https://api.peakaccount.com';
+
+    const clientToken = await getPeakClientToken(baseUrl, connectId);
+    res.json({
+      status: 'success',
+      success: true,
+      message: 'เชื่อมต่อกับ PEAK API สำเร็จ! Client-Token พร้อมใช้งาน',
+      clientTokenPreview: clientToken.slice(0, 10) + '...'
+    });
+  } catch (err) {
+    console.error('[PEAK Test] Error:', err.message);
+    res.status(500).json({ status: 'error', success: false, message: err.message });
+  }
+});
+
+app.post('/api/peak/quotation', async (req, res) => {
+  try {
+    const { peakEnv, connectId, userToken, quotationPayload } = req.body;
+    if (!connectId || !userToken || !quotationPayload) {
+      return res.status(400).json({ success: false, message: 'ข้อมูลไม่ครบถ้วน' });
+    }
+    const baseUrl = peakEnv === 'uat' 
+      ? 'https://peakengineapidev.azurewebsites.net' 
+      : 'https://api.peakaccount.com';
+
+    const clientToken = await getPeakClientToken(baseUrl, connectId);
+    const timeStamp = getPeakTimestamp();
+    const signature = getPeakSignature(timeStamp, connectId);
+
+    const peakRes = await fetch(`${baseUrl}/api/v1/Quotations`, {
+      method: 'POST',
+      headers: {
+        'Time-Stamp': timeStamp,
+        'Time-Signature': signature,
+        'User-Token': userToken,
+        'Client-Token': clientToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(quotationPayload)
+    });
+
+    const peakData = await peakRes.json();
+    res.status(peakRes.status).json({
+      status: peakRes.status === 200 ? 'success' : 'error',
+      code: peakRes.status,
+      data: peakData.data || peakData,
+      message: peakData.message || (peakRes.status === 200 ? 'Created quotation successfully' : 'PEAK error')
+    });
+  } catch (err) {
+    console.error('[PEAK Quotation] Error:', err.message);
+    res.status(500).json({ status: 'error', success: false, message: err.message });
   }
 });
 

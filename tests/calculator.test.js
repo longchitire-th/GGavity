@@ -396,7 +396,96 @@ const express = require('express');
     process.exit(1);
   }
 
+  // --- TEST CASE 9: PEAK ACCOUNT API OWN-USE INTEGRATION ---
+  console.log('--- TEST CASE 9 (PEAK ACCOUNT API OWN-USE INTEGRATION) ---');
+
+  // 1. Open Back-Office and switch to PEAK Account tab
+  await page.click('#btnOpenBackOffice');
+  await page.click('#btnTabBoPeak');
+  const isPeakPaneVisible = await page.isVisible('#boTabPanePeak');
+  if (isPeakPaneVisible) {
+    console.log('✓ TEST 9A PASSED: Back-Office switched to Tab 3 (PEAK Account API Own-Use)!');
+  } else {
+    console.error('✗ TEST 9A FAILED: boTabPanePeak is not visible.');
+    process.exit(1);
+  }
+
+  // 2. Test toggle password visibility for Connect ID
+  const connectIdTypeBefore = await page.getAttribute('#boInputPeakConnectId', 'type');
+  await page.click('#btnTogglePeakConnectId');
+  const connectIdTypeAfter = await page.getAttribute('#boInputPeakConnectId', 'type');
+  if (connectIdTypeBefore === 'password' && connectIdTypeAfter === 'text') {
+    console.log('✓ TEST 9B PASSED: Connect ID password show/hide toggle works!');
+  } else {
+    console.error('✗ TEST 9B FAILED: Password toggle failed. Before:', connectIdTypeBefore, 'After:', connectIdTypeAfter);
+    process.exit(1);
+  }
+
+  // 3. Fill in PEAK Credentials and Save
+  await page.fill('#boInputPeakConnectId', 'conn_test_mock_secret_9988');
+  await page.fill('#boInputPeakUserToken', 'usr_test_mock_company_token_7766');
+  await page.click('#btnSavePeakConfig');
+
+  // Verify status indicator changed to active
+  const peakStatusTitle = await page.innerText('#boPeakStatusTitle');
+  console.log('PEAK Status Title:', peakStatusTitle);
+  if (peakStatusTitle.includes('พร้อมเชื่อมต่อ PEAK Account')) {
+    console.log('✓ TEST 9C PASSED: PEAK settings saved & status updated to "พร้อมเชื่อมต่อ PEAK Account"!');
+  } else {
+    console.error('✗ TEST 9C FAILED: Expected ready status, got', peakStatusTitle);
+    process.exit(1);
+  }
+
+  // Close Back-Office
+  await page.click('#btnCloseBackOffice');
+
+  // 4. Open Quotation modal and verify PEAK Sync button
+  await page.click('#btnPrintQuote');
+  const isSyncBtnVisible = await page.isVisible('#btnSyncToPeakQuotation');
+  if (isSyncBtnVisible) {
+    console.log('✓ TEST 9D PASSED: "ส่งเข้าบัญชี PEAK" button present in Quotation modal!');
+  } else {
+    console.error('✗ TEST 9D FAILED: btnSyncToPeakQuotation is missing.');
+    process.exit(1);
+  }
+
+  // 5. Test PEAK Payload generation schema and date formatting
+  const payload = await page.evaluate(() => buildPeakQuotationPayload());
+  console.log('Generated PEAK Quotation Payload:', JSON.stringify(payload, null, 2));
+
+  const validDateRegex = /^\d{8}$/;
+  if (
+    validDateRegex.test(payload.issuedDate) &&
+    validDateRegex.test(payload.dueDate) &&
+    payload.products &&
+    payload.products.length > 0 &&
+    payload.products[0].quantity === 4 &&
+    payload.contactName.length > 0
+  ) {
+    console.log(`✓ TEST 9E PASSED: PEAK Quotation Payload validated! IssueDate=${payload.issuedDate}, DueDate=${payload.dueDate}, Qty=${payload.products[0].quantity}, Contact=${payload.contactName}`);
+  } else {
+    console.error('✗ TEST 9E FAILED: Invalid PEAK payload structure:', payload);
+    process.exit(1);
+  }
+
+  // 6. Test Apps Script Template enhancement includes PEAK actions
+  const peakAppsScriptCode = await page.evaluate(() => APPS_SCRIPT_TEMPLATE);
+  if (
+    peakAppsScriptCode.includes('createPeakQuotation') &&
+    peakAppsScriptCode.includes('testPeakConnection') &&
+    peakAppsScriptCode.includes('Utilities.computeHmacSha1Signature') &&
+    peakAppsScriptCode.includes('CacheService.getScriptCache()')
+  ) {
+    console.log('✓ TEST 9F PASSED: Google Apps Script template includes HMAC-SHA1 signature, ClientToken caching, and PEAK Quotation actions!');
+  } else {
+    console.error('✗ TEST 9F FAILED: APPS_SCRIPT_TEMPLATE missing PEAK actions.');
+    process.exit(1);
+  }
+
+  // Close Quotation Preview
+  await page.click('#btnCloseQuotationPreview');
+
   await browser.close();
   server.close();
-  console.log('🎉 ALL AUTOMATED TESTS (1-8) COMPLETED SUCCESSFULLY!');
+  console.log('🎉 ALL AUTOMATED TESTS (1-9) COMPLETED SUCCESSFULLY!');
 })();
