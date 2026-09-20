@@ -38,20 +38,54 @@
       }
     }
     @media print {
+      body {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
       body * {
-        visibility: hidden;
+        visibility: hidden !important;
       }
-      #printArea, #printArea * {
-        visibility: visible;
+      #modalQuotationPreview {
+        display: block !important;
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
-      #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
+      #modalQuotationPreview > div {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      #quotationPrintContainer, #quotationPrintContainer * {
+        visibility: visible !important;
+      }
+      #quotationPrintContainer {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        display: block !important;
+        box-shadow: none !important;
+        border: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       .no-print {
         display: none !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 8mm 10mm 8mm 10mm;
       }
     }
   </style>
@@ -83,6 +117,12 @@
           <button id="btnInstallPwaCalc" class="hidden px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition flex items-center gap-1 shadow-sm">
             <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-emerald-600"></i>
             <span class="hidden xs:inline">ติดตั้งแอป</span>
+          </button>
+          <!-- Back-Office Settings Button (หลังบ้าน & เทมเพลต) -->
+          <button type="button" id="btnOpenBackOffice" class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition flex items-center gap-1.5 shadow-sm" title="หลังบ้าน: ตั้งค่าข้อมูลร้านค้า & เทมเพลตตอบลูกค้า">
+            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-purple-600"></i>
+            <span class="hidden sm:inline font-prompt">หลังบ้าน & เทมเพลต</span>
+            <span class="sm:hidden font-prompt">หลังบ้าน</span>
           </button>
           <!-- Reset Button -->
           <button id="btnResetCalc" class="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center gap-1" title="ล้างข้อมูล">
@@ -665,10 +705,10 @@
               </button>
             </div>
 
-            <!-- Print Quote Button -->
-            <button id="btnPrintQuote" class="w-full py-2 px-3 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/80 text-slate-300 hover:text-white font-medium rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-              <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-400"></i>
-              <span>พิมพ์ใบเสนอราคา A4</span>
+            <!-- Print / Formal Quotation Button -->
+            <button id="btnPrintQuote" class="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-900/80 to-purple-900/80 hover:from-indigo-800 hover:to-purple-800 border border-indigo-500/40 text-indigo-100 hover:text-white font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md">
+              <i data-lucide="file-text" class="w-4 h-4 text-indigo-300"></i>
+              <span>📄 ออกใบเสนอราคาทางการ A4 (ตามแบบ Long Ci)</span>
             </button>
           </div>
 
@@ -749,41 +789,589 @@
     </div>
   </div>
 
-  <!-- ================= PRINTABLE AREA ================= -->
-  <div id="printArea" class="hidden p-8 max-w-lg mx-auto bg-white text-slate-900 border border-slate-300">
-    <div class="text-center pb-4 border-b border-slate-300">
-      <h2 class="text-xl font-bold font-prompt" id="printHeaderTitle">ใบเสนอราคา / รายการเปลี่ยนยาง</h2>
-      <p class="text-xs text-slate-500 mt-0.5">ศูนย์บริการยางยนต์และช่วงล่าง</p>
-      <p class="text-[11px] text-slate-400" id="printDate"></p>
-    </div>
+  <!-- ================= FORMAL QUOTATION PREVIEW & PRINT MODAL ================= -->
+  <div id="modalQuotationPreview" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-sm hidden">
+    <div class="bg-slate-100 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[96vh] flex flex-col border border-slate-300 font-sans overflow-hidden">
+      
+      <!-- Modal Control Bar -->
+      <div class="bg-white px-4 sm:px-6 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 z-10 flex-shrink-0 no-print">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 font-prompt">พรีวิวใบเสนอราคาทางการ (A4)</h3>
+            <p class="text-[11px] text-slate-500">รูปแบบทางการ บริษัท หหลงจื่อ กรุ๊ป จำกัด (พร้อมพิมพ์ / โหลด PDF)</p>
+          </div>
+        </div>
 
-    <div class="py-4 space-y-2 text-sm">
-      <div class="flex justify-between">
-        <span class="text-slate-500">รายการยาง:</span>
-        <span class="font-bold" id="printTireName">-</span>
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <button type="button" id="btnTriggerPrintQuotation" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-900/20 transition">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>สั่งพิมพ์ / โหลด PDF (A4)</span>
+          </button>
+          <button type="button" id="btnCopyFormalQuoteLine" class="px-2.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition" title="คัดลอกข้อความสรุปส่ง LINE">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">ก็อปส่ง LINE</span>
+          </button>
+          <button type="button" id="btnEditShopFromQuotation" class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1 transition" title="แก้ไขข้อมูลร้านค้าหลังบ้าน">
+            <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span class="hidden sm:inline">แก้ไขร้าน</span>
+          </button>
+          <button type="button" id="btnCloseQuotationPreview" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
       </div>
-      <div class="flex justify-between">
-        <span class="text-slate-500">จำนวน:</span>
-        <span class="font-bold" id="printQty">-</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-slate-500">ราคาเฉลี่ยต่อเส้น:</span>
-        <span class="font-bold text-blue-600" id="printPricePerUnit">-</span>
-      </div>
-      <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-bold">
-        <span>ราคารวมทั้งสิ้น:</span>
-        <span class="text-emerald-600" id="printGrandTotal">-</span>
-      </div>
-    </div>
 
-    <div class="border-t border-slate-200 pt-3 text-xs text-slate-500 space-y-1" id="printFooterNotes">
-      <p>✓ ฟรี ค่าแรงเปลี่ยน ติดตั้ง และถ่วงล้อ</p>
-      <p>✓ ฟรี จุ๊บลมยางใหม่ทุกเส้น</p>
-      <p>✓ รับประกันคุณภาพยางจากโรงงานผู้ผลิต</p>
-    </div>
+      <!-- Quick Customer Editor Bar (Collapsible / Top helper) -->
+      <div class="bg-white/80 border-b border-slate-200 px-4 sm:px-6 py-2.5 text-xs flex-shrink-0 no-print">
+        <details class="group cursor-pointer">
+          <summary class="flex items-center justify-between font-semibold text-slate-700 list-none select-none">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="user-pen" class="w-3.5 h-3.5 text-indigo-600"></i>
+              <span>✏️ คลิกเพื่อแก้ไขข้อมูลลูกค้า & เลขที่เอกสารสำหรับใบนี้</span>
+              <span class="text-[10px] text-slate-400 font-normal">(พิมพ์แก้แล้วจะอัปเดตลงในเอกสารทันที)</span>
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition"></i>
+          </summary>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 pt-2.5 mt-2 border-t border-slate-100">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">รหัส/ชื่อลูกค้า:</label>
+              <input type="text" id="qoInputCustomerName" value="V00014 ห้างหุ้นส่วนจำกัด รุ่งสิริเบญจ" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">ที่อยู่ลูกค้า:</label>
+              <input type="text" id="qoInputCustomerAddress" value="เลขที่ 72 ตำบลสลักได อำเภอเมืองสุรินทร์ จังหวัดสุรินทร์ 32000" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">เลขประจำตัวผู้เสียภาษีลูกค้า:</label>
+              <input type="text" id="qoInputCustomerTaxId" value="0323552000647 (สำนักงานใหญ่)" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">เบอร์โทรลูกค้า:</label>
+              <input type="text" id="qoInputCustomerTel" value="088-590-6056" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">เลขที่เอกสาร:</label>
+              <input type="text" id="qoInputDocNo" value="QO-20260900001" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">วันที่ออกเอกสาร:</label>
+              <input type="text" id="qoInputIssueDate" value="14/09/2026" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">ใช้ได้ถึงวันที่:</label>
+              <input type="text" id="qoInputValidUntil" value="21/09/2026" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">เรียน (ผู้ติดต่อฝั่งลูกค้า):</label>
+              <input type="text" id="qoInputCustomerAttention" value="-" 
+                class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+          </div>
+        </details>
+      </div>
 
-    <div class="mt-6 pt-4 border-t border-dashed border-slate-300 text-center text-[10px] text-slate-400">
-      ขอบพระคุณที่ไว้วางใจใช้บริการครับ
+      <!-- Scrollable Document Viewport -->
+      <div class="flex-1 overflow-y-auto p-3 sm:p-6 flex justify-center bg-slate-200/70">
+        
+        <!-- ================= ACTUAL PRINTABLE A4 CONTAINER ================= -->
+        <div id="quotationPrintContainer" class="bg-white text-slate-900 shadow-xl rounded-none sm:rounded-sm w-full max-w-[210mm] min-h-[297mm] p-6 sm:p-8 md:p-10 font-sans text-xs leading-relaxed flex flex-col justify-between">
+          
+          <div>
+            <!-- Header: Seller & Document Meta -->
+            <div class="flex items-start justify-between gap-4 pb-3">
+              
+              <!-- Seller info & Logo -->
+              <div class="flex items-start gap-3.5 max-w-[62%]">
+                <!-- Dragon Seal Logo -->
+                <div id="qoLogoContainer" class="flex-shrink-0 flex flex-col items-center justify-center">
+                  <div class="w-14 h-14 rounded-full border-2 border-red-700 bg-red-50 flex items-center justify-center p-1 text-red-700 shadow-sm">
+                    <svg class="w-10 h-10 text-red-700" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                  </div>
+                  <span class="text-[10px] font-black tracking-widest text-slate-900 font-serif mt-0.5">LONG CI</span>
+                  <span class="text-[8px] font-bold tracking-wider text-slate-500 uppercase -mt-0.5">- GROUP -</span>
+                </div>
+
+                <!-- Seller Text -->
+                <div class="space-y-0.5 text-[11px] text-slate-600">
+                  <p class="text-xs font-semibold text-slate-800">ผู้ขาย : <span id="qoDisplayShopName" class="font-bold text-slate-900 text-xs">บริษัท หลงจื่อ กรุ๊ป จำกัด</span></p>
+                  <p>ที่อยู่ : <span id="qoDisplayShopAddress">เลขที่ 775 ห้องเลขที่ 2-3 ถนนเจริญพัฒนา แขวงบางชัน เขตคลองสามวา กรุงเทพมหานคร 10510</span></p>
+                  <p>เลขที่ภาษี : <span id="qoDisplayShopTaxId">0105568120110 (สำนักงานใหญ่)</span></p>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 pt-0.5 text-[10px] text-slate-500">
+                    <span class="flex items-center gap-1">📞 <span id="qoDisplayShopTel">0985795449</span></span>
+                    <span class="flex items-center gap-1">✉️ <span id="qoDisplayShopEmail">longchi.tire@gmail.com</span></span>
+                    <span class="flex items-center gap-1">🌐 <span id="qoDisplayShopWebsite">www.lctyre.com</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top Right Title & Metadata Box -->
+              <div class="w-[36%] text-right flex flex-col items-end">
+                <div class="text-[11px] text-slate-400 font-medium">(ต้นฉบับ)</div>
+                <h2 class="text-2xl font-black tracking-tight text-indigo-700 font-prompt my-0.5">ใบเสนอราคา</h2>
+                
+                <div class="w-full bg-[#f6f7fe] border border-indigo-100 rounded-xl p-2.5 text-left text-[11px] space-y-0.5 mt-1 shadow-xs">
+                  <div class="flex justify-between">
+                    <span class="text-slate-500 font-medium">เลขที่เอกสาร :</span>
+                    <span id="qoDisplayDocNo" class="font-bold text-slate-900">QO-20260900001</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500 font-medium">วันที่ออก :</span>
+                    <span id="qoDisplayIssueDate" class="text-slate-800">14/09/2026</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500 font-medium">วันที่ตอบรับ :</span>
+                    <span id="qoDisplayAcceptDate" class="text-slate-400">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500 font-medium">ใช้ได้ถึง :</span>
+                    <span id="qoDisplayValidUntil" class="text-indigo-800 font-bold">21/09/2026</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500 font-medium">อ้างอิง :</span>
+                    <span id="qoDisplayRef" class="text-slate-400">-</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Divider -->
+            <div class="border-b border-slate-200 my-2"></div>
+
+            <!-- Customer & Contact Return (2 Cols) -->
+            <div class="grid grid-cols-12 gap-3 py-1 text-[11px]">
+              
+              <!-- Customer Column (Left 8 cols) -->
+              <div class="col-span-8 space-y-0.5">
+                <div class="flex items-start gap-1">
+                  <span class="text-slate-500 font-medium flex-shrink-0">ลูกค้า :</span>
+                  <span id="qoDisplayCustomerName" class="font-bold text-slate-900">V00014 ห้างหุ้นส่วนจำกัด รุ่งสิริเบญจ</span>
+                </div>
+                <div class="flex items-start gap-1 text-slate-600">
+                  <span class="text-slate-500 font-medium flex-shrink-0">ที่อยู่ :</span>
+                  <span id="qoDisplayCustomerAddress">เลขที่ 72 ตำบลสลักได อำเภอเมืองสุรินทร์ จังหวัดสุรินทร์ 32000</span>
+                </div>
+                <div class="flex items-start gap-1 text-slate-600">
+                  <span class="text-slate-500 font-medium flex-shrink-0">เลขที่ภาษี :</span>
+                  <span id="qoDisplayCustomerTaxId">0323552000647 (สำนักงานใหญ่)</span>
+                </div>
+                <div class="flex items-center gap-4 text-slate-600 pt-0.5">
+                  <span class="flex items-center gap-1"><span class="text-slate-500">โทร :</span> <span id="qoDisplayCustomerTel">088-590-6056</span></span>
+                  <span class="flex items-center gap-1"><span class="text-slate-500">เรียน :</span> <span id="qoDisplayCustomerAttention">-</span></span>
+                </div>
+              </div>
+
+              <!-- Contact Return Column (Right 4 cols) -->
+              <div class="col-span-4 border-l border-slate-100 pl-3 space-y-0.5">
+                <p class="font-bold text-slate-800">ติดต่อกลับที่ :</p>
+                <p class="flex items-center gap-1 text-slate-700">👤 <span id="qoDisplayContactName" class="font-semibold">หลงจื่อ กรุ๊ป</span></p>
+                <p class="flex items-center gap-1 text-slate-600">📞 <span id="qoDisplayContactTel">0842156566</span></p>
+                <p class="flex items-center gap-1 text-slate-600 truncate">✉️ <span id="qoDisplayContactEmail">longchi.tire@gmail.com</span></p>
+              </div>
+
+            </div>
+
+            <!-- Items Table -->
+            <div class="mt-3 border border-indigo-100 rounded-xl overflow-hidden shadow-xs">
+              <table class="w-full text-[11px]">
+                <thead>
+                  <tr class="bg-[#ede9fe] text-indigo-950 font-bold border-b border-indigo-200 text-[11px]">
+                    <th class="py-2 px-3 text-left w-[46%]">คำอธิบาย</th>
+                    <th class="py-2 px-2 text-right w-[10%]">จำนวน</th>
+                    <th class="py-2 px-2 text-right w-[14%]">ราคา</th>
+                    <th class="py-2 px-2 text-right w-[8%]">ส่วนลด</th>
+                    <th class="py-2 px-2 text-right w-[8%]">VAT</th>
+                    <th class="py-2 px-3 text-right w-[14%]">มูลค่าก่อนภาษี</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr class="align-top">
+                    <td class="py-2.5 px-3">
+                      <p class="font-bold text-slate-900" id="qoDisplayTireTitle">ยาง 225/50R18 MICHELIN รุ่น E PRIMACY ราคาต่อเส้น ปี 2024 (LC0053)</p>
+                      <p class="text-[10px] text-slate-500 mt-0.5" id="qoDisplayTireSubtitle">บริการติดตั้งฟรี ถอด-ใส่-ถ่วงล้อ จุ๊บลมใหม่ทุกเส้น</p>
+                    </td>
+                    <td class="py-2.5 px-2 text-right font-medium text-slate-800" id="qoDisplayQty">4.00</td>
+                    <td class="py-2.5 px-2 text-right font-medium text-slate-800" id="qoDisplayUnitPrice">7,900.00</td>
+                    <td class="py-2.5 px-2 text-right text-slate-500">0.00</td>
+                    <td class="py-2.5 px-2 text-right font-medium text-slate-700" id="qoDisplayVatPct">7%</td>
+                    <td class="py-2.5 px-3 text-right font-semibold text-slate-900" id="qoDisplayPreVatAmount">7,383.18</td>
+                  </tr>
+                  <!-- Optional Storefront Shipping line -->
+                  <tr id="qoRowStoreExtra" class="align-top hidden text-slate-600 bg-slate-50/50">
+                    <td class="py-1.5 px-3 text-[10px]" id="qoDisplayExtraDesc">ค่ารถจัดส่งรับยางตามรอบเรียก</td>
+                    <td class="py-1.5 px-2 text-right text-[10px]">1.00</td>
+                    <td class="py-1.5 px-2 text-right text-[10px]" id="qoDisplayExtraPrice">100.00</td>
+                    <td class="py-1.5 px-2 text-right text-[10px]">0.00</td>
+                    <td class="py-1.5 px-2 text-right text-[10px]">-</td>
+                    <td class="py-1.5 px-3 text-right text-[10px]" id="qoDisplayExtraTotal">100.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Financial Summary (2 Columns) -->
+            <div class="grid grid-cols-12 gap-3 mt-3 pt-1">
+              
+              <!-- Left Summary & Thai Baht Text (7 cols) -->
+              <div class="col-span-7 space-y-1.5">
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-[11px] space-y-1">
+                  <div class="flex items-center gap-1 font-bold text-slate-700 pb-0.5 border-b border-slate-200/60">
+                    <i data-lucide="calculator" class="w-3.5 h-3.5 text-indigo-600"></i>
+                    <span>สรุปยอดคำนวณ:</span>
+                  </div>
+                  <div class="flex justify-between text-slate-600">
+                    <span>มูลค่าที่คำนวณภาษี 7%:</span>
+                    <span id="qoDisplayCalcTaxBase">7,383.18 บาท</span>
+                  </div>
+                  <div class="flex justify-between text-slate-600">
+                    <span>ภาษีมูลค่าเพิ่ม 7%:</span>
+                    <span id="qoDisplayVatTotal">516.82 บาท</span>
+                  </div>
+                  <div class="flex justify-between pt-1 border-t border-slate-200/60 font-semibold text-slate-800">
+                    <span>จำนวนเงินทั้งสิ้น:</span>
+                    <span id="qoDisplayBahtText" class="text-indigo-700 font-bold font-prompt">เจ็ดพันเก้าร้อยบาทถ้วน</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Summary & Payable Box (5 cols) -->
+              <div class="col-span-5 space-y-1 text-[11px]">
+                <div class="bg-[#ede9fe] text-indigo-950 p-2 rounded-xl flex items-center justify-between font-bold border border-indigo-200">
+                  <span>จำนวนเงินทั้งสิ้น</span>
+                  <span id="qoDisplayGrandTotalRight" class="text-sm sm:text-base font-prompt text-indigo-900">7,900.00 บาท</span>
+                </div>
+                <div class="flex justify-between text-slate-500 px-1 py-0.5">
+                  <span>จำนวนเงินที่ถูกหัก ณ ที่จ่าย:</span>
+                  <span>0.00 บาท</span>
+                </div>
+                <div class="flex justify-between text-slate-900 font-bold px-1 py-1 border-t border-slate-200 text-xs">
+                  <span>จำนวนเงินที่ชำระ:</span>
+                  <span id="qoDisplayPayableTotal" class="text-indigo-700 font-prompt">7,900.00 บาท</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Payment & Bank Accounts -->
+            <div class="mt-3 p-2.5 bg-slate-50/70 border border-slate-200 rounded-xl space-y-1.5 text-[10.5px]">
+              <div class="flex items-center gap-1 font-bold text-slate-800">
+                <i data-lucide="credit-card" class="w-3.5 h-3.5 text-indigo-600"></i>
+                <span>ชำระเงิน:</span>
+              </div>
+              <div id="qoBankAccountsList" class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-slate-600">
+                <!-- Dynamically generated from shopProfile.banks -->
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mt-2.5 text-[10.5px] text-slate-600 space-y-0.5">
+              <p class="font-bold text-slate-700 flex items-center gap-1">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-indigo-600"></i>
+                <span>หมายเหตุ:</span>
+              </p>
+              <div id="qoDisplayNotes" class="pl-4 text-slate-600 space-y-0.5">
+                <p>• สินค้ารับประกันคุณภาพจากโรงงานผู้ผลิตตามมาตรฐาน</p>
+                <p>• ฟรี ค่าแรงถอด-ใส่-ถ่วงล้อ และเปลี่ยนจุ๊บลมใหม่ทุกเส้น</p>
+                <p>• กำหนดยืนราคาตามที่ระบุในเอกสาร</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom: Signatures, Stamps, QR Code -->
+          <div class="mt-4 pt-3 border-t border-slate-200 text-[10px]">
+            <div class="flex items-center gap-1 font-bold text-slate-700 mb-2">
+              <i data-lucide="check-check" class="w-3.5 h-3.5 text-indigo-600"></i>
+              <span>รับรอง:</span>
+            </div>
+
+            <div class="grid grid-cols-12 gap-2 items-center text-center">
+              
+              <!-- QR Code (2 cols) -->
+              <div class="col-span-2 flex flex-col items-center justify-center">
+                <div id="qoQrCodeBox" class="w-16 h-16 bg-white p-1 border border-slate-200 rounded-lg flex items-center justify-center shadow-xs">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https%3A%2F%2Flongchitire-th.github.io%2FGGavity%2F" alt="QR Code" class="w-14 h-14">
+                </div>
+                <span class="text-[8px] text-slate-400 mt-1 leading-tight text-center">สแกนเปิดด้วยเว็บไซต์</span>
+              </div>
+
+              <!-- Issuer (2.5 cols) -->
+              <div class="col-span-2 flex flex-col justify-between h-20 pt-1">
+                <span class="text-slate-500 font-medium">ผู้ออกเอกสาร (ผู้ขาย)</span>
+                <div class="mt-auto">
+                  <p class="font-bold text-slate-800" id="qoDisplaySignerIssuer">หลงจื่อ กรุ๊ป</p>
+                  <p class="text-[9px] text-slate-400" id="qoDisplaySignerIssueDate">14/09/2026</p>
+                </div>
+              </div>
+
+              <!-- Approver (2.5 cols) -->
+              <div class="col-span-2 flex flex-col justify-between h-20 pt-1">
+                <span class="text-slate-500 font-medium">ผู้อนุมัติเอกสาร (ผู้ขาย)</span>
+                <div class="mt-auto">
+                  <p class="font-bold text-slate-800" id="qoDisplaySignerApprover">หลงจื่อ กรุ๊ป</p>
+                  <p class="text-[9px] text-slate-400" id="qoDisplaySignerApproveDate">14/09/2026</p>
+                </div>
+              </div>
+
+              <!-- Seller Stamp Box (2 cols) -->
+              <div class="col-span-2 flex flex-col items-center justify-center h-20 border border-dashed border-slate-300 rounded-lg p-1 text-slate-400">
+                <span class="text-[9px]">ตราประทับ (ผู้ขาย)</span>
+              </div>
+
+              <!-- Customer Receiver (2.5 cols) -->
+              <div class="col-span-2 flex flex-col justify-between h-20 pt-1">
+                <span class="text-slate-500 font-medium">ผู้รับเอกสาร (ลูกค้า)</span>
+                <div class="mt-auto">
+                  <p class="font-bold text-slate-800 truncate" id="qoDisplaySignerCustomer">ห้างหุ้นส่วนจำกัด รุ่งสิริ</p>
+                  <p class="text-[9px] text-slate-400">....../....../..........</p>
+                </div>
+              </div>
+
+              <!-- Customer Stamp Box (1.5 cols) -->
+              <div class="col-span-1.5 flex flex-col items-center justify-center h-20 border border-dashed border-slate-300 rounded-lg p-1 text-slate-400">
+                <span class="text-[9px]">ตราประทับ</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= BACK-OFFICE / SETTINGS MODAL ================= -->
+  <div id="modalBackOfficeSettings" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm hidden no-print">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col border border-slate-200 font-sans overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="sticky top-0 bg-white/95 backdrop-blur-md px-5 py-4 border-b border-slate-100 flex items-center justify-between z-10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+            <i data-lucide="sliders-horizontal" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 font-prompt">ระบบหลังบ้าน (Back-Office)</h3>
+            <p class="text-[11px] text-slate-500">จัดการข้อมูลร้านค้า, ข้อมูลออกใบเสนอราคา และเทมเพลตข้อความตอบลูกค้า</p>
+          </div>
+        </div>
+        <button type="button" id="btnCloseBackOffice" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex border-b border-slate-100 bg-slate-50/80 px-5 pt-2 gap-2 flex-shrink-0">
+        <button type="button" id="btnTabBoShop" class="py-2.5 px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-2 transition" data-botab="shop">
+          <i data-lucide="store" class="w-4 h-4"></i>
+          <span>1. ข้อมูลร้านค้า & ใบเสนอราคา</span>
+        </button>
+        <button type="button" id="btnTabBoTemplates" class="py-2.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition" data-botab="templates">
+          <i data-lucide="message-square-text" class="w-4 h-4"></i>
+          <span>2. เทมเพลตการตอบลูกค้า (LINE)</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Shop Profile Content -->
+      <div id="boTabPaneShop" class="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+        
+        <!-- Company Identity -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+          <h4 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+            <i data-lucide="building-2" class="w-4 h-4 text-purple-600"></i>
+            <span>ข้อมูลบริษัท / ร้านค้าผู้ขาย (พิมพ์ลงใบเสนอราคา):</span>
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">ชื่อร้าน / บริษัท (Company Name):</label>
+              <input type="text" id="boInputShopName" placeholder="เช่น บริษัท หลงจื่อ กรุ๊ป จำกัด" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 font-semibold">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">ที่อยู่ร้านค้า (Address):</label>
+              <textarea id="boInputShopAddress" rows="2" placeholder="เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">เลขประจำตัวผู้เสียภาษี (Tax ID):</label>
+              <input type="text" id="boInputShopTaxId" placeholder="เช่น 0105568120110 (สำนักงานใหญ่)" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์ผู้ขาย (Phone):</label>
+              <input type="text" id="boInputShopTel" placeholder="เช่น 0985795449" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">อีเมลผู้ขาย (Email):</label>
+              <input type="email" id="boInputShopEmail" placeholder="เช่น longchi.tire@gmail.com" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">เว็บไซต์ (Website):</label>
+              <input type="text" id="boInputShopWebsite" placeholder="เช่น www.lctyre.com" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Person & Quotation Validity -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+          <h4 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+            <i data-lucide="phone-call" class="w-4 h-4 text-purple-600"></i>
+            <span>ข้อมูลผู้ติดต่อกลับ & เงื่อนไขเอกสาร:</span>
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">ชื่อผู้ติดต่อกลับ (Contact Person):</label>
+              <input type="text" id="boInputContactName" placeholder="เช่น หลงจื่อ กรุ๊ป" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">เบอร์ติดต่อกลับ (Contact Tel):</label>
+              <input type="text" id="boInputContactTel" placeholder="เช่น 0842156566" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">ยืนราคาภายใน (วัน):</label>
+              <input type="number" id="boInputValidDays" value="7" min="1" max="90" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bank Accounts (ชำระเงิน) -->
+        <div class="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-indigo-950 text-xs sm:text-sm flex items-center gap-1.5">
+              <i data-lucide="credit-card" class="w-4 h-4 text-indigo-600"></i>
+              <span>บัญชีธนาคารสำหรับชำระเงิน (แสดงท้ายใบเสนอราคา):</span>
+            </h4>
+            <button type="button" id="btnAddBankRow" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>เพิ่มบัญชี</span>
+            </button>
+          </div>
+
+          <div id="boBankRowsContainer" class="space-y-2">
+            <!-- Dynamic Bank Rows rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Default Terms & Notes -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <label class="block text-xs font-bold text-slate-800">
+            หมายเหตุ / เงื่อนไขท้ายใบเสนอราคาเริ่มต้น:
+          </label>
+          <textarea id="boInputShopTerms" rows="3" placeholder="ข้อความหมายเหตุ เช่น รับประกันสินค้า, บริการติดตั้งฟรี..." 
+            class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+        </div>
+
+        <!-- Save / Reset Shop Profile Buttons -->
+        <div class="sticky bottom-0 bg-white/95 backdrop-blur-md py-3 border-t border-slate-100 flex items-center justify-between -mx-5 -mb-5 px-5 z-10">
+          <button type="button" id="btnResetShopProfileDefault" class="px-3 py-2 text-slate-500 hover:text-rose-600 text-xs font-semibold transition">
+            🔄 คืนค่าเริ่มต้น (หลงจื่อ กรุ๊ป)
+          </button>
+          <button type="button" id="btnSaveShopProfile" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-900/20 transition flex items-center gap-1.5">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>บันทึกข้อมูลร้านค้า</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Tab 2: Customer Reply Templates Content -->
+      <div id="boTabPaneTemplates" class="flex-1 overflow-y-auto p-5 space-y-4 text-xs hidden">
+        
+        <!-- Template Mode Selector -->
+        <div>
+          <label class="block text-xs font-bold text-slate-800 mb-1.5">เลือกเทมเพลตที่ต้องการแก้ไข:</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl">
+            <button type="button" class="bo-tpl-selector-btn py-2 px-2 rounded-lg text-xs font-bold bg-white text-purple-700 shadow-sm transition" data-tpl="storefront">
+              1. หน้าร้าน
+            </button>
+            <button type="button" class="bo-tpl-selector-btn py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition" data-tpl="reverse">
+              2. คิดย้อนกลับ
+            </button>
+            <button type="button" class="bo-tpl-selector-btn py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition" data-tpl="online">
+              3. ออนไลน์
+            </button>
+            <button type="button" class="bo-tpl-selector-btn py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition" data-tpl="formal">
+              4. ทางการ (LINE)
+            </button>
+          </div>
+        </div>
+
+        <!-- Available Dynamic Placeholders Chips -->
+        <div class="p-3 bg-purple-50/60 rounded-xl border border-purple-100 space-y-1.5">
+          <p class="text-[11px] font-bold text-purple-950 flex items-center gap-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-600"></i>
+            <span>คลิกแท็กตัวแปรด้านล่างเพื่อแทรกลงในข้อความอัตโนมัติ:</span>
+          </p>
+          <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{tire_name}">{tire_name}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{qty}">{qty}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{price_per_unit}">{price_per_unit}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{grand_total}">{grand_total}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{doc_no}">{doc_no}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{valid_until}">{valid_until}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{shop_name}">{shop_name}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{contact_tel}">{contact_tel}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{bank_info}">{bank_info}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{supplier}">{supplier}</button>
+            <button type="button" class="bo-var-chip px-2 py-0.5 rounded-lg bg-white border border-purple-200 text-purple-800 font-mono hover:bg-purple-100 transition" data-var="{note}">{note}</button>
+          </div>
+        </div>
+
+        <!-- Template Editor Area -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-800" id="boLabelTemplateName">เนื้อหาเทมเพลต:</span>
+            <button type="button" id="btnResetCurrentTemplate" class="text-[11px] text-slate-500 hover:text-rose-600">คืนค่าเทมเพลตนี้</button>
+          </div>
+          <textarea id="boInputTemplateBody" rows="9" class="w-full p-3 font-mono text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 leading-relaxed"></textarea>
+        </div>
+
+        <!-- Live Preview of Resulting LINE Message -->
+        <div class="space-y-1.5">
+          <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+            <i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>พรีวิวตัวอย่างข้อความที่ลูกค้าจะได้รับ (Live Preview):</span>
+          </span>
+          <div id="boTemplateLivePreview" class="p-3 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl whitespace-pre-wrap leading-relaxed border border-slate-800 max-h-48 overflow-y-auto">
+            (กำลังโหลดตัวอย่างข้อความ...)
+          </div>
+        </div>
+
+        <!-- Save Template Button -->
+        <div class="sticky bottom-0 bg-white/95 backdrop-blur-md py-3 border-t border-slate-100 flex items-center justify-between -mx-5 -mb-5 px-5 z-10">
+          <button type="button" id="btnResetAllTemplates" class="px-3 py-2 text-slate-500 hover:text-rose-600 text-xs font-semibold transition">
+            🔄 คืนค่าเทมเพลตทั้งหมด
+          </button>
+          <button type="button" id="btnSaveTemplate" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-900/20 transition flex items-center gap-1.5">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>บันทึกเทมเพลตนี้</span>
+          </button>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
@@ -1563,75 +2151,271 @@
       showToast(`ปัดราคาขายเป็น ฿${rounded.toLocaleString()}`);
     }
 
-    // Copy Quote Message
-    function copyQuoteMessage() {
-      const isStorefront = calcState.appMode === 'storefront';
-      const isReverse = isStorefront && calcState.storeCalcDirection === 'reverse';
-      const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
-      const qty = calcState.qty;
-      const grandTotal = document.getElementById('displayGrandTotal').innerText;
-      const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
+    // ================= THAI BAHT TEXT CONVERTER (สำหรับใบเสนอราคาทางการ) =================
+    function formatThaiBahtText(amount) {
+      if (amount === null || amount === undefined || isNaN(amount)) return 'ศูนย์บาทถ้วน';
+      let num = Math.round(Number(amount) * 100) / 100;
+      if (num === 0) return 'ศูนย์บาทถ้วน';
+      let isNegative = num < 0;
+      num = Math.abs(num);
 
-      let message = '';
-      if (isReverse) {
-        const targetSellPrice = parseFloat(document.getElementById('inputTargetSellingPrice')?.value) || 0;
-        const tireCostUnit = parseFloat(document.getElementById('inputTireCostPerUnit').value) || 0;
-        const laborUnit = parseFloat(document.getElementById('inputLaborPerUnit').value) || 0;
-        const totalTire = (tireCostUnit * qty).toLocaleString();
-        const totalLabor = (laborUnit * qty).toLocaleString();
-        const shipCost = document.getElementById('bdShippingCost').innerText.replace(/^[+-]/, '');
-        const vatCost = calcState.includeVat ? `\n  • ภาษี VAT 7%: -${document.getElementById('bdVatCost').innerText.replace(/^[+-]/, '')} บาท` : '';
-        const profitTotal = grandTotal;
-        const profitUnit = pricePerUnit;
-        const profitMargin = document.getElementById('bdProfitMargin').innerText;
-        const isLoss = parseFloat(profitTotal.replace(/,/g, '')) < 0;
+      const thaiNums = ['ศูนย์', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
+      const thaiUnits = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
 
-        message = 
-`🚗 สรุปวิเคราะห์กำไรขายหน้าร้าน (คิดย้อนกลับ)
+      function convertGroup(nStr) {
+        let res = '';
+        const len = nStr.length;
+        for (let i = 0; i < len; i++) {
+          const digit = parseInt(nStr.charAt(i));
+          const pos = len - i - 1;
+          if (digit !== 0) {
+            if (pos === 1 && digit === 1) {
+              res += 'สิบ';
+            } else if (pos === 1 && digit === 2) {
+              res += 'ยี่สิบ';
+            } else if (pos === 0 && digit === 1 && len > 1 && parseInt(nStr.slice(0, -1)) > 0) {
+              res += 'เอ็ด';
+            } else {
+              res += thaiNums[digit] + thaiUnits[pos];
+            }
+          }
+        }
+        return res;
+      }
+
+      const parts = num.toFixed(2).split('.');
+      const intPart = parts[0];
+      const decPart = parts[1];
+      const intVal = parseInt(intPart);
+
+      let bahtText = '';
+      if (intVal === 0) {
+        bahtText = 'ศูนย์บาท';
+      } else {
+        let chunks = [];
+        let tmp = intPart;
+        while (tmp.length > 0) {
+          chunks.unshift(tmp.slice(-6));
+          tmp = tmp.slice(0, -6);
+        }
+        for (let i = 0; i < chunks.length; i++) {
+          const groupText = convertGroup(chunks[i]);
+          bahtText += groupText;
+          if (i < chunks.length - 1 && groupText !== '') {
+            bahtText += 'ล้าน';
+          }
+        }
+        bahtText += 'บาท';
+      }
+
+      const decVal = parseInt(decPart);
+      if (decVal === 0) {
+        bahtText += 'ถ้วน';
+      } else {
+        bahtText += convertGroup(decPart) + 'สตางค์';
+      }
+
+      return (isNegative ? 'ลบ' : '') + bahtText;
+    }
+
+    // ================= DEFAULT SHOP PROFILE & CUSTOMER REPLY TEMPLATES =================
+    const DEFAULT_SHOP_PROFILE = {
+      name: 'บริษัท หหลงจื่อ กรุ๊ป จำกัด',
+      address: 'เลขที่ 775 ห้องเลขที่ 2-3 ถนนเจริญพัฒนา แขวงบางชัน เขตคลองสามวา กรุงเทพมหานคร 10510',
+      taxId: '0105568120110 (สำนักงานใหญ่)',
+      tel: '0985795449',
+      email: 'longchi.tire@gmail.com',
+      website: 'www.lctyre.com',
+      contactName: 'หลงจื่อ กรุ๊ป',
+      contactTel: '0842156566',
+      validDays: 7,
+      terms: '• สินค้ารับประกันคุณภาพจากโรงงานผู้ผลิตตามมาตรฐาน\n• ฟรี ค่าแรงถอด-ใส่-ถ่วงล้อ และเปลี่ยนจุ๊บลมใหม่ทุกเส้น\n• กำหนดยืนราคาตามที่ระบุในเอกสาร',
+      signerIssuer: 'หลงจื่อ กรุ๊ป',
+      signerApprover: 'หลงจื่อ กรุ๊ป',
+      banks: [
+        { bankName: 'ธ.ไทยพาณิชย์ (SCB)', accNo: '439-166298-6', accName: 'บจก. หหลงจื่อ กรุ๊ป' },
+        { bankName: 'ธ.กรุงไทย (KTB)', accNo: '664-5-80277-3', accName: 'บจก. หหลงจื่อ กรุ๊ป' }
+      ]
+    };
+
+    const DEFAULT_REPLY_TEMPLATES = {
+      storefront: `🚗 ข้อเสนอราคาพิเศษ (หน้าร้าน)
 ━━━━━━━━━━━━━━━━━━━━
-📦 สินค้า: ${tireName} (${qty} เส้น)
-🏷️ ราคาขายที่ตั้งไว้: ฿${targetSellPrice.toLocaleString()} บาท (เฉลี่ยเส้นละ ฿${Math.round(targetSellPrice / qty).toLocaleString()} บ.)
-━━━━━━━━━━━━━━━━━━━━
-📊 รายการหักต้นทุน:
-  • ทุนยาง (${qty} เส้น @${tireCostUnit.toLocaleString()}): -฿${totalTire} บาท
-  • ค่าแรงช่าง (@${laborUnit} บ./เส้น): -฿${totalLabor} บาท
-  • ค่ารถรับยาง: -${shipCost} บาท${vatCost}
-━━━━━━━━━━━━━━━━━━━━
-💵 เหลือกำไรสุทธิ: ฿${profitTotal} บาท (เส้นละ ${profitUnit} บาท)
-📈 อัตรากำไร: ${profitMargin}
-${isLoss ? '⚠️ ขายราคานี้เข้าเนื้อ/ขาดทุน กรุณาพิจารณาราคาใหม่' : '✅ ผ่านเกณฑ์ มีกำไรสุทธิเข้ากระเป๋า'}`;
-      } else if (isStorefront) {
-        message = 
-`🚗 ข้อเสนอราคาพิเศษ (หน้าร้าน)
-━━━━━━━━━━━━━━━━━━━━
-📦 สินค้า: ${tireName}
-🔢 จำนวน: ${qty} เส้น
-💰 ราคาเส้นละ: ${pricePerUnit} บาท
-🏷️ ยอดรวมทั้งสิ้น: ฿${grandTotal} บาท
+📦 สินค้า: {tire_name}
+🔢 จำนวน: {qty} เส้น
+💰 ราคาเส้นละ: {price_per_unit} บาท
+🏷️ ยอดรวมทั้งสิ้น: ฿{grand_total} บาท
 
 ✨ บริการพร้อมในชุด:
   • ฟรี ค่าแรงติดตั้ง ถอด-ใส่-ถ่วงล้อ
   • ฟรี เปลี่ยนจุ๊บลมใหม่ทุกเส้น
   • ฟรี ตรวจเช็กระบบเบรกและช่วงล่างเบื้องต้น
 
-📞 สนใจล็อกราคา หรือนัดคิวติดตั้งแจ้งได้เลยครับผม!`;
-      } else {
-        const platform = calcState.gpPlatformName || 'ออนไลน์';
-        const gp = document.getElementById('inputGpPercent').value;
-        message = 
-`🛒 ข้อมูลตั้งราคาขายออนไลน์ (${platform})
+📞 สนใจล็อกราคา หรือนัดคิวติดตั้งแจ้งได้เลยครับผม!
+👤 ติดต่อ: {contact_name} โทร {contact_tel}
+🏢 {shop_name}`,
+
+      reverse: `🚗 สรุปวิเคราะห์กำไรขายหน้าร้าน (คิดย้อนกลับ)
 ━━━━━━━━━━━━━━━━━━━━
-📦 สินค้า: ${tireName} (${qty} เส้น)
-🏷️ ราคาตั้งขายหน้าแอป: ฿${grandTotal} บาท
-💰 เฉลี่ยตั้งขายเส้นละ: ${pricePerUnit} บาท
-📊 หักค่าธรรมเนียม GP: ${gp}%
-📥 ยอดเงินสุทธิร้านรับ: ${document.getElementById('bdNetPayout').innerText} บาท
-💵 กำไรสุทธิเข้ากระเป๋า: ${document.getElementById('bdProfitCost').innerText} บาท`;
+📦 สินค้า: {tire_name} ({qty} เส้น)
+🏷️ ราคาขายที่ตั้งไว้: ฿{target_selling_price} บาท (เฉลี่ยเส้นละ ฿{price_per_unit} บ.)
+━━━━━━━━━━━━━━━━━━━━
+📊 สรุปผลกำไร:
+💵 เหลือกำไรสุทธิ: ฿{grand_total} บาท
+📈 อัตรากำไร: {profit_margin}
+🏢 ซับพลายเออร์: {supplier}
+📝 หมายเหตุ: {note}`,
+
+      online: `🛒 ข้อมูลตั้งราคาขายออนไลน์ ({platform})
+━━━━━━━━━━━━━━━━━━━━
+📦 สินค้า: {tire_name} ({qty} เส้น)
+🏷️ ราคาตั้งขายหน้าแอป: ฿{grand_total} บาท
+💰 เฉลี่ยตั้งขายเส้นละ: {price_per_unit} บาท
+📊 หักค่าธรรมเนียม GP: {gp}%
+📥 ยอดเงินสุทธิร้านรับ: ฿{net_payout} บาท
+💵 กำไรสุทธิเข้ากระเป๋า: ฿{profit_cost} บาท`,
+
+      formal: `📄 ใบเสนอราคาทางการ ({shop_name})
+━━━━━━━━━━━━━━━━━━━━
+เลขที่เอกสาร: {doc_no}
+วันที่ออก: {issue_date} (ใช้ได้ถึง {valid_until})
+ลูกค้า: {customer_name}
+━━━━━━━━━━━━━━━━━━━━
+📦 รายการ: {tire_name}
+🔢 จำนวน: {qty} เส้น
+💰 ราคาต่อเส้น: {price_per_unit} บาท
+🏷️ ยอดรวมทั้งสิ้น: ฿{grand_total} บาท ({baht_text})
+━━━━━━━━━━━━━━━━━━━━
+💳 โอนชำระเงิน:
+{bank_info}
+
+👤 ติดต่อ: {contact_name} โทร {contact_tel}
+🏢 {shop_name}`
+    };
+
+    function getShopProfile() {
+      try {
+        const saved = localStorage.getItem('tire_shop_profile');
+        if (saved) {
+          return Object.assign({}, DEFAULT_SHOP_PROFILE, JSON.parse(saved));
+        }
+      } catch (e) {}
+      return Object.assign({}, DEFAULT_SHOP_PROFILE);
+    }
+
+    function saveShopProfile(profile) {
+      localStorage.setItem('tire_shop_profile', JSON.stringify(profile));
+    }
+
+    function resetShopProfile() {
+      localStorage.removeItem('tire_shop_profile');
+      return Object.assign({}, DEFAULT_SHOP_PROFILE);
+    }
+
+    function getReplyTemplates() {
+      try {
+        const saved = localStorage.getItem('tire_reply_templates');
+        if (saved) {
+          return Object.assign({}, DEFAULT_REPLY_TEMPLATES, JSON.parse(saved));
+        }
+      } catch (e) {}
+      return Object.assign({}, DEFAULT_REPLY_TEMPLATES);
+    }
+
+    function saveReplyTemplates(tpls) {
+      localStorage.setItem('tire_reply_templates', JSON.stringify(tpls));
+    }
+
+    function resetReplyTemplates() {
+      localStorage.removeItem('tire_reply_templates');
+      return Object.assign({}, DEFAULT_REPLY_TEMPLATES);
+    }
+
+    // Replace dynamic placeholders with current calculation numbers
+    function formatReplyMessage(tplKey, customTemplateBody = null) {
+      const templates = getReplyTemplates();
+      const templateStr = customTemplateBody !== null ? customTemplateBody : (templates[tplKey] || DEFAULT_REPLY_TEMPLATES[tplKey] || '');
+      const profile = getShopProfile();
+
+      const isStorefront = calcState.appMode === 'storefront';
+      const isReverse = isStorefront && calcState.storeCalcDirection === 'reverse';
+      const tireName = document.getElementById('inputTireName')?.value.trim() || 'ยางรถยนต์มาตรฐาน';
+      const qty = calcState.qty || 4;
+      const supplier = document.getElementById('inputSupplierName')?.value.trim() || '-';
+      const note = document.getElementById('inputQuoteNote')?.value.trim() || '-';
+
+      const displayGrandTotalText = document.getElementById('displayGrandTotal')?.innerText || '0';
+      const displayPricePerUnitText = document.getElementById('displayPricePerUnit')?.innerText || '0';
+      const targetSellPrice = parseFloat(document.getElementById('inputTargetSellingPrice')?.value) || 0;
+      const profitMargin = document.getElementById('bdProfitMargin')?.innerText || '0%';
+      const netPayout = document.getElementById('bdNetPayout')?.innerText || '0';
+      const profitCost = document.getElementById('bdProfitCost')?.innerText || '0';
+      const gp = document.getElementById('inputGpPercent')?.value || '14';
+      const platform = calcState.gpPlatformName || 'ออนไลน์';
+
+      const docNo = document.getElementById('qoInputDocNo')?.value || ('QO-' + new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + '00001');
+      const issueDate = document.getElementById('qoInputIssueDate')?.value || new Date().toLocaleDateString('th-TH');
+      const validUntil = document.getElementById('qoInputValidUntil')?.value || '';
+      const customerName = document.getElementById('qoInputCustomerName')?.value || 'ลูกค้าทั่วไป';
+
+      let grandTotalVal = 0;
+      if (isReverse) {
+        grandTotalVal = targetSellPrice;
+      } else {
+        grandTotalVal = parseFloat(displayGrandTotalText.replace(/,/g, '')) || 0;
       }
+      const bahtText = formatThaiBahtText(grandTotalVal);
+
+      const bankInfo = (profile.banks || []).map(b => `  • ${b.bankName}: ${b.accNo} (${b.accName})`).join('\n') || '-';
+
+      const vars = {
+        '{tire_name}': tireName,
+        '{qty}': qty,
+        '{price_per_unit}': displayPricePerUnitText.replace('฿', ''),
+        '{grand_total}': isReverse ? targetSellPrice.toLocaleString() : displayGrandTotalText,
+        '{target_selling_price}': targetSellPrice.toLocaleString(),
+        '{profit_margin}': profitMargin,
+        '{supplier}': supplier,
+        '{note}': note,
+        '{platform}': platform,
+        '{gp}': gp,
+        '{net_payout}': netPayout,
+        '{profit_cost}': profitCost,
+        '{doc_no}': docNo,
+        '{issue_date}': issueDate,
+        '{valid_until}': validUntil,
+        '{customer_name}': customerName,
+        '{baht_text}': bahtText,
+        '{bank_info}': bankInfo,
+        '{shop_name}': profile.name || '',
+        '{shop_tel}': profile.tel || '',
+        '{contact_name}': profile.contactName || '',
+        '{contact_tel}': profile.contactTel || ''
+      };
+
+      let result = templateStr;
+      for (const [k, v] of Object.entries(vars)) {
+        result = result.split(k).join(v !== undefined ? v : '');
+      }
+      return result;
+    }
+
+    // Copy Quote Message using active template
+    function copyQuoteMessage() {
+      const isStorefront = calcState.appMode === 'storefront';
+      const isReverse = isStorefront && calcState.storeCalcDirection === 'reverse';
+      let tplKey = 'storefront';
+      if (isStorefront) {
+        tplKey = isReverse ? 'reverse' : 'storefront';
+      } else {
+        tplKey = 'online';
+      }
+
+      const message = formatReplyMessage(tplKey);
 
       if (navigator.clipboard) {
         navigator.clipboard.writeText(message).then(() => {
-          showToast('คัดลอกข้อความเรียบร้อยแล้ว!');
+          showToast('คัดลอกข้อความ LINE เรียบร้อยแล้ว!');
         });
       } else {
         const textarea = document.createElement('textarea');
@@ -1640,8 +2424,276 @@ ${isLoss ? '⚠️ ขายราคานี้เข้าเนื้อ/ข
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showToast('คัดลอกข้อความเรียบร้อยแล้ว!');
+        showToast('คัดลอกข้อความ LINE เรียบร้อยแล้ว!');
       }
+    }
+
+    // ================= FORMAL QUOTATION RENDERER =================
+    function renderQuotationDocument() {
+      const profile = getShopProfile();
+      const isStorefront = calcState.appMode === 'storefront';
+      const isReverse = isStorefront && calcState.storeCalcDirection === 'reverse';
+
+      // Seller identity
+      const elShopName = document.getElementById('qoDisplayShopName');
+      const elShopAddress = document.getElementById('qoDisplayShopAddress');
+      const elShopTaxId = document.getElementById('qoDisplayShopTaxId');
+      const elShopTel = document.getElementById('qoDisplayShopTel');
+      const elShopEmail = document.getElementById('qoDisplayShopEmail');
+      const elShopWebsite = document.getElementById('qoDisplayShopWebsite');
+
+      if (elShopName) elShopName.innerText = profile.name;
+      if (elShopAddress) elShopAddress.innerText = profile.address;
+      if (elShopTaxId) elShopTaxId.innerText = profile.taxId;
+      if (elShopTel) elShopTel.innerText = profile.tel;
+      if (elShopEmail) elShopEmail.innerText = profile.email;
+      if (elShopWebsite) elShopWebsite.innerText = profile.website;
+
+      // Contact return box
+      const elContactName = document.getElementById('qoDisplayContactName');
+      const elContactTel = document.getElementById('qoDisplayContactTel');
+      const elContactEmail = document.getElementById('qoDisplayContactEmail');
+      if (elContactName) elContactName.innerText = profile.contactName;
+      if (elContactTel) elContactTel.innerText = profile.contactTel;
+      if (elContactEmail) elContactEmail.innerText = profile.email;
+
+      // Metadata: Dates & Doc No
+      const inpDocNo = document.getElementById('qoInputDocNo');
+      const inpIssueDate = document.getElementById('qoInputIssueDate');
+      const inpValidUntil = document.getElementById('qoInputValidUntil');
+
+      const now = new Date();
+      const dStr = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+      const validDate = new Date();
+      validDate.setDate(now.getDate() + (parseInt(profile.validDays) || 7));
+      const vStr = String(validDate.getDate()).padStart(2, '0') + '/' + String(validDate.getMonth() + 1).padStart(2, '0') + '/' + validDate.getFullYear();
+
+      if (inpIssueDate && !inpIssueDate.value) inpIssueDate.value = dStr;
+      if (inpValidUntil && !inpValidUntil.value) inpValidUntil.value = vStr;
+      if (inpDocNo && !inpDocNo.value) {
+        inpDocNo.value = 'QO-' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + '00001';
+      }
+
+      document.getElementById('qoDisplayDocNo').innerText = inpDocNo?.value || 'QO-20260900001';
+      document.getElementById('qoDisplayIssueDate').innerText = inpIssueDate?.value || dStr;
+      document.getElementById('qoDisplayValidUntil').innerText = inpValidUntil?.value || vStr;
+
+      // Customer fields
+      const custName = document.getElementById('qoInputCustomerName')?.value || 'ลูกค้าทั่วไป';
+      const custAddr = document.getElementById('qoInputCustomerAddress')?.value || '-';
+      const custTax = document.getElementById('qoInputCustomerTaxId')?.value || '-';
+      const custTel = document.getElementById('qoInputCustomerTel')?.value || '-';
+      const custAttn = document.getElementById('qoInputCustomerAttention')?.value || '-';
+
+      document.getElementById('qoDisplayCustomerName').innerText = custName;
+      document.getElementById('qoDisplayCustomerAddress').innerText = custAddr;
+      document.getElementById('qoDisplayCustomerTaxId').innerText = custTax;
+      document.getElementById('qoDisplayCustomerTel').innerText = custTel;
+      document.getElementById('qoDisplayCustomerAttention').innerText = custAttn;
+
+      // Financial calculations
+      const tireName = document.getElementById('inputTireName')?.value.trim() || 'ยางรถยนต์มาตรฐาน';
+      const qty = calcState.qty || 4;
+
+      let grandTotalNum = 0;
+      if (isReverse) {
+        grandTotalNum = parseFloat(document.getElementById('inputTargetSellingPrice')?.value) || 0;
+      } else {
+        grandTotalNum = parseFloat(document.getElementById('displayGrandTotal')?.innerText.replace(/,/g, '')) || 0;
+      }
+
+      const unitPriceNum = qty > 0 ? (grandTotalNum / qty) : 0;
+      let preVatAmount = grandTotalNum;
+      let vatAmount = 0;
+      let vatPctText = '-';
+
+      if (calcState.includeVat) {
+        preVatAmount = Math.round((grandTotalNum / 1.07) * 100) / 100;
+        vatAmount = Math.round((grandTotalNum - preVatAmount) * 100) / 100;
+        vatPctText = '7%';
+      }
+
+      document.getElementById('qoDisplayTireTitle').innerText = tireName;
+      document.getElementById('qoDisplayTireSubtitle').innerText = isStorefront 
+        ? 'บริการติดตั้งฟรี ถอด-ใส่-ถ่วงล้อ จุ๊บลมใหม่ทุกเส้น พร้อมตรวจเช็กระบบเบรก'
+        : `จัดส่งสินค้ามาตรฐาน (${calcState.gpPlatformName || 'ออนไลน์'})`;
+
+      document.getElementById('qoDisplayQty').innerText = qty.toFixed(2);
+      document.getElementById('qoDisplayUnitPrice').innerText = unitPriceNum.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('qoDisplayVatPct').innerText = vatPctText;
+      document.getElementById('qoDisplayPreVatAmount').innerText = preVatAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      // Summary
+      document.getElementById('qoDisplayCalcTaxBase').innerText = preVatAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+      document.getElementById('qoDisplayVatTotal').innerText = vatAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+      document.getElementById('qoDisplayGrandTotalRight').innerText = grandTotalNum.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+      document.getElementById('qoDisplayPayableTotal').innerText = grandTotalNum.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+      document.getElementById('qoDisplayBahtText').innerText = formatThaiBahtText(grandTotalNum);
+
+      // Bank accounts
+      const bankListCont = document.getElementById('qoBankAccountsList');
+      if (bankListCont) {
+        bankListCont.innerHTML = (profile.banks || []).map(b => `
+          <div class="p-2 bg-white rounded-lg border border-slate-200/80 shadow-xs">
+            <p class="font-bold text-slate-800">${b.bankName || '-'}</p>
+            <p class="font-mono text-indigo-700 font-bold text-[11px]">${b.accNo || '-'}</p>
+            <p class="text-slate-500 text-[9.5px]">${b.accName || '-'}</p>
+          </div>
+        `).join('');
+      }
+
+      // Terms
+      const notesCont = document.getElementById('qoDisplayNotes');
+      if (notesCont) {
+        const termLines = (profile.terms || '').split('\n').filter(l => l.trim().length > 0);
+        notesCont.innerHTML = termLines.map(l => `<p>${l.startsWith('•') ? l : '• ' + l}</p>`).join('');
+      }
+
+      // Signatures
+      document.getElementById('qoDisplaySignerIssuer').innerText = profile.signerIssuer || profile.name;
+      document.getElementById('qoDisplaySignerApprover').innerText = profile.signerApprover || profile.name;
+      document.getElementById('qoDisplaySignerIssueDate').innerText = inpIssueDate?.value || dStr;
+      document.getElementById('qoDisplaySignerApproveDate').innerText = inpIssueDate?.value || dStr;
+      document.getElementById('qoDisplaySignerCustomer').innerText = custName.slice(0, 30);
+
+      // QR Code
+      const qrUrl = profile.website && profile.website.startsWith('http') ? profile.website : ('https://' + (profile.website || 'www.lctyre.com'));
+      const qrImg = document.querySelector('#qoQrCodeBox img');
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrUrl)}`;
+      }
+
+      updateIcons();
+    }
+
+    function openQuotationModal() {
+      renderQuotationDocument();
+      document.getElementById('modalQuotationPreview')?.classList.remove('hidden');
+      updateIcons();
+    }
+
+    function closeQuotationModal() {
+      document.getElementById('modalQuotationPreview')?.classList.add('hidden');
+    }
+
+    // ================= BACK-OFFICE / SETTINGS ENGINE =================
+    let currentBoBanks = [];
+    let currentBoTab = 'shop';
+    let currentSelectedTpl = 'storefront';
+
+    function renderBankRowsInBackOffice() {
+      const cont = document.getElementById('boBankRowsContainer');
+      if (!cont) return;
+      cont.innerHTML = currentBoBanks.map((b, idx) => `
+        <div class="flex items-center gap-2 bank-row" data-index="${idx}">
+          <input type="text" class="bo-bank-name flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 text-slate-800" placeholder="ชื่อธนาคาร เช่น SCB" value="${b.bankName || ''}">
+          <input type="text" class="bo-bank-acc flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 text-slate-800" placeholder="เลขที่บัญชี" value="${b.accNo || ''}">
+          <input type="text" class="bo-bank-accname flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 text-slate-800" placeholder="ชื่อบัญชี" value="${b.accName || ''}">
+          <button type="button" class="bo-btn-delete-bank w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition" data-index="${idx}" title="ลบบัญชีนี้">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      `).join('');
+
+      cont.querySelectorAll('.bo-btn-delete-bank').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.index);
+          currentBoBanks.splice(idx, 1);
+          renderBankRowsInBackOffice();
+        });
+      });
+
+      updateIcons();
+    }
+
+    function switchBoTab(tab) {
+      currentBoTab = tab;
+      const btnShop = document.getElementById('btnTabBoShop');
+      const btnTpls = document.getElementById('btnTabBoTemplates');
+      const paneShop = document.getElementById('boTabPaneShop');
+      const paneTpls = document.getElementById('boTabPaneTemplates');
+
+      if (tab === 'shop') {
+        btnShop.className = 'py-2.5 px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-2 transition';
+        btnTpls.className = 'py-2.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition';
+        paneShop.classList.remove('hidden');
+        paneTpls.classList.add('hidden');
+      } else {
+        btnShop.className = 'py-2.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition';
+        btnTpls.className = 'py-2.5 px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-2 transition';
+        paneShop.classList.add('hidden');
+        paneTpls.classList.remove('hidden');
+        switchBoTemplate(currentSelectedTpl);
+      }
+      updateIcons();
+    }
+
+    function switchBoTemplate(tplKey) {
+      currentSelectedTpl = tplKey;
+      document.querySelectorAll('.bo-tpl-selector-btn').forEach(btn => {
+        if (btn.dataset.tpl === tplKey) {
+          btn.className = 'bo-tpl-selector-btn py-2 px-2 rounded-lg text-xs font-bold bg-white text-purple-700 shadow-sm transition';
+        } else {
+          btn.className = 'bo-tpl-selector-btn py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition';
+        }
+      });
+
+      const titles = {
+        storefront: 'เนื้อหาเทมเพลตหน้าร้าน (Storefront LINE Message):',
+        reverse: 'เนื้อหาเทมเพลตคิดย้อนกลับ (Reverse Profit Analysis):',
+        online: 'เนื้อหาเทมเพลตออนไลน์ (Marketplace Platform Listing):',
+        formal: 'เนื้อหาเทมเพลตทางการ (Formal Quotation LINE Summary):'
+      };
+      document.getElementById('boLabelTemplateName').innerText = titles[tplKey] || 'เนื้อหาเทมเพลต:';
+
+      const tpls = getReplyTemplates();
+      const textarea = document.getElementById('boInputTemplateBody');
+      textarea.value = tpls[tplKey] || DEFAULT_REPLY_TEMPLATES[tplKey] || '';
+      updateBoTemplateLivePreview();
+    }
+
+    function updateBoTemplateLivePreview() {
+      const preview = document.getElementById('boTemplateLivePreview');
+      if (!preview) return;
+      const text = document.getElementById('boInputTemplateBody')?.value || '';
+      preview.innerText = formatReplyMessage(currentSelectedTpl, text);
+    }
+
+    function insertVariableAtCursor(variable) {
+      const textarea = document.getElementById('boInputTemplateBody');
+      if (!textarea) return;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      textarea.value = text.substring(0, start) + variable + text.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+      textarea.focus();
+      updateBoTemplateLivePreview();
+    }
+
+    function openBackOfficeModal(tab = 'shop') {
+      const profile = getShopProfile();
+      document.getElementById('boInputShopName').value = profile.name || '';
+      document.getElementById('boInputShopAddress').value = profile.address || '';
+      document.getElementById('boInputShopTaxId').value = profile.taxId || '';
+      document.getElementById('boInputShopTel').value = profile.tel || '';
+      document.getElementById('boInputShopEmail').value = profile.email || '';
+      document.getElementById('boInputShopWebsite').value = profile.website || '';
+      document.getElementById('boInputContactName').value = profile.contactName || '';
+      document.getElementById('boInputContactTel').value = profile.contactTel || '';
+      document.getElementById('boInputValidDays').value = profile.validDays || 7;
+      document.getElementById('boInputShopTerms').value = profile.terms || '';
+
+      currentBoBanks = JSON.parse(JSON.stringify(profile.banks || []));
+      renderBankRowsInBackOffice();
+
+      switchBoTab(tab);
+      document.getElementById('modalBackOfficeSettings')?.classList.remove('hidden');
+      updateIcons();
+    }
+
+    function closeBackOfficeModal() {
+      document.getElementById('modalBackOfficeSettings')?.classList.add('hidden');
     }
 
     // Google Apps Script Template
@@ -1966,27 +3018,9 @@ function doGet(e) {
       if (modal) modal.classList.add('hidden');
     }
 
-    // Print Quotation
+    // Print / Open Formal Quotation (A4 Long Ci)
     function printQuote() {
-      const isStorefront = calcState.appMode === 'storefront';
-      const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
-      const qty = calcState.qty;
-      const grandTotal = document.getElementById('displayGrandTotal').innerText;
-      const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
-
-      document.getElementById('printHeaderTitle').innerText = isStorefront ? 'ใบเสนอราคา / รายการเปลี่ยนยางหน้าร้าน' : 'ใบสรุปโครงสร้างราคาขายออนไลน์';
-      document.getElementById('printTireName').innerText = tireName;
-      document.getElementById('printQty').innerText = `${qty} เส้น`;
-      document.getElementById('printPricePerUnit').innerText = pricePerUnit;
-      document.getElementById('printGrandTotal').innerText = `฿${grandTotal} บาท`;
-      document.getElementById('printDate').innerText = `วันที่ ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')}`;
-
-      const printArea = document.getElementById('printArea');
-      printArea.classList.remove('hidden');
-      window.print();
-      setTimeout(() => {
-        printArea.classList.add('hidden');
-      }, 500);
+      openQuotationModal();
     }
 
     // Fetch memory mappings from server if available
@@ -2207,6 +3241,134 @@ function doGet(e) {
       // Save Quote (Primary & Mobile)
       document.getElementById('btnSaveQuote')?.addEventListener('click', saveQuoteHistory);
       document.getElementById('btnMobileSave')?.addEventListener('click', saveQuoteHistory);
+
+      // ================= BACK-OFFICE & QUOTATION EVENT LISTENERS =================
+      // Back-Office Controls
+      document.getElementById('btnOpenBackOffice')?.addEventListener('click', () => openBackOfficeModal('shop'));
+      document.getElementById('btnCloseBackOffice')?.addEventListener('click', closeBackOfficeModal);
+      document.getElementById('modalBackOfficeSettings')?.addEventListener('click', (e) => {
+        if (e.target.id === 'modalBackOfficeSettings') closeBackOfficeModal();
+      });
+
+      document.getElementById('btnTabBoShop')?.addEventListener('click', () => switchBoTab('shop'));
+      document.getElementById('btnTabBoTemplates')?.addEventListener('click', () => switchBoTab('templates'));
+
+      // Bank Management in Back-Office
+      document.getElementById('btnAddBankRow')?.addEventListener('click', () => {
+        currentBoBanks.push({ bankName: '', accNo: '', accName: '' });
+        renderBankRowsInBackOffice();
+      });
+
+      // Save Shop Profile
+      document.getElementById('btnSaveShopProfile')?.addEventListener('click', () => {
+        const profile = getShopProfile();
+        profile.name = document.getElementById('boInputShopName')?.value.trim() || DEFAULT_SHOP_PROFILE.name;
+        profile.address = document.getElementById('boInputShopAddress')?.value.trim() || DEFAULT_SHOP_PROFILE.address;
+        profile.taxId = document.getElementById('boInputShopTaxId')?.value.trim() || DEFAULT_SHOP_PROFILE.taxId;
+        profile.tel = document.getElementById('boInputShopTel')?.value.trim() || DEFAULT_SHOP_PROFILE.tel;
+        profile.email = document.getElementById('boInputShopEmail')?.value.trim() || DEFAULT_SHOP_PROFILE.email;
+        profile.website = document.getElementById('boInputShopWebsite')?.value.trim() || DEFAULT_SHOP_PROFILE.website;
+        profile.contactName = document.getElementById('boInputContactName')?.value.trim() || DEFAULT_SHOP_PROFILE.contactName;
+        profile.contactTel = document.getElementById('boInputContactTel')?.value.trim() || DEFAULT_SHOP_PROFILE.contactTel;
+        profile.validDays = parseInt(document.getElementById('boInputValidDays')?.value) || 7;
+        profile.terms = document.getElementById('boInputShopTerms')?.value || DEFAULT_SHOP_PROFILE.terms;
+        
+        // Read current bank inputs from DOM
+        const bankRows = document.querySelectorAll('#boBankRowsContainer .bank-row');
+        const updatedBanks = [];
+        bankRows.forEach(row => {
+          const bankName = row.querySelector('.bo-bank-name')?.value.trim() || '';
+          const accNo = row.querySelector('.bo-bank-acc')?.value.trim() || '';
+          const accName = row.querySelector('.bo-bank-accname')?.value.trim() || '';
+          if (bankName || accNo) {
+            updatedBanks.push({ bankName, accNo, accName });
+          }
+        });
+        profile.banks = updatedBanks.length > 0 ? updatedBanks : currentBoBanks;
+        currentBoBanks = JSON.parse(JSON.stringify(profile.banks));
+
+        saveShopProfile(profile);
+        renderQuotationDocument();
+        showToast('✅ บันทึกข้อมูลร้านค้าเรียบร้อยแล้ว!');
+      });
+
+      // Reset Shop Profile Default
+      document.getElementById('btnResetShopProfileDefault')?.addEventListener('click', () => {
+        resetShopProfile();
+        openBackOfficeModal('shop');
+        renderQuotationDocument();
+        showToast('คืนค่าเริ่มต้น (หลงจื่อ กรุ๊ป) เรียบร้อยแล้ว');
+      });
+
+      // Template Selector Buttons
+      document.querySelectorAll('.bo-tpl-selector-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchBoTemplate(btn.dataset.tpl));
+      });
+
+      // Template Dynamic Chips Click-to-Insert
+      document.querySelectorAll('.bo-var-chip').forEach(btn => {
+        btn.addEventListener('click', () => insertVariableAtCursor(btn.dataset.var));
+      });
+
+      // Template Textarea Input Event (Live Preview)
+      document.getElementById('boInputTemplateBody')?.addEventListener('input', updateBoTemplateLivePreview);
+
+      // Save Template Button
+      document.getElementById('btnSaveTemplate')?.addEventListener('click', () => {
+        const tpls = getReplyTemplates();
+        const text = document.getElementById('boInputTemplateBody')?.value || '';
+        tpls[currentSelectedTpl] = text;
+        saveReplyTemplates(tpls);
+        showToast('✅ บันทึกเทมเพลตข้อความเรียบร้อยแล้ว!');
+      });
+
+      // Reset Current Template Button
+      document.getElementById('btnResetCurrentTemplate')?.addEventListener('click', () => {
+        const tpls = getReplyTemplates();
+        tpls[currentSelectedTpl] = DEFAULT_REPLY_TEMPLATES[currentSelectedTpl];
+        saveReplyTemplates(tpls);
+        switchBoTemplate(currentSelectedTpl);
+        showToast('คืนค่าเทมเพลตนี้เป็นค่าเริ่มต้นแล้ว');
+      });
+
+      // Reset All Templates Button
+      document.getElementById('btnResetAllTemplates')?.addEventListener('click', () => {
+        resetReplyTemplates();
+        switchBoTemplate(currentSelectedTpl);
+        showToast('คืนค่าเทมเพลตทั้งหมดเป็นค่าเริ่มต้นแล้ว');
+      });
+
+      // Quotation Modal Controls
+      document.getElementById('btnCloseQuotationPreview')?.addEventListener('click', closeQuotationModal);
+      document.getElementById('modalQuotationPreview')?.addEventListener('click', (e) => {
+        if (e.target.id === 'modalQuotationPreview') closeQuotationModal();
+      });
+
+      document.getElementById('btnTriggerPrintQuotation')?.addEventListener('click', () => {
+        window.print();
+      });
+
+      document.getElementById('btnCopyFormalQuoteLine')?.addEventListener('click', () => {
+        const msg = formatReplyMessage('formal');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(msg).then(() => {
+            showToast('✅ คัดลอกข้อความใบเสนอราคา (LINE) เรียบร้อยแล้ว!');
+          });
+        } else {
+          showToast('คัดลอกข้อความเรียบร้อยแล้ว!');
+        }
+      });
+
+      document.getElementById('btnEditShopFromQuotation')?.addEventListener('click', () => {
+        openBackOfficeModal('shop');
+      });
+
+      // Real-time Live Sync for Customer Quick Inputs
+      ['qoInputCustomerName', 'qoInputCustomerAddress', 'qoInputCustomerTaxId', 'qoInputCustomerTel', 'qoInputCustomerAttention', 'qoInputDocNo', 'qoInputIssueDate', 'qoInputValidUntil'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () => {
+          renderQuotationDocument();
+        });
+      });
 
       // Supplier Presets
       document.querySelectorAll('.supplier-preset-btn').forEach(btn => {
