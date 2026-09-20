@@ -806,6 +806,11 @@
         </div>
 
         <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <!-- Send to PEAK Button -->
+          <button type="button" id="btnSyncToPeakQuotation" class="px-3 py-2 bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-700 hover:to-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-sky-900/20 transition" title="ส่งข้อมูลเปิดใบเสนอราคาบน PEAK Account">
+            <i data-lucide="cloud-upload" class="w-3.5 h-3.5 text-sky-200"></i>
+            <span id="btnSyncToPeakText">ส่งเข้าบัญชี PEAK</span>
+          </button>
           <button type="button" id="btnTriggerPrintQuotation" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-900/20 transition">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i>
             <span>สั่งพิมพ์ / โหลด PDF (A4)</span>
@@ -878,6 +883,28 @@
             </div>
           </div>
         </details>
+      </div>
+
+      <!-- PEAK Sync Status Alert Banner -->
+      <div id="qoPeakSyncBanner" class="hidden mx-4 sm:mx-6 my-2.5 p-3 rounded-2xl border text-xs flex flex-wrap items-center justify-between gap-2.5 no-print transition bg-sky-50 border-sky-200">
+        <div class="flex items-center gap-2.5">
+          <span id="qoPeakBannerIcon" class="w-8 h-8 rounded-xl flex items-center justify-center font-bold bg-sky-100 text-sky-700 flex-shrink-0">
+            <i data-lucide="cloud-check" class="w-4 h-4"></i>
+          </span>
+          <div>
+            <p id="qoPeakBannerTitle" class="font-bold text-slate-800 text-xs">ส่งข้อมูลออกใบเสนอราคาบน PEAK เรียบร้อยแล้ว</p>
+            <p id="qoPeakBannerSubtitle" class="text-[11px] text-slate-600">เลขที่เอกสาร PEAK: <span id="qoPeakDocNumberDisplay" class="font-bold text-sky-700 font-mono">QT-xxxx</span></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a id="linkOpenPeakDoc" href="#" target="_blank" class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+            <span>เปิดดูใน PEAK Account</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
+          <button type="button" id="btnClosePeakBanner" class="w-7 h-7 rounded-lg hover:bg-sky-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Scrollable Document Viewport -->
@@ -1175,14 +1202,18 @@
       </div>
 
       <!-- Tab Switcher -->
-      <div class="flex border-b border-slate-100 bg-slate-50/80 px-5 pt-2 gap-2 flex-shrink-0">
-        <button type="button" id="btnTabBoShop" class="py-2.5 px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-2 transition" data-botab="shop">
+      <div class="flex border-b border-slate-100 bg-slate-50/80 px-3 sm:px-5 pt-2 gap-1.5 sm:gap-2 flex-shrink-0 overflow-x-auto">
+        <button type="button" id="btnTabBoShop" class="py-2.5 px-3 sm:px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap" data-botab="shop">
           <i data-lucide="store" class="w-4 h-4"></i>
           <span>1. ข้อมูลร้านค้า & ใบเสนอราคา</span>
         </button>
-        <button type="button" id="btnTabBoTemplates" class="py-2.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition" data-botab="templates">
+        <button type="button" id="btnTabBoTemplates" class="py-2.5 px-3 sm:px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap" data-botab="templates">
           <i data-lucide="message-square-text" class="w-4 h-4"></i>
-          <span>2. เทมเพลตการตอบลูกค้า (LINE)</span>
+          <span>2. เทมเพลตตอบลูกค้า (LINE)</span>
+        </button>
+        <button type="button" id="btnTabBoPeak" class="py-2.5 px-3 sm:px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-sky-700 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap" data-botab="peak">
+          <i data-lucide="cloud-cog" class="w-4 h-4 text-sky-600"></i>
+          <span>3. บัญชี PEAK (API Own-Use)</span>
         </button>
       </div>
 
@@ -1368,6 +1399,107 @@
             <i data-lucide="save" class="w-4 h-4"></i>
             <span>บันทึกเทมเพลตนี้</span>
           </button>
+        </div>
+
+      </div>
+
+      <!-- Tab 3: PEAK Account API Own-Use Content -->
+      <div id="boTabPanePeak" class="flex-1 overflow-y-auto p-5 space-y-4 text-xs hidden">
+        
+        <!-- Status Indicator Banner -->
+        <div id="boPeakStatusIndicator" class="p-3.5 rounded-2xl border flex items-center justify-between gap-3 bg-slate-50 border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <span id="boPeakStatusDot" class="w-3 h-3 rounded-full bg-slate-400 flex-shrink-0 animate-pulse"></span>
+            <div>
+              <p id="boPeakStatusTitle" class="font-bold text-slate-800 text-xs">สถานะ: ยังไม่ได้ตั้งค่าเชื่อมต่อ PEAK</p>
+              <p id="boPeakStatusDesc" class="text-[11px] text-slate-500">กรุณากรอก Connect ID และ User Token จาก PEAK Account ด้านล่าง</p>
+            </div>
+          </div>
+          <span id="boPeakEnvBadge" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-200 text-slate-700">Production</span>
+        </div>
+
+        <!-- Credentials Form -->
+        <div class="p-4 bg-sky-50/50 rounded-2xl border border-sky-100 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+              <i data-lucide="key" class="w-4 h-4 text-sky-600"></i>
+              <span>ข้อมูลการเชื่อมต่อ API Own-Use:</span>
+            </h4>
+            <span class="text-[10px] text-sky-700 bg-sky-100 px-2 py-0.5 rounded-md font-semibold">PEAK Pro</span>
+          </div>
+
+          <div class="space-y-3">
+            <!-- Environment -->
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">สภาพแวดล้อม (API Environment):</label>
+              <select id="boSelectPeakEnv" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 font-semibold">
+                <option value="production">Production (ใช้งานจริง - api.peakaccount.com)</option>
+                <option value="uat">Sandbox / UAT (ทดสอบระบบ - peakengineapidev.azurewebsites.net)</option>
+              </select>
+            </div>
+
+            <!-- Connect ID -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-[11px] font-semibold text-slate-700">Connect ID (Secret Key):</label>
+                <button type="button" id="btnTogglePeakConnectId" class="text-[10px] text-sky-600 hover:text-sky-800 font-semibold flex items-center gap-0.5">
+                  <i data-lucide="eye" class="w-3 h-3"></i>
+                  <span id="btnTogglePeakConnectIdText">แสดงรหัส</span>
+                </button>
+              </div>
+              <input type="password" id="boInputPeakConnectId" placeholder="เช่น conn_xxxxxxxxxxxxxxxxxxxxxxxx" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <p class="text-[10px] text-slate-500 mt-1">ได้รับทางอีเมลจากเจ้าหน้าที่ PEAK (Software Consultant) พร้อมกับ Application Code</p>
+            </div>
+
+            <!-- User Token -->
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">User Token (กุญแจประจำกิจการใน PEAK):</label>
+              <input type="text" id="boInputPeakUserToken" placeholder="เช่น usr_xxxxxxxxxxxxxxxxxxxxxxxx" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <p class="text-[10px] text-slate-500 mt-1">ได้จากการนำ Application Code ไปผูกในเมนู "ตั้งค่า > ตั้งค่าเชื่อมต่อระบบภายนอก > เชื่อมต่อแอปพลิเคชันภายนอก"</p>
+            </div>
+          </div>
+
+          <!-- Action buttons inside form -->
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-sky-100">
+            <button type="button" id="btnTestPeakConn" class="px-3.5 py-2 rounded-xl bg-white hover:bg-sky-50 border border-sky-300 text-sky-700 font-bold text-xs flex items-center gap-1.5 transition shadow-sm">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-600"></i>
+              <span id="btnTestPeakConnText">ทดสอบการเชื่อมต่อ</span>
+            </button>
+            <button type="button" id="btnSavePeakConfig" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-md shadow-sky-900/20">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              <span>บันทึกการตั้งค่า PEAK</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Setup Guide Accordion / Card -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+          <h4 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+            <i data-lucide="help-circle" class="w-4 h-4 text-blue-600"></i>
+            <span>3 ขั้นตอนการขอและเชื่อมต่อ PEAK API Own-Use:</span>
+          </h4>
+          <ol class="list-decimal pl-4 space-y-1.5 text-[11px] text-slate-600 leading-relaxed">
+            <li>
+              <b>ขอเปิดใช้งาน API:</b> ติดต่อเจ้าหน้าที่ PEAK (Software Consultant) เพื่อขอเปิดใช้งาน API Own-Use จะได้รับอีเมลที่มี <b>Connect ID</b> และ <b>Application Code</b>
+            </li>
+            <li>
+              <b>เปิดใช้งานในระบบ PEAK:</b> เข้าโปรแกรม PEAK > เมนู <b>ตั้งค่า</b> > <b>ตั้งค่าเชื่อมต่อระบบภายนอก</b> > <b>เชื่อมต่อแอปพลิเคชันภายนอก</b> > กดเชื่อมต่อแล้วกรอก <b>Application Code</b> จากอีเมล
+            </li>
+            <li>
+              <b>รับ User Token:</b> ระบบ PEAK จะแสดง <b>User Token</b> ให้นำมาใส่ในช่องด้านบนนี้พร้อม Connect ID แล้วกด <b>บันทึกการตั้งค่า PEAK</b>
+            </li>
+          </ol>
+          <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-[11px] flex items-start gap-2 mt-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-bold">ระบบรักษาความปลอดภัย Secret Key & ป้องกัน CORS:</p>
+              <p class="text-[10px] text-emerald-700 mt-0.5">
+                สามารถเชื่อมต่อผ่าน Google Apps Script Bridge หรือเซิร์ฟเวอร์หลังบ้าน เพื่อปกป้อง Connect ID และส่งใบเสนอราคาเข้า PEAK ได้ทันที
+              </p>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -2610,22 +2742,341 @@
       currentBoTab = tab;
       const btnShop = document.getElementById('btnTabBoShop');
       const btnTpls = document.getElementById('btnTabBoTemplates');
+      const btnPeak = document.getElementById('btnTabBoPeak');
       const paneShop = document.getElementById('boTabPaneShop');
       const paneTpls = document.getElementById('boTabPaneTemplates');
+      const panePeak = document.getElementById('boTabPanePeak');
+
+      // Reset tabs styling
+      if (btnShop) btnShop.className = 'py-2.5 px-3 sm:px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap';
+      if (btnTpls) btnTpls.className = 'py-2.5 px-3 sm:px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap';
+      if (btnPeak) btnPeak.className = 'py-2.5 px-3 sm:px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-sky-700 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap';
+
+      if (paneShop) paneShop.classList.add('hidden');
+      if (paneTpls) paneTpls.classList.add('hidden');
+      if (panePeak) panePeak.classList.add('hidden');
 
       if (tab === 'shop') {
-        btnShop.className = 'py-2.5 px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-2 transition';
-        btnTpls.className = 'py-2.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition';
-        paneShop.classList.remove('hidden');
-        paneTpls.classList.add('hidden');
-      } else {
-        btnShop.className = 'py-2.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition';
-        btnTpls.className = 'py-2.5 px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-2 transition';
-        paneShop.classList.add('hidden');
-        paneTpls.classList.remove('hidden');
+        if (btnShop) btnShop.className = 'py-2.5 px-3 sm:px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap';
+        if (paneShop) paneShop.classList.remove('hidden');
+      } else if (tab === 'templates') {
+        if (btnTpls) btnTpls.className = 'py-2.5 px-3 sm:px-4 font-bold text-xs sm:text-sm border-b-2 border-purple-600 text-purple-700 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap';
+        if (paneTpls) paneTpls.classList.remove('hidden');
         switchBoTemplate(currentSelectedTpl);
+      } else if (tab === 'peak') {
+        if (btnPeak) btnPeak.className = 'py-2.5 px-3 sm:px-4 font-bold text-xs sm:text-sm border-b-2 border-sky-600 text-sky-700 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap';
+        if (panePeak) panePeak.classList.remove('hidden');
+        loadPeakSettingsToUi();
       }
       updateIcons();
+    }
+
+    // ================= PEAK ACCOUNT INTEGRATION HELPERS =================
+    function getPeakSettings() {
+      const saved = localStorage.getItem('tire_peak_settings');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+      return {
+        env: 'production',
+        connectId: '',
+        userToken: ''
+      };
+    }
+
+    function savePeakSettings() {
+      const env = document.getElementById('boSelectPeakEnv')?.value || 'production';
+      const connectId = document.getElementById('boInputPeakConnectId')?.value.trim() || '';
+      const userToken = document.getElementById('boInputPeakUserToken')?.value.trim() || '';
+
+      const config = { env, connectId, userToken };
+      localStorage.setItem('tire_peak_settings', JSON.stringify(config));
+      updatePeakStatusUi(config);
+      showToast('💾 บันทึกการตั้งค่า PEAK Account เรียบร้อยแล้ว!');
+    }
+
+    function updatePeakStatusUi(config = null) {
+      const cfg = config || getPeakSettings();
+      const statusDot = document.getElementById('boPeakStatusDot');
+      const statusTitle = document.getElementById('boPeakStatusTitle');
+      const statusDesc = document.getElementById('boPeakStatusDesc');
+      const envBadge = document.getElementById('boPeakEnvBadge');
+
+      if (envBadge) {
+        envBadge.innerText = cfg.env === 'uat' ? 'Sandbox / UAT' : 'Production';
+        envBadge.className = cfg.env === 'uat' 
+          ? 'px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-800' 
+          : 'px-2 py-1 rounded-lg text-[10px] font-bold bg-sky-100 text-sky-800';
+      }
+
+      const isConfigured = Boolean(cfg.connectId && cfg.userToken);
+      if (statusDot && statusTitle && statusDesc) {
+        if (isConfigured) {
+          statusDot.className = 'w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0 shadow-sm shadow-emerald-500/50';
+          statusTitle.innerText = 'สถานะ: พร้อมเชื่อมต่อ PEAK Account';
+          statusDesc.innerText = `บันทึก Connect ID (${cfg.connectId.slice(0, 6)}...) และ User Token (${cfg.userToken.slice(0, 6)}...) แล้ว`;
+        } else {
+          statusDot.className = 'w-3 h-3 rounded-full bg-slate-400 flex-shrink-0 animate-pulse';
+          statusTitle.innerText = 'สถานะ: ยังไม่ได้ตั้งค่าเชื่อมต่อ PEAK';
+          statusDesc.innerText = 'กรุณากรอก Connect ID และ User Token จาก PEAK Account ด้านล่าง';
+        }
+      }
+    }
+
+    function loadPeakSettingsToUi() {
+      const cfg = getPeakSettings();
+      const selectEnv = document.getElementById('boSelectPeakEnv');
+      const inputConnectId = document.getElementById('boInputPeakConnectId');
+      const inputUserToken = document.getElementById('boInputPeakUserToken');
+
+      if (selectEnv) selectEnv.value = cfg.env || 'production';
+      if (inputConnectId) inputConnectId.value = cfg.connectId || '';
+      if (inputUserToken) inputUserToken.value = cfg.userToken || '';
+
+      updatePeakStatusUi(cfg);
+    }
+
+    async function testPeakConnection() {
+      const cfg = {
+        env: document.getElementById('boSelectPeakEnv')?.value || 'production',
+        connectId: document.getElementById('boInputPeakConnectId')?.value.trim() || '',
+        userToken: document.getElementById('boInputPeakUserToken')?.value.trim() || ''
+      };
+
+      if (!cfg.connectId || !cfg.userToken) {
+        showToast('⚠️ กรุณากรอก Connect ID และ User Token ให้ครบถ้วนก่อนทดสอบ');
+        return;
+      }
+
+      const btn = document.getElementById('btnTestPeakConn');
+      const btnText = document.getElementById('btnTestPeakConnText');
+      if (btnText) btnText.innerText = '⏳ กำลังทดสอบ...';
+      if (btn) btn.disabled = true;
+
+      try {
+        const webhook = (calcState.sheetWebhook || localStorage.getItem('tire_sheet_webhook') || '').trim();
+        let result = null;
+
+        if (webhook.startsWith('http')) {
+          const res = await fetch(webhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'testPeakConnection',
+              peakEnv: cfg.env,
+              connectId: cfg.connectId,
+              userToken: cfg.userToken
+            })
+          });
+          result = await res.json();
+        } else {
+          // Local Express endpoint test
+          const res = await fetch('/api/peak/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cfg)
+          });
+          result = await res.json();
+        }
+
+        if (result && (result.status === 'success' || result.code === 200)) {
+          showToast('✅ เชื่อมต่อกับ PEAK API สำเร็จ! Client-Token พร้อมใช้งาน');
+        } else {
+          showToast(`⚠️ ผลการทดสอบ: ${result?.message || 'ไม่สามารถติดต่อ PEAK API ได้ ตรวจสอบ Key/URL'}`);
+        }
+      } catch (err) {
+        console.warn('Peak test error:', err);
+        showToast('⚠️ ส่งคำขอทดสอบไปยัง Webhook ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตหรือ Webhook URL');
+      } finally {
+        if (btnText) btnText.innerText = 'ทดสอบการเชื่อมต่อ';
+        if (btn) btn.disabled = false;
+        updateIcons();
+      }
+    }
+
+    // Format date string (DD/MM/YYYY) to PEAK YYYYMMDD format
+    function formatPeakDate(dateStr) {
+      if (!dateStr) {
+        const now = new Date();
+        return now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+      }
+      const parts = dateStr.trim().split('/');
+      if (parts.length === 3) {
+        let y = parseInt(parts[2]);
+        const m = String(parseInt(parts[1])).padStart(2, '0');
+        const d = String(parseInt(parts[0])).padStart(2, '0');
+        if (y > 2400) y = y - 543; // Convert Buddhist Era to CE
+        return `${y}${m}${d}`;
+      }
+      return dateStr.replace(/[^0-9]/g, '').slice(0, 8);
+    }
+
+    // Build Quotations payload matching PEAK Schema
+    function buildPeakQuotationPayload() {
+      const inpIssueDate = document.getElementById('qoInputIssueDate')?.value || '';
+      const inpValidUntil = document.getElementById('qoInputValidUntil')?.value || '';
+      const issuedDate = formatPeakDate(inpIssueDate);
+      const dueDate = formatPeakDate(inpValidUntil);
+
+      let custRaw = document.getElementById('qoInputCustomerName')?.value.trim() || 'ลูกค้าทั่วไป';
+      let contactCode = '';
+      let contactName = custRaw;
+      const codeMatch = custRaw.match(/^([A-Za-z0-9_-]+)\s+(.+)$/);
+      if (codeMatch) {
+        contactCode = codeMatch[1];
+        contactName = codeMatch[2];
+      }
+
+      const contactAddress = document.getElementById('qoInputCustomerAddress')?.value.trim() || '';
+      const contactTaxId = (document.getElementById('qoInputCustomerTaxId')?.value || '').replace(/[^0-9]/g, '');
+      const contactPhone = document.getElementById('qoInputCustomerTel')?.value.trim() || '';
+      const docNo = document.getElementById('qoInputDocNo')?.value.trim() || '';
+
+      const tireName = document.getElementById('inputTireName')?.value.trim() || 'ยางรถยนต์มาตรฐาน';
+      const qty = calcState.qty || 4;
+
+      let grandTotalNum = 0;
+      if (calcState.appMode === 'storefront' && calcState.storeCalcDirection === 'reverse') {
+        grandTotalNum = parseFloat(document.getElementById('inputTargetSellingPrice')?.value) || 0;
+      } else {
+        grandTotalNum = parseFloat(document.getElementById('displayGrandTotal')?.innerText.replace(/,/g, '')) || 0;
+      }
+
+      const unitPrice = qty > 0 ? Math.round((grandTotalNum / qty) * 100) / 100 : 0;
+      const isTaxIncluded = calcState.includeVat ? 1 : 0; // 1 = รวมภาษี, 0 = ไม่รวมภาษี
+
+      return {
+        documentNumber: docNo || undefined,
+        issuedDate: issuedDate,
+        dueDate: dueDate,
+        contactCode: contactCode || undefined,
+        contactName: contactName,
+        contactTaxId: contactTaxId || undefined,
+        contactBranch: "00000",
+        contactAddress: contactAddress || undefined,
+        contactPhone: contactPhone || undefined,
+        isTaxInvoice: 0,
+        taxStatus: isTaxIncluded,
+        products: [
+          {
+            name: tireName,
+            quantity: qty,
+            price: unitPrice,
+            vatType: calcState.includeVat ? 7 : 0,
+            description: "ราคารวมค่าบริการติดตั้งและถ่วงล้อแล้ว / รับประกันยาง"
+          }
+        ],
+        notes: `สร้างจากระบบคำนวณราคายาง GGavity (${calcState.appMode === 'online' ? 'โหมดออนไลน์ GP%' : 'โหมดหน้าร้าน'})`,
+        title: "ใบเสนอราคาเปลี่ยนยาง"
+      };
+    }
+
+    // Sync current quotation to PEAK Account
+    async function syncQuotationToPeak() {
+      const peakCfg = getPeakSettings();
+      if (!peakCfg.connectId || !peakCfg.userToken) {
+        showToast('⚠️ กรุณากรอก Connect ID และ User Token ใน "หลังบ้าน > บัญชี PEAK" ก่อน');
+        openBackOfficeModal('peak');
+        return;
+      }
+
+      const btn = document.getElementById('btnSyncToPeakQuotation');
+      const btnText = document.getElementById('btnSyncToPeakText');
+      const banner = document.getElementById('qoPeakSyncBanner');
+      const bannerTitle = document.getElementById('qoPeakBannerTitle');
+      const bannerSubtitle = document.getElementById('qoPeakBannerSubtitle');
+      const bannerLink = document.getElementById('linkOpenPeakDoc');
+
+      if (btnText) btnText.innerText = '⏳ กำลังส่งเข้า PEAK...';
+      if (btn) btn.disabled = true;
+
+      if (banner) {
+        banner.classList.remove('hidden', 'bg-rose-50', 'border-rose-200', 'bg-emerald-50', 'border-emerald-200');
+        banner.classList.add('bg-sky-50', 'border-sky-200');
+        if (bannerTitle) bannerTitle.innerText = 'กำลังส่งข้อมูลไปยัง PEAK Account...';
+        if (bannerSubtitle) bannerSubtitle.innerText = 'ระบบกำลังสร้างใบเสนอราคาและเชื่อมต่อ API';
+      }
+
+      const payload = buildPeakQuotationPayload();
+
+      try {
+        const webhook = (calcState.sheetWebhook || localStorage.getItem('tire_sheet_webhook') || '').trim();
+        let result = null;
+
+        // Try Google Apps Script Bridge first if configured
+        if (webhook.startsWith('http')) {
+          const gasPayload = {
+            action: 'createPeakQuotation',
+            peakEnv: peakCfg.env,
+            connectId: peakCfg.connectId,
+            userToken: peakCfg.userToken,
+            quotationPayload: payload
+          };
+
+          const res = await fetch(webhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(gasPayload)
+          });
+          result = await res.json();
+        } else {
+          // Local Express server endpoint fallback
+          const res = await fetch('/api/peak/quotation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              peakEnv: peakCfg.env,
+              connectId: peakCfg.connectId,
+              userToken: peakCfg.userToken,
+              quotationPayload: payload
+            })
+          });
+          result = await res.json();
+        }
+
+        if (result && (result.status === 'success' || result.code === 200)) {
+          const docData = result.data || {};
+          const docNo = docData.documentNumber || result.documentNumber || ('QT-' + Date.now().toString().slice(-6));
+          const viewUrl = docData.onlineViewUrl || docData.pdfUrl || `https://app.peakaccount.com/quotations`;
+
+          calcState.lastPeakDocNo = docNo;
+
+          // Update Quotation preview doc number
+          const inpDocNo = document.getElementById('qoInputDocNo');
+          if (inpDocNo) inpDocNo.value = docNo;
+          const dispDocNo = document.getElementById('qoDisplayDocNo');
+          if (dispDocNo) dispDocNo.innerText = docNo;
+
+          // Update banner
+          if (banner) {
+            banner.classList.remove('bg-sky-50', 'border-sky-200');
+            banner.classList.add('bg-emerald-50', 'border-emerald-200');
+            if (bannerTitle) bannerTitle.innerText = '✅ ออกใบเสนอราคาบน PEAK เรียบร้อยแล้ว!';
+            if (bannerSubtitle) bannerSubtitle.innerHTML = `เลขที่เอกสาร PEAK: <b class="text-emerald-800 font-mono">${docNo}</b>`;
+            if (bannerLink) {
+              bannerLink.href = viewUrl;
+              bannerLink.classList.remove('hidden');
+            }
+          }
+
+          showToast(`✅ สร้างใบเสนอราคาใน PEAK สำเร็จ: ${docNo}`);
+        } else {
+          throw new Error(result?.message || 'PEAK API ไม่สามารถสร้างเอกสารได้');
+        }
+      } catch (err) {
+        console.error('PEAK Sync Error:', err);
+        if (banner) {
+          banner.classList.remove('bg-sky-50', 'border-sky-200');
+          banner.classList.add('bg-rose-50', 'border-rose-200');
+          if (bannerTitle) bannerTitle.innerText = '⚠️ เชื่อมต่อ PEAK ไม่สำเร็จ';
+          if (bannerSubtitle) bannerSubtitle.innerText = err.message || 'โปรดตรวจสอบ Connect ID / User Token หรือ Webhook URL';
+        }
+        showToast(`⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ PEAK: ${err.message || 'โปรดตรวจสอบการตั้งค่า'}`);
+      } finally {
+        if (btnText) btnText.innerText = 'ส่งเข้าบัญชี PEAK';
+        if (btn) btn.disabled = false;
+        updateIcons();
+      }
     }
 
     function switchBoTemplate(tplKey) {
@@ -2687,6 +3138,8 @@
       currentBoBanks = JSON.parse(JSON.stringify(profile.banks || []));
       renderBankRowsInBackOffice();
 
+      loadPeakSettingsToUi();
+
       switchBoTab(tab);
       document.getElementById('modalBackOfficeSettings')?.classList.remove('hidden');
       updateIcons();
@@ -2696,11 +3149,128 @@
       document.getElementById('modalBackOfficeSettings')?.classList.add('hidden');
     }
 
-    // Google Apps Script Template
+    // Google Apps Script Template (Supports Google Sheets + PEAK Account API Own-Use Bridge)
     const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+  lock.tryLock(15000);
   try {
+    var data = {};
+    if (e && e.postData && e.postData.contents) {
+      data = JSON.parse(e.postData.contents);
+    }
+
+    // ================= ACTION 1: CREATE PEAK QUOTATION =================
+    if (data.action === "createPeakQuotation") {
+      var peakEnv = data.peakEnv || "production";
+      var baseUrl = peakEnv === "uat" 
+        ? "https://peakengineapidev.azurewebsites.net" 
+        : "https://api.peakaccount.com";
+      var connectId = data.connectId;
+      var userToken = data.userToken;
+      var payload = data.quotationPayload;
+
+      if (!connectId || !userToken) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Connect ID หรือ User Token ไม่ถูกต้อง"
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // Step 1: Get or Cache ClientToken (valid 24h)
+      var cache = CacheService.getScriptCache();
+      var clientToken = cache.get("PEAK_CLIENT_TOKEN_" + connectId);
+
+      var timeStamp = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyyMMddHHmmss");
+      var signatureBytes = Utilities.computeHmacSha1Signature(timeStamp, connectId);
+      var signature = Utilities.base64Encode(signatureBytes);
+
+      if (!clientToken) {
+        var tokenRes = UrlFetchApp.fetch(baseUrl + "/api/v1/ClientToken", {
+          method: "post",
+          headers: {
+            "Time-Stamp": timeStamp,
+            "Time-Signature": signature,
+            "Content-Type": "application/json"
+          },
+          payload: JSON.stringify({}),
+          muteHttpExceptions: true
+        });
+        var tokenJson = JSON.parse(tokenRes.getContentText());
+        if (tokenJson && tokenJson.data && tokenJson.data.clientToken) {
+          clientToken = tokenJson.data.clientToken;
+          cache.put("PEAK_CLIENT_TOKEN_" + connectId, clientToken, 80000);
+        } else {
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "error",
+            message: "ขอ Client-Token จาก PEAK ไม่สำเร็จ: " + (tokenJson.message || tokenRes.getContentText())
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+
+      // Step 2: Create Quotation
+      var quoteTimeStamp = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyyMMddHHmmss");
+      var quoteSigBytes = Utilities.computeHmacSha1Signature(quoteTimeStamp, connectId);
+      var quoteSig = Utilities.base64Encode(quoteSigBytes);
+
+      var quoteRes = UrlFetchApp.fetch(baseUrl + "/api/v1/Quotations", {
+        method: "post",
+        headers: {
+          "Time-Stamp": quoteTimeStamp,
+          "Time-Signature": quoteSig,
+          "User-Token": userToken,
+          "Client-Token": clientToken,
+          "Content-Type": "application/json"
+        },
+        payload: JSON.stringify(payload),
+        muteHttpExceptions: true
+      });
+
+      var quoteJson = JSON.parse(quoteRes.getContentText());
+      return ContentService.createTextOutput(JSON.stringify({
+        status: quoteRes.getResponseCode() === 200 ? "success" : "error",
+        code: quoteRes.getResponseCode(),
+        data: quoteJson.data || quoteJson,
+        message: quoteJson.message || "Quotation processed"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ================= ACTION 2: TEST PEAK CONNECTION =================
+    if (data.action === "testPeakConnection") {
+      var peakEnv = data.peakEnv || "production";
+      var baseUrl = peakEnv === "uat" 
+        ? "https://peakengineapidev.azurewebsites.net" 
+        : "https://api.peakaccount.com";
+      var connectId = data.connectId;
+      var timeStamp = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyyMMddHHmmss");
+      var signatureBytes = Utilities.computeHmacSha1Signature(timeStamp, connectId);
+      var signature = Utilities.base64Encode(signatureBytes);
+
+      var tokenRes = UrlFetchApp.fetch(baseUrl + "/api/v1/ClientToken", {
+        method: "post",
+        headers: {
+          "Time-Stamp": timeStamp,
+          "Time-Signature": signature,
+          "Content-Type": "application/json"
+        },
+        payload: JSON.stringify({}),
+        muteHttpExceptions: true
+      });
+
+      var tokenJson = JSON.parse(tokenRes.getContentText());
+      if (tokenJson && tokenJson.data && tokenJson.data.clientToken) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "success",
+          message: "เชื่อมต่อกับ PEAK API สำเร็จ! Client-Token พร้อมใช้งาน"
+        })).setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "เชื่อมต่อ PEAK ไม่สำเร็จ: " + (tokenJson.message || tokenRes.getContentText())
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // ================= ACTION 3: SAVE QUOTE TO GOOGLE SHEET (DEFAULT) =================
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getActiveSheet();
     
@@ -2723,7 +3293,8 @@
         "รวมกำไรสุทธิ (บาท)", 
         "ราคาขายรวมทั้งสิ้น (บาท)", 
         "ราคาขายเฉลี่ยต่อเส้น (บาท)", 
-        "หมายเหตุ / ข้อมูลลูกค้า"
+        "หมายเหตุ / ข้อมูลลูกค้า",
+        "เลขที่เอกสาร PEAK"
       ];
       sheet.appendRow(headers);
       var headerRange = sheet.getRange(1, 1, 1, headers.length);
@@ -2735,11 +3306,6 @@
                  .setVerticalAlignment("middle");
       sheet.setRowHeight(1, 36);
       sheet.setFrozenRows(1);
-    }
-    
-    var data = {};
-    if (e && e.postData && e.postData.contents) {
-      data = JSON.parse(e.postData.contents);
     }
     
     var nowFormatted = Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm:ss");
@@ -2760,7 +3326,8 @@
       Number(data.totalProfit) || 0,
       Number(data.grandTotal) || 0,
       Number(data.pricePerUnit) || 0,
-      data.note || "-"
+      data.note || "-",
+      data.peakDocNo || "-"
     ];
     
     sheet.appendRow(rowData);
@@ -2778,7 +3345,7 @@
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput("Tire Calculator Webhook is Active! Ready to receive quote records from GGavity.")
+  return ContentService.createTextOutput("Tire Calculator & PEAK Bridge Webhook is Active! Ready to receive quote records from GGavity.")
     .setMimeType(ContentService.MimeType.TEXT);
 }`;
 
@@ -3252,6 +3819,24 @@ function doGet(e) {
 
       document.getElementById('btnTabBoShop')?.addEventListener('click', () => switchBoTab('shop'));
       document.getElementById('btnTabBoTemplates')?.addEventListener('click', () => switchBoTab('templates'));
+      document.getElementById('btnTabBoPeak')?.addEventListener('click', () => switchBoTab('peak'));
+
+      // PEAK Account Controls in Back-Office
+      document.getElementById('btnTogglePeakConnectId')?.addEventListener('click', () => {
+        const inp = document.getElementById('boInputPeakConnectId');
+        const txt = document.getElementById('btnTogglePeakConnectIdText');
+        if (inp) {
+          if (inp.type === 'password') {
+            inp.type = 'text';
+            if (txt) txt.innerText = 'ซ่อนรหัส';
+          } else {
+            inp.type = 'password';
+            if (txt) txt.innerText = 'แสดงรหัส';
+          }
+        }
+      });
+      document.getElementById('btnSavePeakConfig')?.addEventListener('click', savePeakSettings);
+      document.getElementById('btnTestPeakConn')?.addEventListener('click', testPeakConnection);
 
       // Bank Management in Back-Office
       document.getElementById('btnAddBankRow')?.addEventListener('click', () => {
@@ -3346,6 +3931,12 @@ function doGet(e) {
 
       document.getElementById('btnTriggerPrintQuotation')?.addEventListener('click', () => {
         window.print();
+      });
+
+      // PEAK Sync Quotation Button
+      document.getElementById('btnSyncToPeakQuotation')?.addEventListener('click', syncQuotationToPeak);
+      document.getElementById('btnClosePeakBanner')?.addEventListener('click', () => {
+        document.getElementById('qoPeakSyncBanner')?.classList.add('hidden');
       });
 
       document.getElementById('btnCopyFormalQuoteLine')?.addEventListener('click', () => {
