@@ -196,9 +196,83 @@ const express = require('express');
   console.log('Tab Price Per Unit:', tabPricePerUnit);
   // 4 * 2000 = 8000 tire cost, 4 * 50 = 200 labor, 4 * 400 = 1600 profit, ship = 150 => 9,950 total, 2,488 per tire
   if (tabGrandTotal === '9,950') {
-    console.log('✓ TEST 4 PASSED: Tab Grand Total 9,950!');
+    console.log('✓ TEST 6 PASSED: Tab Grand Total 9,950!');
   } else {
-    console.error('✗ TEST 4 FAILED! Expected 9,950, got', tabGrandTotal);
+    console.error('✗ TEST 6 FAILED! Expected 9,950, got', tabGrandTotal);
+    process.exit(1);
+  }
+
+  // Test Case 7: Google Sheet Integration, Supplier Tracking & Explicit Save
+  console.log('--- TEST CASE 7 (GOOGLE SHEET INTEGRATION & SUPPLIER) ---');
+  await page.goto(`${baseUrl}/calculator.html`);
+  await page.waitForLoadState('networkidle');
+
+  // 1. Verify preset supplier button
+  await page.click('.supplier-preset-btn[data-val="SaveTyre"]');
+  const supplierVal = await page.inputValue('#inputSupplierName');
+  if (supplierVal === 'SaveTyre') {
+    console.log('✓ TEST 7A PASSED: Supplier preset tag populated inputSupplierName with SaveTyre!');
+  } else {
+    console.error('✗ TEST 7A FAILED! Expected SaveTyre, got', supplierVal);
+    process.exit(1);
+  }
+
+  // 2. Set details and verify NO automatic saving happens
+  await page.fill('#inputTireName', 'Michelin Primacy 4 215/55R17');
+  await page.fill('#inputQuoteNote', 'ลูกค้าประจำ รถ Camry ขอลดพิเศษ');
+  await page.fill('#inputTireCostPerUnit', '3200');
+
+  const historyBeforeSave = await page.innerText('#recentQuotesList');
+  if (historyBeforeSave.includes('ยังไม่มีประวัติที่บันทึก')) {
+    console.log('✓ TEST 7B PASSED: Strict rule satisfied: No automatic saving until user clicks save button!');
+  } else {
+    console.error('✗ TEST 7B FAILED! Expected empty history before clicking save, got', historyBeforeSave);
+    process.exit(1);
+  }
+
+  // 3. Click explicit Save button
+  await page.click('#btnSaveQuote');
+  const historyAfterSave = await page.innerText('#recentQuotesList');
+  if (historyAfterSave.includes('Michelin Primacy 4') && historyAfterSave.includes('SaveTyre') && historyAfterSave.includes('Camry')) {
+    console.log('✓ TEST 7C PASSED: Quote explicitly saved with tire, supplier (SaveTyre), and customer note!');
+  } else {
+    console.error('✗ TEST 7C FAILED! Expected saved quote details, got', historyAfterSave);
+    process.exit(1);
+  }
+
+  // 4. Test Google Sheet Settings Modal
+  await page.click('#btnOpenSheetSettings');
+  const isModalVisible = await page.isVisible('#modalGoogleSheetSettings');
+  const sheetUrlValue = await page.inputValue('#inputSheetUrl');
+  const appsScriptCode = await page.inputValue('#appsScriptCodeBlock');
+
+  if (isModalVisible && sheetUrlValue.includes('1cccXVrTFSZqI8quqRuIducktcMAIVR7eg_uyZfEbTbs') && appsScriptCode.includes('function doPost(e)')) {
+    console.log('✓ TEST 7D PASSED: Google Sheet settings modal opened with default sheet URL and ready-to-use Apps Script code!');
+  } else {
+    console.error('✗ TEST 7D FAILED! Modal visible:', isModalVisible, 'Sheet URL:', sheetUrlValue);
+    process.exit(1);
+  }
+
+  // Close modal
+  await page.click('#btnCloseSheetSettings');
+  const isModalHidden = !(await page.isVisible('#modalGoogleSheetSettings'));
+  if (isModalHidden) {
+    console.log('✓ TEST 7E PASSED: Google Sheet settings modal closed cleanly!');
+  } else {
+    console.error('✗ TEST 7E FAILED! Modal was not hidden.');
+    process.exit(1);
+  }
+
+  // 5. Test Mobile Sticky Bar Save Button
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.fill('#inputTireName', 'Bridgestone Turanza T005A');
+  await page.click('.supplier-preset-btn[data-val="TopForm"]');
+  await page.click('#btnMobileSave');
+  const historyAfterMobileSave = await page.innerText('#recentQuotesList');
+  if (historyAfterMobileSave.includes('Bridgestone Turanza') && historyAfterMobileSave.includes('TopForm')) {
+    console.log('✓ TEST 7F PASSED: Mobile sticky bar save button successfully records inquiry to history on mobile screen!');
+  } else {
+    console.error('✗ TEST 7F FAILED! Expected TopForm quote saved from mobile button, got', historyAfterMobileSave);
     process.exit(1);
   }
 

@@ -180,22 +180,60 @@
           </div>
         </div>
 
-        <!-- CARD 2: ทุนค่ายาง -->
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="flex items-center justify-between mb-1.5">
-            <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
-              <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
-              ทุนค่ายาง (Tire Cost)
-            </h2>
-            <span class="text-xs text-slate-500">รวมทุนยาง: <span id="displayTotalTireCost" class="font-bold text-slate-800">฿0</span></span>
+        <!-- CARD 2: ทุนค่ายาง & ที่มาของราคา (ซับพลายเออร์) -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <h2 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2 font-prompt">
+                <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
+                ทุนค่ายาง (Tire Cost)
+              </h2>
+              <span class="text-xs text-slate-500">รวมทุนยาง: <span id="displayTotalTireCost" class="font-bold text-slate-800">฿0</span></span>
+            </div>
+
+            <!-- Safe Flex Input Group -->
+            <div class="flex items-center rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition px-3 py-2">
+              <span class="text-slate-400 font-bold text-sm mr-2 flex-shrink-0">฿</span>
+              <input type="number" id="inputTireCostPerUnit" min="0" step="10" placeholder="ใส่ราคาทุนต่อเส้น เช่น 1500" 
+                class="w-full bg-transparent text-sm sm:text-base font-bold text-slate-800 focus:outline-none">
+              <span class="text-xs text-slate-400 font-medium ml-2 whitespace-nowrap flex-shrink-0">บาท / เส้น</span>
+            </div>
           </div>
 
-          <!-- Safe Flex Input Group -->
-          <div class="flex items-center rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition px-3 py-2">
-            <span class="text-slate-400 font-bold text-sm mr-2 flex-shrink-0">฿</span>
-            <input type="number" id="inputTireCostPerUnit" min="0" step="10" placeholder="ใส่ราคาทุนต่อเส้น เช่น 1500" 
-              class="w-full bg-transparent text-sm sm:text-base font-bold text-slate-800 focus:outline-none">
-            <span class="text-xs text-slate-400 font-medium ml-2 whitespace-nowrap flex-shrink-0">บาท / เส้น</span>
+          <!-- ช่องระบุซับพลายเออร์และหมายเหตุราคา (บันทึกลง Google Sheet) -->
+          <div class="pt-2.5 border-t border-slate-100 space-y-2.5">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <i data-lucide="truck" class="w-3.5 h-3.5 text-blue-600"></i>
+                  <span>เอาราคามาจากซับพลายเออร์เจ้าไหน (Supplier):</span>
+                </label>
+                <span class="text-[10px] text-slate-400">ลง Google Sheet</span>
+              </div>
+              <div class="flex items-center rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition px-3 py-2">
+                <input type="text" id="inputSupplierName" placeholder="เช่น เซฟไทร์ (SaveTyre), ท็อปฟอร์ม, ก้องไพศาล, ยางทอง..." 
+                  class="w-full bg-transparent text-xs sm:text-sm font-medium focus:outline-none text-slate-800">
+              </div>
+
+              <!-- Quick Supplier Presets -->
+              <div class="flex flex-wrap items-center gap-1.5 mt-1.5 text-xs">
+                <span class="text-[11px] text-slate-400">ซับด่วน:</span>
+                <button type="button" class="supplier-preset-btn px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[11px] transition" data-val="SaveTyre">SaveTyre</button>
+                <button type="button" class="supplier-preset-btn px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[11px] transition" data-val="TopForm">TopForm</button>
+                <button type="button" class="supplier-preset-btn px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[11px] transition" data-val="ยางทอง">ยางทอง</button>
+                <button type="button" class="supplier-preset-btn px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[11px] transition" data-val="ก้องไพศาล">ก้องไพศาล</button>
+                <button type="button" class="supplier-preset-btn px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[11px] transition" data-val="พัฒนาการ">พัฒนาการ</button>
+              </div>
+            </div>
+
+            <!-- หมายเหตุเพิ่มเติมเกี่ยวกับลูกค้าหรือราคา -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                หมายเหตุลูกค้า / บันทึกเพิ่มเติม:
+              </label>
+              <input type="text" id="inputQuoteNote" placeholder="เช่น ลูกค้าหน้าร้านขอต่อราคา / ขับ Vios / ทักถามใน LINE..." 
+                class="w-full px-3 py-2 text-xs sm:text-sm font-normal bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800">
+            </div>
           </div>
         </div>
 
@@ -605,23 +643,33 @@
 
           <!-- ACTION BUTTONS -->
           <div class="mt-4 sm:mt-5 space-y-2">
-            <!-- Copy Quote Button -->
-            <button id="btnCopyQuote" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 transition flex items-center justify-center gap-2">
-              <i data-lucide="copy" class="w-5 h-5"></i>
-              <span id="btnCopyQuoteText">คัดลอกข้อความเสนอราคา LINE</span>
+            <!-- Save to Google Sheet Button (Primary) -->
+            <button id="btnSaveQuote" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 transition flex items-center justify-center gap-2">
+              <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-200"></i>
+              <span id="btnSaveQuoteText">💾 บันทึกลง Google Sheet</span>
             </button>
 
-            <!-- Secondary Action Buttons -->
-            <div class="grid grid-cols-2 gap-2">
-              <button id="btnPrintQuote" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-                <i data-lucide="printer" class="w-4 h-4"></i>
-                <span>พิมพ์ใบเสนอราคา</span>
+            <!-- Quick Links & Tools Row -->
+            <div class="grid grid-cols-3 gap-2">
+              <a id="linkOpenGoogleSheet" href="https://docs.google.com/spreadsheets/d/1cccXVrTFSZqI8quqRuIducktcMAIVR7eg_uyZfEbTbs/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="py-2 px-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1 text-center" title="เปิดดูตารางใน Google Sheet">
+                <i data-lucide="external-link" class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0"></i>
+                <span class="truncate">เปิดดูชีต</span>
+              </a>
+              <button id="btnOpenSheetSettings" type="button" class="py-2 px-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1 text-center" title="ตั้งค่าเชื่อมต่อ / สร้างชีตใหม่">
+                <i data-lucide="settings-2" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0"></i>
+                <span class="truncate">ตั้งค่าชีต</span>
               </button>
-              <button id="btnSaveQuote" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-                <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
-                <span>บันทึกประวัติ</span>
+              <button id="btnCopyQuote" class="py-2 px-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1 text-center" title="คัดลอกข้อความสรุปส่ง LINE">
+                <i data-lucide="copy" class="w-3.5 h-3.5 text-blue-400 flex-shrink-0"></i>
+                <span id="btnCopyQuoteText" class="truncate">ก็อป LINE</span>
               </button>
             </div>
+
+            <!-- Print Quote Button -->
+            <button id="btnPrintQuote" class="w-full py-2 px-3 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/80 text-slate-300 hover:text-white font-medium rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+              <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>พิมพ์ใบเสนอราคา A4</span>
+            </button>
           </div>
 
         </div>
@@ -656,9 +704,15 @@
               <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
               ประวัติราคาล่าสุด
             </h3>
-            <button id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-500">ล้างประวัติ</button>
+            <div class="flex items-center gap-2">
+              <button id="btnExportCsv" class="text-[11px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-0.5" title="ส่งออกเป็นไฟล์ CSV">
+                <i data-lucide="download" class="w-3 h-3"></i>
+                <span>CSV</span>
+              </button>
+              <button id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-500">ล้างประวัติ</button>
+            </div>
           </div>
-          <div id="recentQuotesList" class="space-y-1.5 text-xs max-h-48 overflow-y-auto">
+          <div id="recentQuotesList" class="space-y-1.5 text-xs max-h-56 overflow-y-auto">
             <p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก</p>
           </div>
         </div>
@@ -684,8 +738,12 @@
       </div>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
-      <button id="btnMobileCopy" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-900/40">
-        <i data-lucide="copy" class="w-4 h-4"></i>
+      <button id="btnMobileSave" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-900/40">
+        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
+        <span>บันทึกชีต</span>
+      </button>
+      <button id="btnMobileCopy" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md">
+        <i data-lucide="copy" class="w-4 h-4 text-emerald-400"></i>
         <span>คัดลอก LINE</span>
       </button>
     </div>
@@ -737,6 +795,140 @@
     </div>
   </div>
 
+  <!-- ================= GOOGLE SHEET SETTINGS MODAL ================= -->
+  <div id="modalGoogleSheetSettings" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm hidden no-print">
+    <div class="bg-white text-slate-900 rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-slate-200 font-sans">
+      
+      <!-- Modal Header -->
+      <div class="sticky top-0 bg-white/95 backdrop-blur-md px-5 py-4 border-b border-slate-100 flex items-center justify-between z-10">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+            <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 font-prompt">ตั้งค่าเชื่อมต่อ Google Sheet</h3>
+            <p class="text-[11px] text-slate-500">บันทึกประวัติการสอบถามราคายางลง Google Drive</p>
+          </div>
+        </div>
+        <button type="button" id="btnCloseSheetSettings" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs sm:text-sm">
+        
+        <!-- SECTION 1: Google Sheet Links & Create New -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs sm:text-sm">
+              <i data-lucide="sheet" class="w-4 h-4 text-emerald-600"></i>
+              <span>ลิงก์ Google Sheet สำหรับเปิดดูตาราง:</span>
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="url" id="inputSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." 
+              value="https://docs.google.com/spreadsheets/d/1cccXVrTFSZqI8quqRuIducktcMAIVR7eg_uyZfEbTbs/edit?usp=sharing"
+              class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="button" id="btnSaveSheetUrl" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs whitespace-nowrap transition">
+              บันทึก
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <a id="btnModalOpenCurrentSheet" href="https://docs.google.com/spreadsheets/d/1cccXVrTFSZqI8quqRuIducktcMAIVR7eg_uyZfEbTbs/edit?usp=sharing" target="_blank" rel="noopener noreferrer" 
+              class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 transition shadow-sm">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+              <span>เปิดดูตารางในชีต</span>
+            </a>
+            <a href="https://sheets.new" target="_blank" rel="noopener noreferrer" 
+              class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>สร้างชีตใหม่ (sheets.new)</span>
+            </a>
+            <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank" rel="noopener noreferrer" 
+              class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition">
+              <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span>Google Sheets รวม</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Google Apps Script Webhook (Auto Save Directly to Sheet) -->
+        <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3">
+          <div>
+            <h4 class="font-bold text-emerald-950 flex items-center gap-1.5 text-xs sm:text-sm">
+              <i data-lucide="zap" class="w-4 h-4 text-emerald-600"></i>
+              <span>บันทึกอัตโนมัติเข้า Google Drive (Google Apps Script):</span>
+            </h4>
+            <p class="text-[11px] text-emerald-800 mt-0.5">
+              นำ Webhook URL จาก Apps Script มาใส่ เมื่อกดบันทึก ข้อมูลจะวิ่งเข้าแถวใหม่ใน Google Sheet อัตโนมัติทันที
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Webhook URL (เว็บแอป):</label>
+            <div class="flex items-center gap-2">
+              <input type="url" id="inputWebhookUrl" placeholder="https://script.google.com/macros/s/.../exec" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <button type="button" id="btnSaveWebhookUrl" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs whitespace-nowrap transition">
+                บันทึก Webhook
+              </button>
+            </div>
+          </div>
+
+          <!-- Apps Script Code Box -->
+          <div class="bg-white p-3 rounded-xl border border-emerald-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+                <i data-lucide="code" class="w-3.5 h-3.5 text-blue-600"></i>
+                <span>โค้ดสำหรับวางใน Google Apps Script:</span>
+              </span>
+              <button type="button" id="btnCopyAppsScript" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition">
+                <i data-lucide="copy" class="w-3 h-3"></i>
+                <span id="btnCopyAppsScriptText">คัดลอกโค้ด</span>
+              </button>
+            </div>
+            
+            <textarea id="appsScriptCodeBlock" readonly rows="6" class="w-full p-2 bg-slate-900 text-emerald-400 font-mono text-[10px] rounded-lg border border-slate-800 focus:outline-none select-all"></textarea>
+
+            <!-- Instructions -->
+            <div class="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+              <p class="font-bold text-slate-800">วิธีติดตั้งใน 3 ขั้นตอน:</p>
+              <ol class="list-decimal pl-4 space-y-0.5 text-[11px]">
+                <li>เปิด Google Sheet > เมนู <b>ส่วนขยาย (Extensions)</b> > <b>Apps Script</b></li>
+                <li>ลบโค้ดเดิมออก แล้ววางโค้ดที่คัดลอกนี้ลงไป จากนั้นกดปุ่ม <b>บันทึก (Save)</b></li>
+                <li>กดปุ่มสีน้ำเงิน <b>ทำให้ใช้งานได้ (Deploy)</b> > <b>การทำให้ใช้งานได้ใหม่ (New deployment)</b> > เลือกชนิด <b>เว็บแอป (Web app)</b> > ตรง "ผู้มีสิทธิ์เข้าถึง" เลือก <b>ทุกคน (Anyone)</b> > กดทำให้ใช้งานได้ แล้วคัดลอก Webhook URL มาวางในช่องด้านบน</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Export CSV Option -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-2">
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs sm:text-sm">สำรองข้อมูลเป็นไฟล์ Excel / CSV</h4>
+            <p class="text-[11px] text-slate-500">ดาวน์โหลดเปิดใน Google Drive หรือ Excel ได้ทันที</p>
+          </div>
+          <button type="button" id="btnModalExportCsv" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition flex-shrink-0">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>ดาวน์โหลด CSV</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-[11px] text-slate-400">ระบบไม่บันทึกอัตโนมัติหากไม่กดปุ่ม</span>
+        <button type="button" id="btnDoneSheetSettings" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Script for Dual Mode Engine -->
   <script>
     // State
@@ -762,6 +954,8 @@
       gpPlatformName: 'Shopee',
       
       roundedTotal: null,
+      sheetUrl: localStorage.getItem('tire_sheet_url') || 'https://docs.google.com/spreadsheets/d/1cccXVrTFSZqI8quqRuIducktcMAIVR7eg_uyZfEbTbs/edit?usp=sharing',
+      sheetWebhook: localStorage.getItem('tire_sheet_webhook') || '',
       savedHistory: JSON.parse(localStorage.getItem('tire_quote_history') || '[]'),
       memoryMappings: []
     };
@@ -1043,7 +1237,7 @@
         labelBreakdownMode.innerText = 'โหมดหน้าร้าน (คำนวณราคาขาย)';
         labelBreakdownMode.className = 'text-blue-400';
         bdGrandTotalLabel.innerText = 'รวมราคาขายทั้งสิ้น:';
-        btnCopyQuoteText.innerText = 'คัดลอกข้อความเสนอราคา LINE';
+        if (btnCopyQuoteText) btnCopyQuoteText.innerText = 'ก็อป LINE';
         mobileStickyModeBadge.innerText = 'หน้าร้าน';
         mobileStickyModeBadge.style = 'background: rgba(37,99,235,0.2); color: #60a5fa;';
         heroPriceContainer.className = 'flex items-center justify-center gap-1 text-emerald-400 font-prompt';
@@ -1090,7 +1284,7 @@
         labelBreakdownMode.innerText = 'โหมดหน้าร้าน (คิดย้อนกลับ)';
         labelBreakdownMode.className = 'text-purple-400';
         bdGrandTotalLabel.innerText = 'เหลือกำไรสุทธิทั้งสิ้น:';
-        btnCopyQuoteText.innerText = 'คัดลอกสรุปกำไร LINE';
+        if (btnCopyQuoteText) btnCopyQuoteText.innerText = 'ก็อปกำไร';
         mobileStickyModeBadge.innerText = 'คิดย้อนกลับ';
         mobileStickyModeBadge.style = 'background: rgba(168,85,247,0.2); color: #c084fc;';
 
@@ -1157,7 +1351,7 @@
         labelBreakdownMode.innerText = 'โหมดขายออนไลน์';
         labelBreakdownMode.className = 'text-orange-400';
         bdGrandTotalLabel.innerText = 'ราคาตั้งขายบนแอป:';
-        btnCopyQuoteText.innerText = 'คัดลอกราคาขายออนไลน์';
+        if (btnCopyQuoteText) btnCopyQuoteText.innerText = 'ก็อปราคา';
         mobileStickyModeBadge.innerText = 'ออนไลน์ ' + calcState.gpPercent + '%';
         mobileStickyModeBadge.style = 'background: rgba(249,115,22,0.2); color: #fb923c;';
         heroPriceContainer.className = 'flex items-center justify-center gap-1 text-emerald-400 font-prompt';
@@ -1450,29 +1644,197 @@ ${isLoss ? '⚠️ ขายราคานี้เข้าเนื้อ/ข
       }
     }
 
-    // Save Quote History
+    // Google Apps Script Template
+    const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getActiveSheet();
+    
+    // หากเป็นชีตว่าง ให้สร้างหัวตารางสวยงามอัตโนมัติ
+    if (sheet.getLastRow() === 0) {
+      var headers = [
+        "วันที่-เวลา", 
+        "ประเภท/โหมด", 
+        "รายการยาง / รุ่นยาง", 
+        "จำนวน (เส้น)", 
+        "ซับพลายเออร์ (ที่มาของราคา)", 
+        "ราคาทุนต่อเส้น (บาท)", 
+        "รวมทุนยาง (บาท)", 
+        "ค่าแรง/ค่าส่งต่อเส้น (บาท)", 
+        "รวมค่าแรง/ค่าส่ง (บาท)", 
+        "ค่ารถรับยาง (บาท)", 
+        "ค่า GP แพลตฟอร์ม (%)", 
+        "ภาษี VAT 7% (บาท)", 
+        "กำไรต่อเส้น (บาท)", 
+        "รวมกำไรสุทธิ (บาท)", 
+        "ราคาขายรวมทั้งสิ้น (บาท)", 
+        "ราคาขายเฉลี่ยต่อเส้น (บาท)", 
+        "หมายเหตุ / ข้อมูลลูกค้า"
+      ];
+      sheet.appendRow(headers);
+      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground("#0f172a")
+                 .setFontColor("#38bdf8")
+                 .setFontWeight("bold")
+                 .setFontSize(11)
+                 .setHorizontalAlignment("center")
+                 .setVerticalAlignment("middle");
+      sheet.setRowHeight(1, 36);
+      sheet.setFrozenRows(1);
+    }
+    
+    var data = {};
+    if (e && e.postData && e.postData.contents) {
+      data = JSON.parse(e.postData.contents);
+    }
+    
+    var nowFormatted = Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm:ss");
+    var rowData = [
+      data.dateTime || nowFormatted,
+      data.modeText || "หน้าร้าน",
+      data.tireName || "ยางมาตรฐาน",
+      Number(data.qty) || 0,
+      data.supplier || "-",
+      Number(data.costPerUnit) || 0,
+      Number(data.totalTireCost) || 0,
+      Number(data.laborOrShipPerUnit) || 0,
+      Number(data.totalLaborOrShip) || 0,
+      Number(data.shippingFee) || 0,
+      data.gpRateText || "-",
+      Number(data.vatAmount) || 0,
+      Number(data.profitPerUnit) || 0,
+      Number(data.totalProfit) || 0,
+      Number(data.grandTotal) || 0,
+      Number(data.pricePerUnit) || 0,
+      data.note || "-"
+    ];
+    
+    sheet.appendRow(rowData);
+    var newRowIdx = sheet.getLastRow();
+    sheet.getRange(newRowIdx, 1, 1, rowData.length).setFontSize(10).setVerticalAlignment("middle");
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", row: newRowIdx }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput("Tire Calculator Webhook is Active! Ready to receive quote records from GGavity.")
+    .setMimeType(ContentService.MimeType.TEXT);
+}`;
+
+    // Save Quote History (บันทึกลงประวัติ และ Google Sheet ถ้ามี Webhook)
     function saveQuoteHistory() {
-      const tireName = document.getElementById('inputTireName').value.trim() || 'ไม่ระบุชื่อรุ่น';
+      const isStorefront = calcState.appMode === 'storefront';
+      const isReverse = isStorefront && calcState.storeCalcDirection === 'reverse';
+      const tireName = document.getElementById('inputTireName').value.trim() || 'ยางรถยนต์มาตรฐาน';
+      const supplier = document.getElementById('inputSupplierName').value.trim() || '-';
+      const note = document.getElementById('inputQuoteNote').value.trim() || '-';
+      const qty = calcState.qty;
       const grandTotal = document.getElementById('displayGrandTotal').innerText;
       const pricePerUnit = document.getElementById('displayPricePerUnit').innerText;
+      const costPerUnit = parseFloat(document.getElementById('inputTireCostPerUnit').value) || 0;
+      const totalTireCost = costPerUnit * qty;
+      
+      let laborOrShipPerUnit = 0;
+      let shippingFee = 0;
+      let gpRateText = '-';
+      let modeText = 'หน้าร้าน (คำนวณราคาขาย)';
+
+      if (isStorefront) {
+        if (isReverse) {
+          modeText = 'หน้าร้าน (คิดย้อนกลับ)';
+        }
+        laborOrShipPerUnit = parseFloat(document.getElementById('inputLaborPerUnit').value) || 0;
+        if (calcState.shippingMode === 'free') {
+          shippingFee = 0;
+        } else {
+          const shipVal = parseFloat(document.getElementById('inputShippingValue').value) || 0;
+          shippingFee = calcState.shippingMode === 'per_unit' ? (shipVal * qty) : shipVal;
+        }
+      } else {
+        const platform = calcState.gpPlatformName || 'ออนไลน์';
+        const gpVal = document.getElementById('inputGpPercent').value || 14;
+        modeText = `ออนไลน์ (${platform})`;
+        gpRateText = `${gpVal}%`;
+        laborOrShipPerUnit = parseFloat(document.getElementById('inputOnlineShipPerUnit').value) || 0;
+      }
+
+      const totalLaborOrShip = laborOrShipPerUnit * qty;
+      const vatAmount = calcState.includeVat ? (parseFloat(document.getElementById('displayVatAmount').innerText.replace(/[^0-9.]/g, '')) || 0) : 0;
+      
+      let profitPerUnit = 0;
+      let totalProfit = 0;
+      if (isReverse) {
+        totalProfit = parseFloat(grandTotal.replace(/,/g, '')) || 0;
+        profitPerUnit = Math.round(totalProfit / qty);
+      } else {
+        const profitText = document.getElementById('bdProfitCost').innerText.replace(/[^0-9.-]/g, '');
+        totalProfit = parseFloat(profitText) || 0;
+        profitPerUnit = Math.round(totalProfit / qty);
+      }
+
+      const cleanGrandTotalNum = parseFloat(grandTotal.replace(/,/g, '')) || 0;
+      const cleanPricePerUnitNum = parseFloat(pricePerUnit.replace(/[^0-9.]/g, '')) || 0;
 
       const quote = {
         id: Date.now(),
-        mode: calcState.appMode,
+        dateTime: new Date().toLocaleDateString('th-TH') + ' ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
         date: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        mode: calcState.appMode,
+        modeText,
         tireName,
-        qty: calcState.qty,
-        grandTotal,
-        pricePerUnit,
-        costUnit: document.getElementById('inputTireCostPerUnit').value,
+        qty,
+        supplier,
+        costPerUnit,
+        totalTireCost,
+        laborOrShipPerUnit,
+        totalLaborOrShip,
+        shippingFee,
+        gpRateText,
+        vatAmount,
+        profitPerUnit,
+        totalProfit,
+        grandTotal: cleanGrandTotalNum,
+        pricePerUnit: cleanPricePerUnitNum,
+        note,
+        costUnit: costPerUnit,
         profitVal: document.getElementById('inputProfitValue').value
       };
 
       calcState.savedHistory.unshift(quote);
-      if (calcState.savedHistory.length > 15) calcState.savedHistory.pop();
+      if (calcState.savedHistory.length > 50) calcState.savedHistory.pop();
       localStorage.setItem('tire_quote_history', JSON.stringify(calcState.savedHistory));
       renderHistoryList();
-      showToast('บันทึกรายการเสนอราคาลงประวัติแล้ว');
+
+      const webhook = (calcState.sheetWebhook || localStorage.getItem('tire_sheet_webhook') || '').trim();
+      if (webhook.startsWith('http')) {
+        const btnSaveText = document.getElementById('btnSaveQuoteText');
+        if (btnSaveText) btnSaveText.innerText = '⏳ กำลังบันทึกเข้า Google Sheet...';
+        
+        fetch(webhook, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(quote)
+        }).then(() => {
+          showToast('✅ บันทึกลง Google Sheet และประวัติเรียบร้อยแล้ว!');
+        }).catch(err => {
+          console.warn('Google Sheet Webhook error:', err);
+          showToast('บันทึกลงประวัติแล้ว (ส่งขึ้นชีตไม่สำเร็จ ตรวจสอบเน็ต/URL)');
+        }).finally(() => {
+          if (btnSaveText) btnSaveText.innerText = '💾 บันทึกลง Google Sheet';
+        });
+      } else {
+        showToast('✅ บันทึกลงประวัติแล้ว! (กด "ตั้งค่าชีต" เพื่อเชื่อมโยง Google Sheet)');
+      }
     }
 
     // Render History List
@@ -1480,23 +1842,27 @@ ${isLoss ? '⚠️ ขายราคานี้เข้าเนื้อ/ข
       const container = document.getElementById('recentQuotesList');
       if (!container) return;
       if (calcState.savedHistory.length === 0) {
-        container.innerHTML = '<p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก</p>';
+        container.innerHTML = '<p class="text-slate-400 text-center py-3 text-[11px]">ยังไม่มีประวัติที่บันทึก (กดปุ่ม "บันทึกลง Google Sheet" เพื่อเริ่มบันทึก)</p>';
         return;
       }
 
       container.innerHTML = calcState.savedHistory.map(item => `
-        <div class="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer transition" onclick="loadHistoryItem(${item.id})">
+        <div class="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer transition" onclick="loadHistoryItem(${item.id})">
           <div class="min-w-0 pr-2">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[9px] px-1 py-0.2 rounded font-bold uppercase ${item.mode === 'online' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${item.mode === 'online' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}">
                 ${item.mode === 'online' ? 'ออนไลน์' : 'หน้าร้าน'}
               </span>
+              ${item.supplier && item.supplier !== '-' ? `<span class="text-[9px] px-1.5 py-0.2 rounded font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">🏢 ${item.supplier}</span>` : ''}
               <p class="font-bold text-slate-800 truncate">${item.tireName}</p>
             </div>
-            <p class="text-[10px] text-slate-500 mt-0.5">${item.qty} เส้น • เส้นละ ${item.pricePerUnit} (${item.date})</p>
+            <p class="text-[10px] text-slate-500 mt-1">
+              ${item.qty} เส้น • เส้นละ ฿${Number(item.pricePerUnit || 0).toLocaleString()} (${item.date || item.dateTime})
+              ${item.note && item.note !== '-' ? `<span class="text-slate-400"> • 📝 ${item.note}</span>` : ''}
+            </p>
           </div>
           <div class="text-right flex-shrink-0">
-            <span class="font-bold text-emerald-600 font-prompt">฿${item.grandTotal}</span>
+            <span class="font-bold text-emerald-600 font-prompt">฿${Number(item.grandTotal || 0).toLocaleString()}</span>
           </div>
         </div>
       `).join('');
@@ -1508,12 +1874,97 @@ ${isLoss ? '⚠️ ขายราคานี้เข้าเนื้อ/ข
       if (item.mode && item.mode !== calcState.appMode) {
         setAppMode(item.mode);
       }
-      document.getElementById('inputTireName').value = item.tireName;
-      document.getElementById('inputTireCostPerUnit').value = item.costUnit;
-      document.getElementById('inputProfitValue').value = item.profitVal;
+      document.getElementById('inputTireName').value = item.tireName || '';
+      document.getElementById('inputTireCostPerUnit').value = item.costPerUnit || item.costUnit || '';
+      if (item.profitVal !== undefined) {
+        document.getElementById('inputProfitValue').value = item.profitVal;
+      }
+      if (item.supplier && item.supplier !== '-') {
+        document.getElementById('inputSupplierName').value = item.supplier;
+      }
+      if (item.note && item.note !== '-') {
+        document.getElementById('inputQuoteNote').value = item.note;
+      }
       setQty(item.qty);
       showToast(`โหลดข้อมูล: ${item.tireName}`);
     };
+
+    // Export History to CSV (เปิดใน Excel และ Google Sheets ได้ทันที)
+    function exportHistoryToCsv() {
+      if (!calcState.savedHistory || calcState.savedHistory.length === 0) {
+        showToast('ยังไม่มีประวัติที่บันทึกไว้สำหรับส่งออก');
+        return;
+      }
+      
+      const headers = [
+        "วันที่-เวลา", "โหมดการขาย", "รายการยาง", "จำนวน (เส้น)", "ซับพลายเออร์ (ที่มาของราคา)", 
+        "ทุนต่อเส้น (บ.)", "รวมทุนยาง (บ.)", "ค่าแรง/ค่าส่งต่อเส้น (บ.)", "รวมค่าแรง/ค่าส่ง (บ.)", 
+        "ค่ารถ (บ.)", "GP แพลตฟอร์ม", "ภาษี VAT 7% (บ.)", "กำไรต่อเส้น (บ.)", "รวมกำไรสุทธิ (บ.)", 
+        "ราคาขายรวมทั้งสิ้น (บ.)", "ราคาขายเฉลี่ยต่อเส้น (บ.)", "หมายเหตุ / ข้อมูลลูกค้า"
+      ];
+
+      const rows = calcState.savedHistory.map(item => [
+        `"${item.dateTime || item.date || ''}"`,
+        `"${item.modeText || item.mode || ''}"`,
+        `"${(item.tireName || '').replace(/"/g, '""')}"`,
+        item.qty || 0,
+        `"${(item.supplier || '-').replace(/"/g, '""')}"`,
+        item.costPerUnit || item.costUnit || 0,
+        item.totalTireCost || 0,
+        item.laborOrShipPerUnit || 0,
+        item.totalLaborOrShip || 0,
+        item.shippingFee || 0,
+        `"${item.gpRateText || '-'}"`,
+        item.vatAmount || 0,
+        item.profitPerUnit || 0,
+        item.totalProfit || item.profitVal || 0,
+        item.grandTotal || 0,
+        item.pricePerUnit || 0,
+        `"${(item.note || '-').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = "\\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\\r\\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `บันทึกสอบถามราคายาง_หลงฉื่อ_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('ดาวน์โหลดไฟล์ CSV เรียบร้อยแล้ว!');
+    }
+
+    // Modal Control Functions
+    function openSheetSettingsModal() {
+      const modal = document.getElementById('modalGoogleSheetSettings');
+      if (!modal) return;
+      
+      const sheetUrlInput = document.getElementById('inputSheetUrl');
+      const webhookInput = document.getElementById('inputWebhookUrl');
+      const codeBlock = document.getElementById('appsScriptCodeBlock');
+      const openCurrentLink = document.getElementById('btnModalOpenCurrentSheet');
+      const mainOpenSheetLink = document.getElementById('linkOpenGoogleSheet');
+
+      const currentUrl = calcState.sheetUrl || localStorage.getItem('tire_sheet_url') || 'https://docs.google.com/spreadsheets/d/1cccXVrTFSZqI8quqRuIducktcMAIVR7eg_uyZfEbTbs/edit?usp=sharing';
+      if (sheetUrlInput) sheetUrlInput.value = currentUrl;
+      if (openCurrentLink) openCurrentLink.href = currentUrl;
+      if (mainOpenSheetLink) mainOpenSheetLink.href = currentUrl;
+
+      const currentWebhook = calcState.sheetWebhook || localStorage.getItem('tire_sheet_webhook') || '';
+      if (webhookInput) webhookInput.value = currentWebhook;
+
+      if (codeBlock) codeBlock.value = APPS_SCRIPT_TEMPLATE;
+
+      modal.classList.remove('hidden');
+      updateIcons();
+    }
+
+    function closeSheetSettingsModal() {
+      const modal = document.getElementById('modalGoogleSheetSettings');
+      if (modal) modal.classList.add('hidden');
+    }
 
     // Print Quotation
     function printQuote() {
@@ -1753,8 +2204,77 @@ ${isLoss ? '⚠️ ขายราคานี้เข้าเนื้อ/ข
       // Print Quote
       document.getElementById('btnPrintQuote')?.addEventListener('click', printQuote);
 
-      // Save Quote
+      // Save Quote (Primary & Mobile)
       document.getElementById('btnSaveQuote')?.addEventListener('click', saveQuoteHistory);
+      document.getElementById('btnMobileSave')?.addEventListener('click', saveQuoteHistory);
+
+      // Supplier Presets
+      document.querySelectorAll('.supplier-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.dataset.val;
+          const inp = document.getElementById('inputSupplierName');
+          if (inp) inp.value = val;
+          document.querySelectorAll('.supplier-preset-btn').forEach(b => {
+            b.className = 'supplier-preset-btn px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[11px] transition';
+          });
+          btn.className = 'supplier-preset-btn px-2 py-0.5 rounded-lg bg-blue-600 text-white font-bold text-[11px] shadow-sm transition';
+          showToast(`เลือกซับพลายเออร์: ${val}`);
+        });
+      });
+
+      // Google Sheets Modal controls
+      document.getElementById('btnOpenSheetSettings')?.addEventListener('click', openSheetSettingsModal);
+      document.getElementById('btnCloseSheetSettings')?.addEventListener('click', closeSheetSettingsModal);
+      document.getElementById('btnDoneSheetSettings')?.addEventListener('click', closeSheetSettingsModal);
+      document.getElementById('modalGoogleSheetSettings')?.addEventListener('click', (e) => {
+        if (e.target.id === 'modalGoogleSheetSettings') closeSheetSettingsModal();
+      });
+
+      // Initialize Main Sheet Link
+      const initialSheetUrl = calcState.sheetUrl || localStorage.getItem('tire_sheet_url') || 'https://docs.google.com/spreadsheets/d/1cccXVrTFSZqI8quqRuIducktcMAIVR7eg_uyZfEbTbs/edit?usp=sharing';
+      const mainSheetLink = document.getElementById('linkOpenGoogleSheet');
+      if (mainSheetLink) mainSheetLink.href = initialSheetUrl;
+
+      // Save Sheet URL
+      document.getElementById('btnSaveSheetUrl')?.addEventListener('click', () => {
+        const val = document.getElementById('inputSheetUrl')?.value.trim();
+        if (val) {
+          calcState.sheetUrl = val;
+          localStorage.setItem('tire_sheet_url', val);
+          const linkMain = document.getElementById('linkOpenGoogleSheet');
+          const linkModal = document.getElementById('btnModalOpenCurrentSheet');
+          if (linkMain) linkMain.href = val;
+          if (linkModal) linkModal.href = val;
+          showToast('บันทึกลิงก์ Google Sheet เรียบร้อยแล้ว');
+        }
+      });
+
+      // Save Webhook URL
+      document.getElementById('btnSaveWebhookUrl')?.addEventListener('click', () => {
+        const val = document.getElementById('inputWebhookUrl')?.value.trim();
+        calcState.sheetWebhook = val;
+        localStorage.setItem('tire_sheet_webhook', val);
+        showToast(val ? 'บันทึก Webhook เรียบร้อยแล้ว! พร้อมส่งข้อมูลขึ้น Google Sheet' : 'ล้าง Webhook เรียบร้อย');
+      });
+
+      // Copy Apps Script Code
+      document.getElementById('btnCopyAppsScript')?.addEventListener('click', () => {
+        const code = document.getElementById('appsScriptCodeBlock')?.value || APPS_SCRIPT_TEMPLATE;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(() => {
+            const btnTxt = document.getElementById('btnCopyAppsScriptText');
+            if (btnTxt) btnTxt.innerText = 'คัดลอกแล้ว!';
+            setTimeout(() => { if (btnTxt) btnTxt.innerText = 'คัดลอกโค้ด'; }, 2000);
+            showToast('คัดลอกโค้ด Google Apps Script เรียบร้อยแล้ว');
+          });
+        } else {
+          showToast('กรุณากดเลือกข้อความทั้งหมดในกล่องโค้ดเพื่อคัดลอก');
+        }
+      });
+
+      // Export CSV
+      document.getElementById('btnExportCsv')?.addEventListener('click', exportHistoryToCsv);
+      document.getElementById('btnModalExportCsv')?.addEventListener('click', exportHistoryToCsv);
 
       // Clear History
       document.getElementById('btnClearHistory')?.addEventListener('click', () => {
