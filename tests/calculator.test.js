@@ -449,20 +449,22 @@ const express = require('express');
     process.exit(1);
   }
 
-  // 5. Test PEAK Payload generation schema and date formatting
+  // 5. Test PEAK Payload generation schema and date formatting (Matching PDF Page 42-51)
   const payload = await page.evaluate(() => buildPeakQuotationPayload());
   console.log('Generated PEAK Quotation Payload:', JSON.stringify(payload, null, 2));
 
   const validDateRegex = /^\d{8}$/;
+  const rootQuote = payload.PeakQuotations?.quotations?.[0];
   if (
     validDateRegex.test(payload.issuedDate) &&
     validDateRegex.test(payload.dueDate) &&
+    rootQuote &&
+    rootQuote.contact?.name &&
+    rootQuote.products?.[0]?.vatType === 1 && // 1 = ไม่มี VAT (PDF Page 44)
     payload.products &&
-    payload.products.length > 0 &&
-    payload.products[0].quantity === 4 &&
-    payload.contactName.length > 0
+    payload.products[0].quantity === 4
   ) {
-    console.log(`✓ TEST 9E PASSED: PEAK Quotation Payload validated! IssueDate=${payload.issuedDate}, DueDate=${payload.dueDate}, Qty=${payload.products[0].quantity}, Contact=${payload.contactName}`);
+    console.log(`✓ TEST 9E PASSED: PEAK Quotation Payload validated! PeakQuotations root, vatType=${rootQuote.products[0].vatType} (1=No VAT), IssueDate=${payload.issuedDate}, DueDate=${payload.dueDate}`);
   } else {
     console.error('✗ TEST 9E FAILED: Invalid PEAK payload structure:', payload);
     process.exit(1);

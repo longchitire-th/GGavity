@@ -548,10 +548,10 @@ function getPeakTimestamp() {
 }
 
 function getPeakSignature(timeStamp, connectId) {
-  return crypto.createHmac('sha1', connectId).update(timeStamp).digest('base64');
+  return crypto.createHmac('sha1', connectId).update(timeStamp).digest('hex');
 }
 
-async function getPeakClientToken(baseUrl, connectId) {
+async function getPeakClientToken(baseUrl, connectId, password = '') {
   const cached = peakTokenCache.get(connectId);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.token;
@@ -560,29 +560,38 @@ async function getPeakClientToken(baseUrl, connectId) {
   const timeStamp = getPeakTimestamp();
   const signature = getPeakSignature(timeStamp, connectId);
 
-  const response = await fetch(`${baseUrl}/api/v1/ClientToken`, {
+  const tokenBody = {
+    PeakClientToken: {
+      connectId,
+      password: password || connectId
+    },
+    connectId,
+    password: password || connectId
+  };
+
+  const response = await fetch(`${baseUrl}/api/v1/clienttoken`, {
     method: 'POST',
     headers: {
       'Time-Stamp': timeStamp,
       'Time-Signature': signature,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({})
+    body: JSON.stringify(tokenBody)
   });
 
   const data = await response.json();
-  if (data && data.data && data.data.clientToken) {
-    const token = data.data.clientToken;
-    const expiresInMs = (data.data.expiresIn || 86400) * 1000 - 60000;
+  const token = data?.PeakClientToken?.token || data?.data?.clientToken || data?.token;
+  if (token) {
+    const expiresInMs = (data?.data?.expiresIn || 86400) * 1000 - 60000;
     peakTokenCache.set(connectId, { token, expiresAt: Date.now() + expiresInMs });
     return token;
   }
-  throw new Error(data.message || 'Failed to obtain ClientToken from PEAK');
+  throw new Error(data?.resDesc || data?.message || 'Failed to obtain ClientToken from PEAK');
 }
 
 app.post('/api/peak/test', async (req, res) => {
   try {
-    const { peakEnv, connectId, userToken } = req.body;
+    const { peakEnv, connectId, password, userToken } = req.body;
     if (!connectId || !userToken) {
       return res.status(400).json({ success: false, message: 'กรุณาระบุ Connect ID และ User Token' });
     }
@@ -590,7 +599,7 @@ app.post('/api/peak/test', async (req, res) => {
       ? 'https://peakengineapidev.azurewebsites.net' 
       : 'https://api.peakaccount.com';
 
-    const clientToken = await getPeakClientToken(baseUrl, connectId);
+    const clientToken = await getPeakClientToken(baseUrl, connectId, password);
     res.json({
       status: 'success',
       success: true,
@@ -605,7 +614,7 @@ app.post('/api/peak/test', async (req, res) => {
 
 app.post('/api/peak/quotation', async (req, res) => {
   try {
-    const { peakEnv, connectId, userToken, quotationPayload } = req.body;
+    const { peakEnv, connectId, password, userToken, quotationPayload } = req.body;
     if (!connectId || !userToken || !quotationPayload) {
       return res.status(400).json({ success: false, message: 'ข้อมูลไม่ครบถ้วน' });
     }
@@ -613,11 +622,17 @@ app.post('/api/peak/quotation', async (req, res) => {
       ? 'https://peakengineapidev.azurewebsites.net' 
       : 'https://api.peakaccount.com';
 
-    const clientToken = await getPeakClientToken(baseUrl, connectId);
+    const clientToken = await getPeakClientToken(baseUrl, connectId, password);
     const timeStamp = getPeakTimestamp();
     const signature = getPeakSignature(timeStamp, connectId);
 
-    const peakRes = await fetch(`${baseUrl}/api/v1/Quotations`, {
+    const peakPayload = quotationPayload.PeakQuotations ? quotationPayload : {
+      PeakQuotations: {
+        quotations: [quotationPayload]
+      }
+    };
+
+    let peakRes = await fetch(`${baseUrl}/api/v1/quotations/allinone`, {
       method: 'POST',
       headers: {
         'Time-Stamp': timeStamp,
@@ -626,15 +641,33 @@ app.post('/api/peak/quotation', async (req, res) => {
         'Client-Token': clientToken,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(quotationPayload)
+      body: JSON.stringify(peakPayload)
     });
 
+    if (peakRes.status === 404) {
+      peakRes = await fetch(`${baseUrl}/api/v1/quotations`, {
+        method: 'POST',
+        headers: {
+          'Time-Stamp': timeStamp,
+          'Time-Signature': signature,
+          'User-Token': userToken,
+          'Client-Token': clientToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(peakPayload)
+      });
+    }
+
     const peakData = await peakRes.json();
-    res.status(peakRes.status).json({
-      status: peakRes.status === 200 ? 'success' : 'error',
+    const quoteItem = peakData?.PeakQuotations?.quotations?.[0] || peakData?.data || peakData;
+    const isSuccess = peakRes.ok || (quoteItem && (quoteItem.resCode === '200' || quoteItem.code || peakData.resCode === '200'));
+
+    res.status(isSuccess ? 200 : peakRes.status).json({
+      status: isSuccess ? 'success' : 'error',
       code: peakRes.status,
-      data: peakData.data || peakData,
-      message: peakData.message || (peakRes.status === 200 ? 'Created quotation successfully' : 'PEAK error')
+      PeakQuotations: peakData.PeakQuotations || { quotations: [quoteItem] },
+      data: quoteItem,
+      message: (quoteItem && quoteItem.resDesc) || peakData.message || (isSuccess ? 'Created quotation successfully' : 'PEAK error')
     });
   } catch (err) {
     console.error('[PEAK Quotation] Error:', err.message);
