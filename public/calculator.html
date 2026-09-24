@@ -1452,6 +1452,14 @@
               <p class="text-[10px] text-slate-500 mt-1">ได้รับทางอีเมลจากเจ้าหน้าที่ PEAK (Software Consultant) พร้อมกับ Application Code</p>
             </div>
 
+            <!-- Password / Secret Key (Optional per PEAK PDF Page 3) -->
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">API Password / Secret Key (ถ้ามีระบุในอีเมล):</label>
+              <input type="password" id="boInputPeakPassword" placeholder="หากไม่มีให้เว้นว่างไว้ ระบบจะใช้ Connect ID แทน" 
+                class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <p class="text-[10px] text-slate-500 mt-1">ชุดรหัสผ่านที่ออกโดย Peak Engine สำหรับขอ Client-Token (คู่มือหน้า 3)</p>
+            </div>
+
             <!-- User Token -->
             <div>
               <label class="block text-[11px] font-semibold text-slate-700 mb-1">User Token (กุญแจประจำกิจการใน PEAK):</label>
@@ -2780,6 +2788,7 @@
       return {
         env: 'production',
         connectId: '',
+        password: '',
         userToken: ''
       };
     }
@@ -2787,9 +2796,10 @@
     function savePeakSettings() {
       const env = document.getElementById('boSelectPeakEnv')?.value || 'production';
       const connectId = document.getElementById('boInputPeakConnectId')?.value.trim() || '';
+      const password = document.getElementById('boInputPeakPassword')?.value.trim() || '';
       const userToken = document.getElementById('boInputPeakUserToken')?.value.trim() || '';
 
-      const config = { env, connectId, userToken };
+      const config = { env, connectId, password, userToken };
       localStorage.setItem('tire_peak_settings', JSON.stringify(config));
       updatePeakStatusUi(config);
       showToast('💾 บันทึกการตั้งค่า PEAK Account เรียบร้อยแล้ว!');
@@ -2814,7 +2824,7 @@
         if (isConfigured) {
           statusDot.className = 'w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0 shadow-sm shadow-emerald-500/50';
           statusTitle.innerText = 'สถานะ: พร้อมเชื่อมต่อ PEAK Account';
-          statusDesc.innerText = `บันทึก Connect ID (${cfg.connectId.slice(0, 6)}...) และ User Token (${cfg.userToken.slice(0, 6)}...) แล้ว`;
+          statusDesc.innerText = `Connect ID: ${cfg.connectId.slice(0, 6)}... | User Token: ${cfg.userToken.slice(0, 6)}...`;
         } else {
           statusDot.className = 'w-3 h-3 rounded-full bg-slate-400 flex-shrink-0 animate-pulse';
           statusTitle.innerText = 'สถานะ: ยังไม่ได้ตั้งค่าเชื่อมต่อ PEAK';
@@ -2827,10 +2837,12 @@
       const cfg = getPeakSettings();
       const selectEnv = document.getElementById('boSelectPeakEnv');
       const inputConnectId = document.getElementById('boInputPeakConnectId');
+      const inputPassword = document.getElementById('boInputPeakPassword');
       const inputUserToken = document.getElementById('boInputPeakUserToken');
 
       if (selectEnv) selectEnv.value = cfg.env || 'production';
       if (inputConnectId) inputConnectId.value = cfg.connectId || '';
+      if (inputPassword) inputPassword.value = cfg.password || '';
       if (inputUserToken) inputUserToken.value = cfg.userToken || '';
 
       updatePeakStatusUi(cfg);
@@ -2840,6 +2852,7 @@
       const cfg = {
         env: document.getElementById('boSelectPeakEnv')?.value || 'production',
         connectId: document.getElementById('boInputPeakConnectId')?.value.trim() || '',
+        password: document.getElementById('boInputPeakPassword')?.value.trim() || '',
         userToken: document.getElementById('boInputPeakUserToken')?.value.trim() || ''
       };
 
@@ -2865,6 +2878,7 @@
               action: 'testPeakConnection',
               peakEnv: cfg.env,
               connectId: cfg.connectId,
+              password: cfg.password,
               userToken: cfg.userToken
             })
           });
@@ -2879,7 +2893,7 @@
           result = await res.json();
         }
 
-        if (result && (result.status === 'success' || result.code === 200)) {
+        if (result && (result.status === 'success' || result.code === 200 || result?.PeakClientToken?.token || result?.token)) {
           showToast('✅ เชื่อมต่อกับ PEAK API สำเร็จ! Client-Token พร้อมใช้งาน');
         } else {
           showToast(`⚠️ ผลการทดสอบ: ${result?.message || 'ไม่สามารถติดต่อ PEAK API ได้ ตรวจสอบ Key/URL'}`);
@@ -2911,7 +2925,7 @@
       return dateStr.replace(/[^0-9]/g, '').slice(0, 8);
     }
 
-    // Build Quotations payload matching PEAK Schema
+    // Build Quotations payload matching PEAK Schema (Official PeakEngine API Docs Page 42-44, 50-51)
     function buildPeakQuotationPayload() {
       const inpIssueDate = document.getElementById('qoInputIssueDate')?.value || '';
       const inpValidUntil = document.getElementById('qoInputValidUntil')?.value || '';
@@ -2943,12 +2957,28 @@
       }
 
       const unitPrice = qty > 0 ? Math.round((grandTotalNum / qty) * 100) / 100 : 0;
-      const isTaxIncluded = calcState.includeVat ? 1 : 0; // 1 = รวมภาษี, 0 = ไม่รวมภาษี
+      // In PEAK API: taxStatus: 1 = รวมภาษี, 0 = แยกภาษี (PDF Page 43)
+      const isTaxIncluded = calcState.includeVat ? 1 : 0;
+      // In PEAK API: vatType: 1 = ไม่มี VAT, 2 = VAT 0%, 3 = VAT 7% (PDF Page 16, 44, 57, 82)
+      const peakVatType = calcState.includeVat ? 3 : 1;
 
-      return {
+      // Base quotation object
+      const quotationItem = {
+        code: docNo || undefined,
         documentNumber: docNo || undefined,
         issuedDate: issuedDate,
         dueDate: dueDate,
+        // All-in-one contact payload (PDF Page 50)
+        contact: {
+          code: contactCode || undefined,
+          name: contactName,
+          type: 1, // 1 = ห้างหุ้นส่วนจำกัด/บริษัทจำกัด, 5 = บุคคลธรรมดา
+          taxNumber: contactTaxId || undefined,
+          branchCode: "00000",
+          address: contactAddress || undefined,
+          callCenterNumber: contactPhone || undefined
+        },
+        // Flat contact fields for standard endpoints (PDF Page 43)
         contactCode: contactCode || undefined,
         contactName: contactName,
         contactTaxId: contactTaxId || undefined,
@@ -2957,17 +2987,33 @@
         contactPhone: contactPhone || undefined,
         isTaxInvoice: 0,
         taxStatus: isTaxIncluded,
+        tags: ["GGavity", "TyreQuote"],
         products: [
           {
+            productTemplate: {
+              name: tireName,
+              sellValue: String(unitPrice),
+              sellVatType: peakVatType,
+              description: "ราคารวมค่าบริการติดตั้งและถ่วงล้อแล้ว / รับประกันยาง"
+            },
             name: tireName,
+            description: "ราคารวมค่าบริการติดตั้งและถ่วงล้อแล้ว / รับประกันยาง",
             quantity: qty,
             price: unitPrice,
-            vatType: calcState.includeVat ? 7 : 0,
-            description: "ราคารวมค่าบริการติดตั้งและถ่วงล้อแล้ว / รับประกันยาง"
+            vatType: peakVatType
           }
         ],
+        remark: `สร้างจากระบบคำนวณราคายาง GGavity (${calcState.appMode === 'online' ? 'โหมดออนไลน์ GP%' : 'โหมดหน้าร้าน'})`,
         notes: `สร้างจากระบบคำนวณราคายาง GGavity (${calcState.appMode === 'online' ? 'โหมดออนไลน์ GP%' : 'โหมดหน้าร้าน'})`,
         title: "ใบเสนอราคาเปลี่ยนยาง"
+      };
+
+      // Wrap in official PeakEngine root schema (PDF Page 42, 49, 50)
+      return {
+        PeakQuotations: {
+          quotations: [quotationItem]
+        },
+        ...quotationItem
       };
     }
 
@@ -3009,6 +3055,7 @@
             action: 'createPeakQuotation',
             peakEnv: peakCfg.env,
             connectId: peakCfg.connectId,
+            password: peakCfg.password,
             userToken: peakCfg.userToken,
             quotationPayload: payload
           };
@@ -3027,6 +3074,7 @@
             body: JSON.stringify({
               peakEnv: peakCfg.env,
               connectId: peakCfg.connectId,
+              password: peakCfg.password,
               userToken: peakCfg.userToken,
               quotationPayload: payload
             })
@@ -3034,10 +3082,12 @@
           result = await res.json();
         }
 
-        if (result && (result.status === 'success' || result.code === 200)) {
-          const docData = result.data || {};
-          const docNo = docData.documentNumber || result.documentNumber || ('QT-' + Date.now().toString().slice(-6));
-          const viewUrl = docData.onlineViewUrl || docData.pdfUrl || `https://app.peakaccount.com/quotations`;
+        const quoteItem = result?.PeakQuotations?.quotations?.[0] || result?.data || result?.quotations?.[0] || result;
+        const isSuccess = (result?.status === 'success' || result?.code === 200 || result?.resCode === '200' || quoteItem?.resCode === '200' || quoteItem?.code);
+
+        if (isSuccess) {
+          const docNo = quoteItem?.code || quoteItem?.documentNumber || result?.documentNumber || ('QT-' + Date.now().toString().slice(-6));
+          const viewUrl = quoteItem?.onlineViewLink || quoteItem?.onlineViewUrl || quoteItem?.pdfUrl || 'https://app.peakaccount.com/quotations';
 
           calcState.lastPeakDocNo = docNo;
 
@@ -3061,7 +3111,7 @@
 
           showToast(`✅ สร้างใบเสนอราคาใน PEAK สำเร็จ: ${docNo}`);
         } else {
-          throw new Error(result?.message || 'PEAK API ไม่สามารถสร้างเอกสารได้');
+          throw new Error(result?.message || quoteItem?.resDesc || 'PEAK API ไม่สามารถสร้างเอกสารได้');
         }
       } catch (err) {
         console.error('PEAK Sync Error:', err);
@@ -3166,6 +3216,7 @@
         ? "https://peakengineapidev.azurewebsites.net" 
         : "https://api.peakaccount.com";
       var connectId = data.connectId;
+      var password = data.password || "";
       var userToken = data.userToken;
       var payload = data.quotationPayload;
 
@@ -3176,43 +3227,70 @@
         })).setMimeType(ContentService.MimeType.JSON);
       }
 
+      // Helper: lowercase hex HMAC-SHA1 signature (40 characters) as specified in PEAK PDF Page 3
+      function getPeakSignature(ts, key) {
+        var bytes = Utilities.computeHmacSha1Signature(ts, key);
+        return bytes.map(function(b) {
+          var hex = (b < 0 ? b + 256 : b).toString(16);
+          return hex.length === 1 ? "0" + hex : hex;
+        }).join("");
+      }
+
       // Step 1: Get or Cache ClientToken (valid 24h)
       var cache = CacheService.getScriptCache();
       var clientToken = cache.get("PEAK_CLIENT_TOKEN_" + connectId);
 
       var timeStamp = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyyMMddHHmmss");
-      var signatureBytes = Utilities.computeHmacSha1Signature(timeStamp, connectId);
-      var signature = Utilities.base64Encode(signatureBytes);
+      var signature = getPeakSignature(timeStamp, connectId);
 
       if (!clientToken) {
-        var tokenRes = UrlFetchApp.fetch(baseUrl + "/api/v1/ClientToken", {
+        var tokenBody = {
+          "PeakClientToken": {
+            "connectId": connectId,
+            "password": password || connectId
+          },
+          "connectId": connectId,
+          "password": password || connectId
+        };
+
+        var tokenRes = UrlFetchApp.fetch(baseUrl + "/api/v1/clienttoken", {
           method: "post",
           headers: {
             "Time-Stamp": timeStamp,
             "Time-Signature": signature,
             "Content-Type": "application/json"
           },
-          payload: JSON.stringify({}),
+          payload: JSON.stringify(tokenBody),
           muteHttpExceptions: true
         });
+
         var tokenJson = JSON.parse(tokenRes.getContentText());
-        if (tokenJson && tokenJson.data && tokenJson.data.clientToken) {
-          clientToken = tokenJson.data.clientToken;
+        clientToken = (tokenJson && tokenJson.PeakClientToken && tokenJson.PeakClientToken.token)
+          || (tokenJson && tokenJson.data && tokenJson.data.clientToken)
+          || (tokenJson && tokenJson.token);
+
+        if (clientToken) {
           cache.put("PEAK_CLIENT_TOKEN_" + connectId, clientToken, 80000);
         } else {
           return ContentService.createTextOutput(JSON.stringify({
             status: "error",
-            message: "ขอ Client-Token จาก PEAK ไม่สำเร็จ: " + (tokenJson.message || tokenRes.getContentText())
+            message: "ขอ Client-Token จาก PEAK ไม่สำเร็จ: " + (tokenJson.resDesc || tokenJson.message || tokenRes.getContentText())
           })).setMimeType(ContentService.MimeType.JSON);
         }
       }
 
-      // Step 2: Create Quotation
+      // Step 2: Create Quotation (Try /api/v1/quotations/allinone or /api/v1/quotations)
       var quoteTimeStamp = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyyMMddHHmmss");
-      var quoteSigBytes = Utilities.computeHmacSha1Signature(quoteTimeStamp, connectId);
-      var quoteSig = Utilities.base64Encode(quoteSigBytes);
+      var quoteSig = getPeakSignature(quoteTimeStamp, connectId);
 
-      var quoteRes = UrlFetchApp.fetch(baseUrl + "/api/v1/Quotations", {
+      // Ensure PeakQuotations wrapper exists (PDF Page 42, 49, 50)
+      var peakPayload = payload.PeakQuotations ? payload : {
+        "PeakQuotations": {
+          "quotations": [payload]
+        }
+      };
+
+      var quoteRes = UrlFetchApp.fetch(baseUrl + "/api/v1/quotations/allinone", {
         method: "post",
         headers: {
           "Time-Stamp": quoteTimeStamp,
@@ -3221,16 +3299,40 @@
           "Client-Token": clientToken,
           "Content-Type": "application/json"
         },
-        payload: JSON.stringify(payload),
+        payload: JSON.stringify(peakPayload),
         muteHttpExceptions: true
       });
 
+      // If allinone returned 404, fallback to /api/v1/quotations
+      if (quoteRes.getResponseCode() === 404) {
+        quoteRes = UrlFetchApp.fetch(baseUrl + "/api/v1/quotations", {
+          method: "post",
+          headers: {
+            "Time-Stamp": quoteTimeStamp,
+            "Time-Signature": quoteSig,
+            "User-Token": userToken,
+            "Client-Token": clientToken,
+            "Content-Type": "application/json"
+          },
+          payload: JSON.stringify(peakPayload),
+          muteHttpExceptions: true
+        });
+      }
+
       var quoteJson = JSON.parse(quoteRes.getContentText());
+      var quoteItem = (quoteJson && quoteJson.PeakQuotations && quoteJson.PeakQuotations.quotations && quoteJson.PeakQuotations.quotations[0])
+        || (quoteJson && quoteJson.data)
+        || quoteJson;
+
+      var isSuccess = (quoteRes.getResponseCode() === 200 || quoteRes.getResponseCode() === 201) &&
+        (quoteItem && (quoteItem.resCode === "200" || quoteItem.code || quoteJson.resCode === "200" || quoteJson.status === "success"));
+
       return ContentService.createTextOutput(JSON.stringify({
-        status: quoteRes.getResponseCode() === 200 ? "success" : "error",
+        status: isSuccess ? "success" : "error",
         code: quoteRes.getResponseCode(),
-        data: quoteJson.data || quoteJson,
-        message: quoteJson.message || "Quotation processed"
+        PeakQuotations: quoteJson.PeakQuotations || { quotations: [quoteItem] },
+        data: quoteItem,
+        message: (quoteItem && quoteItem.resDesc) || quoteJson.message || "Quotation processed"
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -3241,31 +3343,56 @@
         ? "https://peakengineapidev.azurewebsites.net" 
         : "https://api.peakaccount.com";
       var connectId = data.connectId;
+      var password = data.password || "";
       var timeStamp = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyyMMddHHmmss");
-      var signatureBytes = Utilities.computeHmacSha1Signature(timeStamp, connectId);
-      var signature = Utilities.base64Encode(signatureBytes);
 
-      var tokenRes = UrlFetchApp.fetch(baseUrl + "/api/v1/ClientToken", {
+      function getPeakSignature(ts, key) {
+        var bytes = Utilities.computeHmacSha1Signature(ts, key);
+        return bytes.map(function(b) {
+          var hex = (b < 0 ? b + 256 : b).toString(16);
+          return hex.length === 1 ? "0" + hex : hex;
+        }).join("");
+      }
+
+      var signature = getPeakSignature(timeStamp, connectId);
+
+      var tokenBody = {
+        "PeakClientToken": {
+          "connectId": connectId,
+          "password": password || connectId
+        },
+        "connectId": connectId,
+        "password": password || connectId
+      };
+
+      var tokenRes = UrlFetchApp.fetch(baseUrl + "/api/v1/clienttoken", {
         method: "post",
         headers: {
           "Time-Stamp": timeStamp,
           "Time-Signature": signature,
           "Content-Type": "application/json"
         },
-        payload: JSON.stringify({}),
+        payload: JSON.stringify(tokenBody),
         muteHttpExceptions: true
       });
 
       var tokenJson = JSON.parse(tokenRes.getContentText());
-      if (tokenJson && tokenJson.data && tokenJson.data.clientToken) {
+      var tokenVal = (tokenJson && tokenJson.PeakClientToken && tokenJson.PeakClientToken.token)
+        || (tokenJson && tokenJson.data && tokenJson.data.clientToken)
+        || (tokenJson && tokenJson.token);
+
+      if (tokenVal) {
         return ContentService.createTextOutput(JSON.stringify({
           status: "success",
+          code: 200,
+          token: tokenVal,
           message: "เชื่อมต่อกับ PEAK API สำเร็จ! Client-Token พร้อมใช้งาน"
         })).setMimeType(ContentService.MimeType.JSON);
       } else {
         return ContentService.createTextOutput(JSON.stringify({
           status: "error",
-          message: "เชื่อมต่อ PEAK ไม่สำเร็จ: " + (tokenJson.message || tokenRes.getContentText())
+          code: tokenRes.getResponseCode(),
+          message: "เชื่อมต่อ PEAK ไม่สำเร็จ: " + (tokenJson.resDesc || tokenJson.message || tokenRes.getContentText())
         })).setMimeType(ContentService.MimeType.JSON);
       }
     }
