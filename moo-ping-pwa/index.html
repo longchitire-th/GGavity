@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>หมูปิ้ง หน้าร้านยาง · คิดเงิน & หลังบ้าน (POS)</title>
+
+  <!-- PWA & Mobile Standalone Meta -->
+  <meta name="theme-color" content="#1b4332">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="หมูปิ้ง POS">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icon-180.png">
+
+  <style>
+    :root {
+      --brand: #1b4332;
+      --brand-mid: #254c3b;
+      --brand-light: #e3efdf;
+      --accent: #d97706;
+      --accent-light: #fef3c7;
+      --bg: #f7f5ef;
+      --card: #ffffff;
+      --text: #1e2f26;
+      --muted: #64746b;
+      --border: #dfe5dc;
+      --danger: #b91c1c;
+      --danger-bg: #fef2f2;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-size: 16px;
+      min-height: 100dvh;
+      overscroll-behavior-y: none;
+    }
+
+    /* App Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: linear-gradient(135deg, var(--brand), var(--brand-mid));
+      color: #ffffff;
+      padding: calc(var(--safe-top) + 10px) 14px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(27, 67, 50, 0.2);
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #fff;
+      padding: 2px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: #cce3d6;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .sync-pill {
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      display: inline-block;
+    }
+    .dot.warn { background: #fbbf24; }
+
+    /* Container */
+    .main-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 12px 12px calc(92px + var(--safe-bottom));
+    }
+
+    @media (min-width: 768px) {
+      .main-container {
+        padding: 20px 24px 110px;
+      }
+      .pos-products-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .pos-products-grid .product-card {
+        margin: 0;
+      }
+      .kpi-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+    }
+
+    .upload-dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .upload-action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 58px;
+      border: 2px dashed var(--brand);
+      border-radius: 14px;
+      background: #f2f8f4;
+      color: var(--brand);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 8px 6px;
+      text-align: center;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .upload-action-btn.camera {
+      background: var(--brand-light);
+      border-style: solid;
+    }
+    .upload-action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .tab-page { display: none; }
+    .tab-page.active { display: block; animation: fadeIn 0.18s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Quick Combos */
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin: 4px 0 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .combo-scroll {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .combo-scroll::-webkit-scrollbar { display: none; }
+
+    .combo-chip {
+      border: 1px solid #d5ded5;
+      background: #ffffff;
+      color: var(--brand);
+      border-radius: 12px;
+      padding: 8px 11px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+    }
+    .combo-chip:active {
+      background: var(--brand);
+      color: #fff;
+      transform: scale(0.96);
+    }
+    .combo-chip.reset {
+      background: #fff1f2;
+      color: #be123c;
+      border-color: #fecdd3;
+    }
+
+    /* Product Cards */
+    .product-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 12px 14px;
+      margin: 9px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .product-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .product-info b {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .product-info small {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .counter-box {
+      display: grid;
+      grid-template-columns: 46px 76px 46px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-step {
+      height: 46px;
+      border-radius: 13px;
+      border: 1.5px solid #cbd5ce;
+      background: #f8faf8;
+      color: var(--brand);
+      font-size: 26px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .btn-step.plus {
+      background: var(--brand);
+      color: #ffffff;
+      border-color: var(--brand);
+    }
+    .btn-step:active { transform: scale(0.94); }
+
+    .qty-input {
+      width: 100%;
+      height: 46px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      border: 1.5px solid #cbd5ce;
+      border-radius: 12px;
+      color: var(--text);
+      background: #fff;
+      padding: 0;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    .qty-input::-webkit-inner-spin-button { appearance: none; }
+
+    .quick-steps {
+      display: flex;
+      gap: 6px;
+      margin-top: 9px;
+      padding-top: 8px;
+      border-top: 1px dashed #e5ebe4;
+    }
+
+    .chip-step {
+      flex: 1;
+      height: 34px;
+      border-radius: 9px;
+      border: 1px solid #d5ded5;
+      background: #f4f7f4;
+      color: var(--brand-mid);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .chip-step:active { background: #dce8dc; }
+
+    /* Total Display */
+    .total-banner {
+      background: linear-gradient(135deg, #1b4332, #2d6a4f);
+      color: #ffffff;
+      border-radius: 20px;
+      padding: 14px 16px;
+      text-align: center;
+      margin: 10px 0;
+      box-shadow: 0 6px 18px rgba(27, 67, 50, 0.22);
+    }
+
+    .total-summary {
+      font-size: 13px;
+      color: #d8f3dc;
+      font-weight: 500;
+    }
+
+    .total-amount {
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin: 4px 0 2px;
+      color: #ffffff;
+    }
+
+    /* Payment Method Grid */
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .btn-method {
+      min-height: 50px;
+      border-radius: 14px;
+      border: 1.5px solid #cbd5ce;
+      background: #ffffff;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 6px;
+    }
+
+    .btn-method[aria-pressed="true"] {
+      background: var(--brand);
+      color: #ffffff;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px #cce3d6;
+    }
+
+    /* Payment Panels */
+    .panel-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      margin: 10px 0;
+    }
+
+    .bank-Row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .btn-bank {
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid #cbd5ce;
+      background: #f8faf8;
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+    }
+    .btn-bank:active { background: var(--brand); color: #fff; }
+
+    .cash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .change-box {
+      background: var(--brand-light);
+      border-radius: 14px;
+      padding: 10px 12px;
+      text-align: right;
+    }
+    .change-box.insufficient {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+    .change-val {
+      font-size: 24px;
+      font-weight: 900;
+      display: block;
+    }
+
+    /* QR & Slip */
+    .qr-preview-box {
+      text-align: center;
+      background: #f8faf8;
+      border: 1px dashed #b7c9bc;
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .qr-preview-box img {
+      max-width: 210px;
+      width: 100%;
+      border-radius: 10px;
+      display: block;
+      margin: 6px auto;
+      cursor: pointer;
+    }
+
+    .slip-upload-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 48px;
+      border: 2px dashed var(--brand);
+      border-radius: 14px;
+      background: #f2f8f4;
+      color: var(--brand);
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .confirm-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #fef9c3;
+      border: 1px solid #fde047;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .confirm-check input {
+      width: 24px;
+      height: 24px;
+      accent-color: var(--brand);
+      flex-shrink: 0;
+    }
+
+    /* Primary CTA */
+    .btn-primary {
+      width: 100%;
+      min-height: 58px;
+      background: linear-gradient(135deg, #1b4332, #254c3b);
+      color: #ffffff;
+      border: none;
+      border-radius: 16px;
+      font-size: 20px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(27, 67, 50, 0.28);
+      touch-action: manipulation;
+      margin-top: 8px;
+    }
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      border: 1.5px solid #cbd5ce;
+      background: #fff;
+      color: var(--brand);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Forms & Inputs */
+    .form-group { margin-bottom: 12px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+    .form-control {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1.5px solid #cbd5ce;
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin: 10px 0;
+    }
+    .kpi-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .kpi-card small {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      display: block;
+    }
+    .kpi-card strong {
+      font-size: 22px;
+      font-weight: 900;
+      display: block;
+      margin: 4px 0 2px;
+    }
+    .kpi-card .sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Lists */
+    .record-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf1ec;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .record-item:last-child { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #e2ece4;
+      color: var(--brand);
+    }
+    .badge.warn { background: #fef3c7; color: #b45309; }
+
+    /* Notice / Alert */
+    .alert-box {
+      padding: 12px 14px;
+      border-radius: 14px;
+      margin: 10px 0;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .alert-box.success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .alert-box.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-box.info { background: #fef3c7; color: #92400e; border: 1px solid #fde047; }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #dce3da;
+      padding: 6px 8px calc(6px + var(--safe-bottom));
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      z-index: 50;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 12px;
+      padding: 6px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .nav-btn .icon { font-size: 20px; line-height: 1; }
+    .nav-btn.active {
+      color: var(--brand);
+      background: var(--brand-light);
+    }
+
+    /* Fullscreen Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 29, 22, 0.78);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: 22px;
+      max-width: 420px;
+      width: 100%;
+      max-height: 88dvh;
+      overflow-y: auto;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="app-header">
+    <div class="brand-box">
+      <img src="./assets/icon-192.png" alt="โลโก้หมูปิ้งหน้าร้านยาง" class="brand-logo">
+      <div>
+        <h1 class="brand-title">หมูปิ้ง หน้าร้านยาง</h1>
+        <div class="brand-sub">
+          <span id="price-subtitle">หมู 5฿ · ข้าวเหนียว 5฿</span>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="sync-pill" id="btn-sync-status" title="สถานะเชื่อมต่อ Google Sheet">
+      <span class="dot" id="sync-dot"></span>
+      <span id="sync-text">พร้อมขาย</span>
+    </button>
+  </header>
+
+  <main class="main-container">
+
+    <!-- ==========================================
+         TAB 1: 🍢 คิดเงินหน้าร้าน (POS CASHIER)
+         ========================================== -->
+    <section id="tab-pos" class="tab-page active">
+      <div class="section-label">
+        <span>⚡ ชุดเซตขายดี (แตะเลือกด่วน)</span>
+        <span id="today-mini-stat" style="color:var(--brand);">วันนี้ 0 บิล · 0฿</span>
+      </div>
+      <div class="combo-scroll">
+        <button type="button" class="combo-chip" data-pork="3" data-rice="1">ชุด 20฿ (หมู 3+ข้าว 1)</button>
+        <button type="button" class="combo-chip" data-pork="4" data-rice="1">ชุด 25฿ (หมู 4+ข้าว 1)</button>
+        <button type="button" class="combo-chip" data-pork="5" data-rice="1">ชุด 30฿ (หมู 5+ข้าว 1)</button>
+        <button type="button" class="combo-chip" data-pork="8" data-rice="2">ชุด 50฿ (หมู 8+ข้าว 2)</button>
+        <button type="button" class="combo-chip" data-pork="16" data-rice="4">ชุด 100฿ (หมู 16+ข้าว 4)</button>
+        <button type="button" class="combo-chip reset" data-pork="0" data-rice="0">ล้าง (0)</button>
+      </div>
+
+      <div class="pos-products-grid">
+        <!-- หมูปิ้ง -->
+        <div class="product-card">
+          <div class="product-top">
+            <div class="product-info">
+              <b>🍢 หมูปิ้ง (ไม้)</b>
+              <small id="pork-price-label">ไม้ละ 5.00 บาท</small>
+            </div>
+            <div class="counter-box">
+              <button type="button" class="btn-step" data-item="pork" data-step="-1">−</button>
+              <input type="number" id="pork-qty" class="qty-input" value="0" min="0" max="10000" inputmode="numeric">
+              <button type="button" class="btn-step plus" data-item="pork" data-step="1">+</button>
+            </div>
+          </div>
+          <div class="quick-steps">
+            <button type="button" class="chip-step" data-item="pork" data-step="-5">-5 ไม้</button>
+            <button type="button" class="chip-step" data-item="pork" data-step="2">+2 ไม้</button>
+            <button type="button" class="chip-step" data-item="pork" data-step="5">+5 ไม้</button>
+            <button type="button" class="chip-step" data-item="pork" data-step="10">+10 ไม้</button>
+            <button type="button" class="chip-step" data-item="pork" data-step="20">+20 ไม้</button>
+          </div>
+        </div>
+
+        <!-- ข้าวเหนียว -->
+        <div class="product-card">
+          <div class="product-top">
+            <div class="product-info">
+              <b>🍚 ข้าวเหนียว (ห่อ)</b>
+              <small id="rice-price-label">ห่อละ 5.00 บาท</small>
+            </div>
+            <div class="counter-box">
+              <button type="button" class="btn-step" data-item="rice" data-step="-1">−</button>
+              <input type="number" id="rice-qty" class="qty-input" value="0" min="0" max="10000" inputmode="numeric">
+              <button type="button" class="btn-step plus" data-item="rice" data-step="1">+</button>
+            </div>
+          </div>
+          <div class="quick-steps">
+            <button type="button" class="chip-step" data-item="rice" data-step="-1">-1 ห่อ</button>
+            <button type="button" class="chip-step" data-item="rice" data-step="1">+1 ห่อ</button>
+            <button type="button" class="chip-step" data-item="rice" data-step="2">+2 ห่อ</button>
+            <button type="button" class="chip-step" data-item="rice" data-step="5">+5 ห่อ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ยอดบวกเพิ่ม / สินค้าอื่น ๆ (ถ้ามี) -->
+      <div class="panel-card" style="padding:10px 14px;margin:8px 0;">
+        <div class="form-row" style="align-items:center;">
+          <div>
+            <label for="pos-extra-baht" style="font-size:12px;font-weight:700;color:var(--muted);display:block;">➕ บวกยอดขายเพิ่ม / รายการอื่น (บาท)</label>
+            <input type="number" id="pos-extra-baht" class="form-control" style="min-height:40px;padding:6px 10px;font-size:16px;font-weight:700;margin-top:4px;" placeholder="0" min="0" step="1" inputmode="decimal">
+          </div>
+          <div>
+            <label for="pos-note" style="font-size:12px;font-weight:700;color:var(--muted);display:block;">📝 หมายเหตุบิล (ไม่บังคับ)</label>
+            <input type="text" id="pos-note" class="form-control" style="min-height:40px;padding:6px 10px;font-size:14px;margin-top:4px;" placeholder="เช่น ลูกค้าประจำ / สั่งพิเศษ">
+          </div>
+        </div>
+      </div>
+
+      <!-- ยอดรวม -->
+      <div class="total-banner">
+        <div class="total-summary" id="order-breakdown">ยังไม่ได้เลือกรายการ</div>
+        <div class="total-amount" id="total-display">0.00 บาท</div>
+      </div>
+
+      <!-- วิธีชำระเงิน -->
+      <div class="section-label"><span>วิธีรับชำระเงิน</span></div>
+      <div class="method-grid">
+        <button type="button" class="btn-method" data-method="cash" aria-pressed="true">
+          <span>💵 เงินสด</span>
+        </button>
+        <button type="button" class="btn-method" data-method="qr" aria-pressed="false">
+          <span>📲 สแกน QR</span>
+        </button>
+        <button type="button" class="btn-method" data-method="transfer" aria-pressed="false">
+          <span>🏦 เงินโอน</span>
+        </button>
+      </div>
+
+      <!-- กล่องเงินสด -->
+      <div id="cash-panel" class="panel-card">
+        <div class="section-label"><span>แตะเลือกแบงก์ที่ลูกค้าจ่าย</span></div>
+        <div class="bank-Row">
+          <button type="button" class="btn-bank" data-bank="exact">พอดี</button>
+          <button type="button" class="btn-bank" data-bank="20">20</button>
+          <button type="button" class="btn-bank" data-bank="50">50</button>
+          <button type="button" class="btn-bank" data-bank="100">100</button>
+          <button type="button" class="btn-bank" data-bank="500">500</button>
+          <button type="button" class="btn-bank" data-bank="1000">1000</button>
+        </div>
+        <div class="cash-grid">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--muted);">รับเงินสดมา (บาท)</label>
+            <input type="number" id="cash-received" class="form-control" style="font-size:22px;font-weight:800;margin-top:4px;" placeholder="0" inputmode="decimal">
+          </div>
+          <div class="change-box" id="change-box">
+            <span style="font-size:12px;font-weight:700;">เงินทอนลูกค้า</span>
+            <strong class="change-val" id="change-display">0.00 ฿</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- กล่อง QR / โอน + แนบสลิป (ย่อรูปอัตโนมัติ) -->
+      <div id="slip-panel" class="panel-card" hidden>
+        <div id="qr-card-container" class="qr-preview-box">
+          <div style="font-weight:800;color:var(--brand);font-size:14px;">📲 ให้ลูกค้าสแกน QR ร้านหมูปิ้งหน้าร้านยาง</div>
+          <img src="./assets/payment-card.png" alt="QR รับเงินร้านหมูปิ้ง" id="btn-zoom-qr">
+          <button type="button" class="btn-secondary" id="btn-fullscreen-qr" style="width:100%;margin-top:4px;">🔍 ขยาย QR เต็มจอพร้อมยอดเงิน</button>
+        </div>
+
+        <div class="section-label"><span>แนบรูปสลิปการโอนเงิน (ย่อขนาดรูปอัตโนมัติ)</span></div>
+        <div class="upload-dual-grid">
+          <label class="upload-action-btn camera" for="slip-camera-input">
+            <span style="font-size:20px;">📸</span>
+            <span>ถ่ายรูปสลิปจากกล้อง</span>
+          </label>
+          <label class="upload-action-btn" for="slip-gallery-input">
+            <span style="font-size:20px;">🖼️</span>
+            <span>เลือกรูปสลิปจากอัลบั้ม</span>
+          </label>
+        </div>
+        <input type="file" id="slip-camera-input" accept="image/*" capture="environment" hidden>
+        <input type="file" id="slip-gallery-input" accept="image/*" hidden>
+        <div id="slip-meta" style="font-size:12px;color:var(--brand);font-weight:700;text-align:center;margin-top:6px;" hidden></div>
+        <img id="slip-preview-img" alt="ตัวอย่างสลิป" style="max-height:190px;max-width:100%;display:block;margin:8px auto;border-radius:12px;border:1px solid var(--border);" hidden>
+
+        <label class="confirm-check">
+          <input type="checkbox" id="chk-payment-confirmed" checked>
+          <span>ตรวจเงินเข้าบัญชีเรียบร้อยแล้ว</span>
+        </label>
+      </div>
+
+      <div id="pos-message" class="alert-box" hidden></div>
+
+      <button type="button" class="btn-primary" id="btn-save-sale">
+        💾 บันทึกการขาย (0.00 บาท)
+      </button>
+    </section>
+
+    <!-- ==========================================
+         TAB 2: 🧾 ซื้อของ / รายจ่าย (EXPENSES)
+         ========================================== -->
+    <section id="tab-expense" class="tab-page">
+      <div class="section-label"><span>⚡ ปุ่มลัดรายการซื้อของประจำร้าน</span></div>
+      <div class="combo-scroll" style="margin-bottom:8px;">
+        <button type="button" class="combo-chip exp-preset" data-cat="วัตถุดิบ" data-desc="หมูสด/หมูหมัก" data-unit="กก.">🥩 หมูสด/หมูหมัก</button>
+        <button type="button" class="combo-chip exp-preset" data-cat="วัตถุดิบ" data-desc="ข้าวเหนียว" data-unit="กก.">🍚 ข้าวเหนียว</button>
+        <button type="button" class="combo-chip exp-preset" data-cat="วัตถุดิบ" data-desc="ถ่านปิ้งหมู" data-unit="กระสอบ">🔥 ถ่านปิ้งหมู</button>
+        <button type="button" class="combo-chip exp-preset" data-cat="บรรจุภัณฑ์" data-desc="ไม้เสียบหมู" data-unit="ห่อ">🎋 ไม้เสียบหมู</button>
+        <button type="button" class="combo-chip exp-preset" data-cat="บรรจุภัณฑ์" data-desc="ถุงร้อน/ถุงหิ้ว" data-unit="แพ็ค">🛍️ ถุงร้อน/ถุงหิ้ว</button>
+        <button type="button" class="combo-chip exp-preset" data-cat="วัตถุดิบ" data-desc="เครื่องหมัก/ซอส" data-unit="ชุด">🧄 เครื่องหมัก</button>
+        <button type="button" class="combo-chip exp-preset" data-cat="น้ำ/ไฟ/แก๊ส" data-desc="น้ำแข็ง/น้ำดื่ม" data-unit="ถุง">🧊 น้ำแข็ง/น้ำ</button>
+        <button type="button" class="combo-chip exp-preset" data-cat="ค่าแรง" data-desc="ค่าแรงหน้าร้าน" data-unit="วัน">👩‍🍳 ค่าแรง</button>
+      </div>
+
+      <form id="expense-form" class="panel-card">
+        <h2 style="margin:0 0 12px;font-size:18px;">🧾 บันทึกซื้อของ / ค่าใช้จ่าย</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="exp-date">วันที่ซื้อ</label>
+            <input type="date" id="exp-date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="exp-category">หมวดค่าใช้จ่าย</label>
+            <select id="exp-category" class="form-control" required>
+              <option value="วัตถุดิบ">วัตถุดิบ</option>
+              <option value="บรรจุภัณฑ์">บรรจุภัณฑ์</option>
+              <option value="ค่าแรง">ค่าแรง</option>
+              <option value="น้ำ/ไฟ/แก๊ส">น้ำ/ไฟ/แก๊ส</option>
+              <option value="ขนส่ง">ขนส่ง</option>
+              <option value="อุปกรณ์">อุปกรณ์</option>
+              <option value="อื่น ๆ">อื่น ๆ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exp-desc">รายการที่ซื้อ *</label>
+          <input type="text" id="exp-desc" class="form-control" placeholder="เช่น หมูสันนอก 10 กก., ถ่านอัดแท่ง" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="exp-qty">จำนวน *</label>
+            <input type="number" id="exp-qty" class="form-control" value="1" min="0.001" step="any" inputmode="decimal" required>
+          </div>
+          <div class="form-group">
+            <label for="exp-unit">หน่วย *</label>
+            <input type="text" id="exp-unit" class="form-control" value="กก." placeholder="กก. / ห่อ / ถุง" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="exp-unit-price">ราคาต่อหน่วย (บาท) *</label>
+            <input type="number" id="exp-unit-price" class="form-control" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" required>
+          </div>
+          <div class="form-group">
+            <label for="exp-method">วิธีจ่ายเงิน</label>
+            <select id="exp-method" class="form-control">
+              <option value="cash">เงินสด</option>
+              <option value="transfer">เงินโอน / QR</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="exp-supplier">ร้านค้า / ผู้ขาย</label>
+            <input type="text" id="exp-supplier" class="form-control" placeholder="ไม่บังคับ">
+          </div>
+          <div class="form-group">
+            <label for="exp-doc">เลขใบเสร็จ / บิล</label>
+            <input type="text" id="exp-doc" class="form-control" placeholder="ไม่บังคับ">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exp-note">หมายเหตุ</label>
+          <input type="text" id="exp-note" class="form-control" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">
+        </div>
+
+        <div class="section-label"><span>แนบรูปสลิป / ใบเสร็จซื้อของ (ย่อขนาดรูปอัตโนมัติ)</span></div>
+        <div class="upload-dual-grid">
+          <label class="upload-action-btn camera" for="exp-camera-input">
+            <span style="font-size:20px;">📸</span>
+            <span>ถ่ายรูปสลิป/ใบเสร็จ (กล้อง)</span>
+          </label>
+          <label class="upload-action-btn" for="exp-gallery-input">
+            <span style="font-size:20px;">🖼️</span>
+            <span>เลือกรูปจากอัลบั้ม/เครื่อง</span>
+          </label>
+        </div>
+        <input type="file" id="exp-camera-input" accept="image/*" capture="environment" hidden>
+        <input type="file" id="exp-gallery-input" accept="image/*" hidden>
+        <div id="exp-receipt-meta" style="font-size:12px;color:var(--brand);font-weight:700;text-align:center;margin-bottom:6px;" hidden></div>
+        <img id="exp-receipt-preview" alt="ตัวอย่างใบเสร็จ" style="max-height:180px;max-width:100%;display:block;margin:8px auto;border-radius:10px;border:1px solid var(--border);" hidden>
+
+        <div style="background:var(--brand-light);padding:12px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;margin:10px 0;">
+          <span style="font-weight:700;">ยอดจ่ายรวมสุทธิ:</span>
+          <strong id="exp-total-display" style="font-size:24px;color:var(--brand);">0.00 บาท</strong>
+        </div>
+
+        <div id="exp-message" class="alert-box" hidden></div>
+
+        <button type="submit" class="btn-primary" id="btn-save-expense">
+          💾 บันทึกค่าใช้จ่าย
+        </button>
+      </form>
+    </section>
+
+    <!-- ==========================================
+         TAB 3: 📊 หลังบ้าน / สรุปยอด (BACKOFFICE)
+         ========================================== -->
+    <section id="tab-report" class="tab-page">
+      <div class="panel-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <h2 style="margin:0;font-size:18px;">📊 สรุปยอดขาย & กำไรสุทธิ</h2>
+          <button type="button" class="btn-secondary" id="btn-fetch-cloud" style="min-height:36px;padding:6px 10px;font-size:12px;">🔄 ดึงข้อมูล Sheet</button>
+        </div>
+
+        <div class="combo-scroll" style="margin-bottom:10px;">
+          <button type="button" class="combo-chip date-preset" data-range="today">วันนี้</button>
+          <button type="button" class="combo-chip date-preset" data-range="yesterday">เมื่อวาน</button>
+          <button type="button" class="combo-chip date-preset" data-range="7days">7 วันล่าสุด</button>
+          <button type="button" class="combo-chip date-preset" data-range="month">เดือนนี้</button>
+          <button type="button" class="combo-chip date-preset" data-range="all">ทั้งหมด</button>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);">ตั้งแต่วันที่</label>
+            <input type="date" id="rep-from" class="form-control" style="min-height:40px;padding:6px 10px;font-size:14px;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);">ถึงวันที่</label>
+            <input type="date" id="rep-to" class="form-control" style="min-height:40px;padding:6px 10px;font-size:14px;">
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <small>💰 ยอดขายรวม</small>
+          <strong id="kpi-sales" style="color:var(--brand);">0.00 ฿</strong>
+          <div class="sub" id="kpi-sales-sub">0 บิล · หมู 0 ไม้ / ข้าว 0 ห่อ</div>
+        </div>
+        <div class="kpi-card">
+          <small>🧾 ค่าใช้จ่ายซื้อของ</small>
+          <strong id="kpi-expenses" style="color:var(--danger);">0.00 ฿</strong>
+          <div class="sub" id="kpi-expenses-sub">0 รายการ</div>
+        </div>
+        <div class="kpi-card">
+          <small>📈 กำไรสุทธิ (รับ - จ่าย)</small>
+          <strong id="kpi-profit">0.00 ฿</strong>
+          <div class="sub">หักค่าซื้อของตามช่วงวันที่</div>
+        </div>
+        <div class="kpi-card">
+          <small>🏦 แยกวิธีรับเงิน</small>
+          <strong id="kpi-cash-qr" style="font-size:15px;margin-top:6px;">สด 0฿ / QR 0฿</strong>
+          <div class="sub" id="kpi-pending-count">ซิงก์ครบทุกรายการ</div>
+        </div>
+      </div>
+
+      <div id="report-notice" class="alert-box info" hidden></div>
+
+      <!-- ปุ่มส่งออก CSV & เปิด Google Sheet -->
+      <div style="display:flex;gap:8px;margin:10px 0;">
+        <button type="button" class="btn-secondary" id="btn-export-csv" style="flex:1;">📥 ส่งออก Excel (CSV)</button>
+        <a href="https://docs.google.com/spreadsheets/d/1QDDWOZh_36EHNk5lcjtzArDTrZlj-GgYZwiz7EACWs4/edit?gid=102#gid=102" target="_blank" rel="noopener" class="btn-secondary" style="flex:1;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;">📗 เปิด Google Sheet (gid=102)</a>
+      </div>
+
+      <!-- สรุปค่าใช้จ่ายแยกตามหมวด -->
+      <div class="panel-card">
+        <h3 style="margin:0 0 8px;font-size:16px;">🗂️ ค่าใช้จ่ายแยกตามหมวด</h3>
+        <div id="rep-category-list"></div>
+      </div>
+
+      <!-- บิลขายล่าสุด -->
+      <div class="panel-card">
+        <h3 style="margin:0 0 8px;font-size:16px;">🍢 รายการขายล่าสุด</h3>
+        <div id="rep-sales-list"></div>
+      </div>
+
+      <!-- รายการซื้อของล่าสุด -->
+      <div class="panel-card">
+        <h3 style="margin:0 0 8px;font-size:16px;">🧾 รายการซื้อของล่าสุด</h3>
+        <div id="rep-expenses-list"></div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 4: ⚙️ ตั้งค่า & เชื่อมต่อระบบ (SETTINGS)
+         ========================================== -->
+    <section id="tab-settings" class="tab-page">
+      <div class="panel-card">
+        <h2 style="margin:0 0 10px;font-size:18px;">📲 ติดตั้งเป็นแอปบนหน้าจอมือถือ</h2>
+        <p style="font-size:14px;color:var(--muted);margin:0 0 12px;line-height:1.5;">
+          แอปนี้เป็น <b>Mobile PWA แท้</b> มีไอคอนรูปร้านหมูปิ้งหน้าร้านยาง เปิดเต็มจอไวใน 0.1 วินาที และย่อรูปสลิปอัตโนมัติ
+        </p>
+        <button type="button" class="btn-primary" id="btn-pwa-install" style="min-height:48px;font-size:16px;margin-bottom:10px;" hidden>
+          📲 กดติดตั้งแอปลงหน้าจอมือถือทันที
+        </button>
+        <div style="background:#f8faf8;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:13px;line-height:1.6;">
+          <div><b>📱 สำหรับ iPhone / iPad (Safari):</b><br>กดปุ่ม <b>แชร์ (Share ⬆️)</b> ด้านล่าง $\rightarrow$ เลือก <b>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</b></div>
+          <hr style="border:0;border-top:1px solid #e2e8e4;margin:8px 0;">
+          <div><b>🤖 สำหรับ Android (Chrome):</b><br>กดปุ่ม <b>เมนู 3 จุด (⋮)</b> มุมขวาบน $\rightarrow$ เลือก <b>"ติดตั้งแอป" (Install app)</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b></div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h2 style="margin:0 0 10px;font-size:18px;">🏷️ ตั้งราคาขายหน้าร้าน</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="set-pork-price">ราคาหมูปิ้ง (บาท/ไม้)</label>
+            <input type="number" id="set-pork-price" class="form-control" value="5" min="1" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="set-rice-price">ราคาข้าวเหนียว (บาท/ห่อ)</label>
+            <input type="number" id="set-rice-price" class="form-control" value="5" min="1" step="0.5">
+          </div>
+        </div>
+        <button type="button" class="btn-secondary" id="btn-save-prices" style="width:100%;">💾 บันทึกราคาขาย</button>
+      </div>
+
+      <div class="panel-card">
+        <h2 style="margin:0 0 8px;font-size:18px;">☁️ เชื่อมต่อ Google Sheet & Drive ของร้าน</h2>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.5;">
+          ทุกบิลและรายจ่ายจะถูกบันทึกในเครื่องทันที และส่งเข้า Google Sheet (<code>1QDDWOZh_36EHNk5lcjtzArDTrZlj-GgYZwiz7EACWs4</code>) อัตโนมัติ
+        </p>
+        <div class="form-group">
+          <label for="set-gas-url">URL เว็บแอป Google Apps Script</label>
+          <input type="url" id="set-gas-url" class="form-control" style="font-size:13px;">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn-secondary" id="btn-save-gas-url" style="flex:1;">บันทึก URL</button>
+          <button type="button" class="btn-secondary" id="btn-sync-now" style="flex:1;background:var(--brand);color:#fff;border-color:var(--brand);">🔄 ซิงก์บิลค้างขึ้น Sheet</button>
+        </div>
+        <div id="settings-message" class="alert-box" hidden></div>
+
+        <hr style="border:0;border-top:1px solid #e2e8e4;margin:14px 0;">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="https://docs.google.com/spreadsheets/d/1QDDWOZh_36EHNk5lcjtzArDTrZlj-GgYZwiz7EACWs4/edit?gid=102#gid=102" target="_blank" rel="noopener" class="btn-secondary" style="text-align:center;text-decoration:none;display:block;">
+            📗 เปิดตาราง Google Sheet ของร้าน (gid=102) ↗
+          </a>
+          <button type="button" class="btn-secondary" id="btn-copy-gas-code" style="width:100%;">
+            📋 คัดลอกโค้ด Google Apps Script (Code.gs) สำหรับติดตั้งแต่ละชีต
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal ขยาย QR เต็มจอให้ลูกค้าสแกน -->
+  <div id="qr-modal" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <div style="font-size:14px;font-weight:700;color:var(--muted);">สแกนชำระเงิน · หมูปิ้ง หน้าร้านยาง</div>
+      <div id="qr-modal-amount" style="font-size:38px;font-weight:900;color:var(--brand);margin:4px 0 10px;">0.00 บาท</div>
+      <img src="./assets/payment-card.png" alt="QR ชำระเงิน" style="width:100%;max-width:340px;border-radius:14px;display:block;margin:0 auto 14px;">
+      <button type="button" class="btn-primary" id="btn-close-qr-modal" style="min-height:48px;font-size:17px;">ปิดหน้าต่าง QR</button>
+    </div>
+  </div>
+
+  <!-- Modal ดูรูปสลิป / ใบเสร็จ -->
+  <div id="img-modal" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <div id="img-modal-title" style="font-size:15px;font-weight:700;margin-bottom:10px;">รูปแนบ</div>
+      <img id="img-modal-view" alt="รูปแนบ" style="width:100%;max-height:65dvh;object-fit:contain;border-radius:12px;">
+      <button type="button" class="btn-primary" id="btn-close-img-modal" style="min-height:46px;font-size:16px;margin-top:12px;">ปิด</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="เมนูหลัก">
+    <button type="button" class="nav-btn active" data-tab="pos">
+      <span class="icon">🍢</span>
+      <span>คิดเงิน</span>
+    </button>
+    <button type="button" class="nav-btn" data-tab="expense">
+      <span class="icon">🧾</span>
+      <span>ซื้อของ</span>
+    </button>
+    <button type="button" class="nav-btn" data-tab="report">
+      <span class="icon">📊</span>
+      <span>สรุปยอด</span>
+    </button>
+    <button type="button" class="nav-btn" data-tab="settings">
+      <span class="icon">⚙️</span>
+      <span>ตั้งค่า/ชีต</span>
+    </button>
+  </nav>
+
+  <script>
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwolZgqZI-UfXZNhfloSSRE9CmlpM21J4NthjGETfmExuzyM_Q0Xt-to_esJ_2VuTqx/exec';
+    const STORAGE_KEYS = {
+      prices: 'mooping_prices_v2',
+      sales: 'mooping_sales_v2',
+      expenses: 'mooping_expenses_v2',
+      gasUrl: 'mooping_gas_url_v2'
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const money = (cents) => (cents / 100).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+    const moneyShort = (cents) => (cents / 100).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '฿';
+
+    function bangkokDate(d = new Date()) {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(d);
+      const get = (t) => parts.find((p) => p.type === t).value;
+      return `${get('year')}-${get('month')}-${get('day')}`;
+    }
+
+    function bangkokDateTime(d = new Date()) {
+      return new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }).format(d);
+    }
+
+    // State
+    let prices = JSON.parse(localStorage.getItem(STORAGE_KEYS.prices) || '{"pork":500,"rice":500}');
+    let sales = JSON.parse(localStorage.getItem(STORAGE_KEYS.sales) || '[]');
+    let expenses = JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses) || '[]');
+    let gasUrl = localStorage.getItem(STORAGE_KEYS.gasUrl) || DEFAULT_GAS_URL;
+    let method = 'cash';
+    let currentSlipData = null;
+    let currentSlipHash = '';
+    let currentReceiptData = null;
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.prices, JSON.stringify(prices));
+        localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+        localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(expenses));
+        localStorage.setItem(STORAGE_KEYS.gasUrl, gasUrl);
+      } catch (e) {
+        console.warn('Storage full, trimming old inline images', e);
+      }
+      updateSyncBadge();
+    }
+
+    // Auto Image Compression (< 200KB JPEG so it never fails 2MB limit)
+    async function compressImage(file, maxDim = 1000, quality = 0.78) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('อ่านไฟล์รูปไม่สำเร็จ'));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('ไฟล์รูปภาพไม่ถูกต้อง'));
+          img.onload = async () => {
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+              else { w = Math.round((w * maxDim) / h); h = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const base64 = dataUrl.split(',')[1];
+            const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+            let hashHex = '';
+            if (window.crypto && crypto.subtle) {
+              const digest = await crypto.subtle.digest('SHA-256', binary);
+              hashHex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+            }
+            resolve({ dataUrl, sizeKB: Math.round(binary.length / 1024), hash: hashHex });
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // POS Calculation & UI Paint
+    function getQty(item) {
+      const el = $(item + '-qty');
+      const v = parseInt(el.value, 10);
+      return Number.isFinite(v) && v >= 0 ? Math.min(10000, v) : 0;
+    }
+
+    function getExtraCents() {
+      const v = parseFloat($('pos-extra-baht').value);
+      return Number.isFinite(v) && v > 0 ? Math.round(v * 100) : 0;
+    }
+
+    function getTotalCents() {
+      return getQty('pork') * prices.pork + getQty('rice') * prices.rice + getExtraCents();
+    }
+
+    function paintPOS() {
+      const pork = getQty('pork');
+      const rice = getQty('rice');
+      const extraCents = getExtraCents();
+      const totalCents = getTotalCents();
+
+      $('pork-price-label').textContent = `ไม้ละ ${(prices.pork / 100).toFixed(2)} บาท`;
+      $('rice-price-label').textContent = `ห่อละ ${(prices.rice / 100).toFixed(2)} บาท`;
+      $('price-subtitle').textContent = `หมู ${prices.pork / 100}฿ · ข้าวเหนียว ${prices.rice / 100}฿`;
+
+      const parts = [];
+      if (pork > 0) parts.push(`หมูปิ้ง ${pork} ไม้ (${moneyShort(pork * prices.pork)})`);
+      if (rice > 0) parts.push(`ข้าวเหนียว ${rice} ห่อ (${moneyShort(rice * prices.rice)})`);
+      if (extraCents > 0) parts.push(`รายการอื่น (${moneyShort(extraCents)})`);
+      $('order-breakdown').textContent = parts.length ? parts.join(' + ') : 'แตะเลือกจำนวนหมูปิ้งหรือข้าวเหนียว';
+      $('total-display').textContent = money(totalCents);
+      $('qr-modal-amount').textContent = money(totalCents);
+      $('btn-save-sale').textContent = `💾 บันทึกการขาย (${money(totalCents)})`;
+
+      document.querySelectorAll('[data-method]').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.method === method));
+      });
+
+      $('cash-panel').hidden = method !== 'cash';
+      $('slip-panel').hidden = method === 'cash';
+      $('qr-card-container').hidden = method !== 'qr';
+
+      if (method === 'cash') {
+        const recVal = parseFloat($('cash-received').value);
+        const recCents = Number.isFinite(recVal) ? Math.round(recVal * 100) : 0;
+        const diff = recCents - totalCents;
+        const box = $('change-box');
+        if (totalCents === 0 || !$('cash-received').value) {
+          box.classList.remove('insufficient');
+          $('change-display').textContent = '0.00 ฿';
+        } else if (diff >= 0) {
+          box.classList.remove('insufficient');
+          $('change-display').textContent = moneyShort(diff);
+        } else {
+          box.classList.add('insufficient');
+          $('change-display').textContent = `ขาด ${moneyShort(-diff)}`;
+        }
+      }
+
+      // Today mini stat
+      const today = bangkokDate();
+      const todaySales = sales.filter((s) => s.date === today);
+      const todayCents = todaySales.reduce((sum, s) => sum + s.totalCents, 0);
+      $('today-mini-stat').textContent = `วันนี้ ${todaySales.length} บิล · ${moneyShort(todayCents)}`;
+    }
+
+    function showNotice(id, text, type = 'info') {
+      const el = $(id);
+      el.textContent = text;
+      el.className = `alert-box ${type}`;
+      el.hidden = !text;
+    }
+
+    // Cloud Sync to Google Apps Script (doPost JSON API)
+    async function callGasApi(action, payload) {
+      const res = await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, payload })
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'เชื่อมต่อ Google Sheet ไม่สำเร็จ');
+      return json.data;
+    }
+
+    function updateSyncBadge() {
+      const pendingSales = sales.filter((s) => !s.synced).length;
+      const pendingExp = expenses.filter((e) => !e.synced).length;
+      const totalPending = pendingSales + pendingExp;
+      const dot = $('sync-dot');
+      const txt = $('sync-text');
+      if (totalPending > 0) {
+        dot.className = 'dot warn';
+        txt.textContent = `รอซิงก์ ${totalPending}`;
+      } else {
+        dot.className = 'dot';
+        txt.textContent = 'พร้อมขาย';
+      }
+    }
+
+    async function syncPendingToCloud() {
+      let syncedCount = 0;
+      for (const s of sales) {
+        if (s.synced) continue;
+        try {
+          const res = await callGasApi('saveSale', {
+            id: s.id,
+            date: s.date,
+            datetime: s.datetime,
+            pork: s.pork,
+            rice: s.rice,
+            extraBaht: (s.extraCents || 0) / 100,
+            totalCents: s.totalCents,
+            note: s.note || '',
+            prices: s.prices,
+            method: s.method,
+            received: s.receivedCents,
+            confirmed: s.confirmed,
+            slip: s.slipData || null
+          });
+          if (!res.rejected) {
+            s.synced = true;
+            if (res.slipUrl) s.slipUrl = res.slipUrl;
+            syncedCount++;
+          }
+        } catch (err) {
+          console.log('Cloud sync deferred:', err.message);
+          break;
+        }
+      }
+      for (const e of expenses) {
+        if (e.synced) continue;
+        try {
+          const res = await callGasApi('saveExpense', {
+            id: e.id,
+            date: e.date,
+            category: e.category,
+            description: e.description,
+            supplier: e.supplier,
+            quantity: e.quantity,
+            unit: e.unit,
+            unitCents: e.unitCents,
+            method: e.methodKey,
+            document: e.document,
+            note: e.note,
+            receipt: e.receiptData || null
+          });
+          if (!res.rejected) {
+            e.synced = true;
+            syncedCount++;
+          }
+        } catch (err) {
+          console.log('Expense cloud sync deferred:', err.message);
+          break;
+        }
+      }
+      persist();
+      return syncedCount;
+    }
+
+    // Event Listeners: POS Combos & Step Buttons
+    document.querySelectorAll('.combo-chip[data-pork]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        $('pork-qty').value = btn.dataset.pork;
+        $('rice-qty').value = btn.dataset.rice;
+        showNotice('pos-message', '');
+        paintPOS();
+      });
+    });
+
+    document.querySelectorAll('[data-step]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const item = btn.dataset.item;
+        const step = parseInt(btn.dataset.step, 10);
+        $(item + '-qty').value = Math.max(0, Math.min(10000, getQty(item) + step));
+        showNotice('pos-message', '');
+        paintPOS();
+      });
+    });
+
+    ['pork-qty', 'rice-qty', 'pos-extra-baht', 'cash-received'].forEach((id) => {
+      $(id).addEventListener('input', () => {
+        showNotice('pos-message', '');
+        paintPOS();
+      });
+    });
+
+    document.querySelectorAll('[data-method]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        method = btn.dataset.method;
+        showNotice('pos-message', '');
+        paintPOS();
+      });
+    });
+
+    document.querySelectorAll('[data-bank]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const totalBaht = getTotalCents() / 100;
+        $('cash-received').value = btn.dataset.bank === 'exact' ? totalBaht : btn.dataset.bank;
+        paintPOS();
+      });
+    });
+
+    // QR Fullscreen Modal
+    $('btn-zoom-qr').addEventListener('click', () => { $('qr-modal').hidden = false; });
+    $('btn-fullscreen-qr').addEventListener('click', () => { $('qr-modal').hidden = false; });
+    $('btn-close-qr-modal').addEventListener('click', () => { $('qr-modal').hidden = true; });
+    $('btn-close-img-modal').addEventListener('click', () => { $('img-modal').hidden = true; });
+
+    // Slip Upload & Auto Compression (Camera or Gallery)
+    async function handleSlipFile(file) {
+      if (!file) return;
+      try {
+        $('slip-meta').textContent = '⏳ กำลังย่อขนาดรูปสลิปอัตโนมัติ...';
+        $('slip-meta').hidden = false;
+        const compressed = await compressImage(file, 1000, 0.78);
+        currentSlipData = compressed.dataUrl;
+        currentSlipHash = compressed.hash;
+        $('slip-preview-img').src = compressed.dataUrl;
+        $('slip-preview-img').hidden = false;
+        $('slip-meta').textContent = `✓ แนบรูปสลิปเรียบร้อย (${compressed.sizeKB} KB · พร้อมบันทึก)`;
+        $('slip-meta').hidden = false;
+      } catch (err) {
+        showNotice('pos-message', err.message, 'error');
+      }
+    }
+    $('slip-camera-input').addEventListener('change', (e) => handleSlipFile(e.target.files[0]));
+    $('slip-gallery-input').addEventListener('change', (e) => handleSlipFile(e.target.files[0]));
+
+    // Save Sale
+    $('btn-save-sale').addEventListener('click', async () => {
+      try {
+        const pork = getQty('pork');
+        const rice = getQty('rice');
+        const extraCents = getExtraCents();
+        const totalCents = getTotalCents();
+        if (totalCents <= 0) throw new Error('กรุณาเลือกจำนวนหมูปิ้ง ข้าวเหนียว หรือระบุยอดขายก่อนคิดเงินค่ะ');
+
+        let receivedCents = totalCents;
+        if (method === 'cash') {
+          const raw = $('cash-received').value.trim();
+          receivedCents = raw === '' ? totalCents : Math.round(parseFloat(raw) * 100);
+          if (!Number.isFinite(receivedCents) || receivedCents < totalCents) {
+            throw new Error('จำนวนเงินสดที่รับต้องไม่น้อยกว่ายอดขายค่ะ');
+          }
+        } else {
+          if (!currentSlipData) throw new Error('กรุณาถ่ายรูปสลิปจากกล้อง หรือเลือกรูปสลิปจากอัลบั้มก่อนบันทึกค่ะ');
+          if (!$('chk-payment-confirmed').checked) throw new Error('กรุณาติ๊กยืนยันว่าตรวจเงินเข้าบัญชีเรียบร้อยแล้วค่ะ');
+          if (currentSlipHash && sales.some((s) => s.slipHash && s.slipHash === currentSlipHash)) {
+            throw new Error('รูปสลิปนี้เคยใช้บันทึกในบิลอื่นแล้ว กรุณาตรวจสอบค่ะ');
+          }
+        }
+
+        const record = {
+          id: 'MP-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now()),
+          datetime: bangkokDateTime(),
+          date: bangkokDate(),
+          pork,
+          rice,
+          extraCents,
+          note: $('pos-note').value.trim(),
+          prices: { ...prices },
+          totalCents,
+          method,
+          methodLabel: { cash: 'เงินสด', qr: 'สแกน QR', transfer: 'เงินโอน' }[method],
+          receivedCents,
+          changeCents: receivedCents - totalCents,
+          confirmed: method === 'cash' ? true : $('chk-payment-confirmed').checked,
+          slipData: method === 'cash' ? null : currentSlipData,
+          slipHash: method === 'cash' ? '' : currentSlipHash,
+          synced: false
+        };
+
+        sales.unshift(record);
+        persist();
+
+        // Reset Form Immediately for Fast Next Customer
+        $('pork-qty').value = 0;
+        $('rice-qty').value = 0;
+        $('pos-extra-baht').value = '';
+        $('pos-note').value = '';
+        $('cash-received').value = '';
+        $('slip-camera-input').value = '';
+        $('slip-gallery-input').value = '';
+        $('chk-payment-confirmed').checked = true;
+        $('slip-preview-img').hidden = true;
+        $('slip-meta').hidden = true;
+        currentSlipData = null;
+        currentSlipHash = '';
+        method = 'cash';
+        paintPOS();
+
+        const changeMsg = record.changeCents > 0 ? ` · เงินทอน ${money(record.changeCents)}` : '';
+        showNotice('pos-message', `✓ บันทึกบิลสำเร็จ ${money(record.totalCents)}${changeMsg}\nเลขบิล: ${record.id}`, 'success');
+
+        // Background Sync
+        syncPendingToCloud();
+      } catch (err) {
+        showNotice('pos-message', err.message, 'error');
+      }
+    });
+
+    // ==========================================
+    // TAB 2: EXPENSES LOGIC
+    // ==========================================
+    $('exp-date').value = bangkokDate();
+
+    function paintExpenseTotal() {
+      const q = parseFloat($('exp-qty').value) || 0;
+      const u = parseFloat($('exp-unit-price').value) || 0;
+      const totalCents = Math.round(q * u * 100);
+      $('exp-total-display').textContent = money(totalCents > 0 ? totalCents : 0);
+    }
+
+    ['exp-qty', 'exp-unit-price'].forEach((id) => $(id).addEventListener('input', paintExpenseTotal));
+
+    document.querySelectorAll('.exp-preset').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        $('exp-category').value = btn.dataset.cat;
+        $('exp-desc').value = btn.dataset.desc;
+        $('exp-unit').value = btn.dataset.unit;
+        $('exp-unit-price').focus();
+      });
+    });
+
+    async function handleExpenseReceiptFile(file) {
+      if (!file) return;
+      try {
+        $('exp-receipt-meta').textContent = '⏳ กำลังย่อรูปสลิป/ใบเสร็จอัตโนมัติ...';
+        $('exp-receipt-meta').hidden = false;
+        const compressed = await compressImage(file, 1000, 0.78);
+        currentReceiptData = compressed.dataUrl;
+        $('exp-receipt-preview').src = compressed.dataUrl;
+        $('exp-receipt-preview').hidden = false;
+        $('exp-receipt-meta').textContent = `✓ แนบรูปสลิป/ใบเสร็จเรียบร้อย (${compressed.sizeKB} KB)`;
+      } catch (err) {
+        showNotice('exp-message', err.message, 'error');
+      }
+    }
+    $('exp-camera-input').addEventListener('change', (e) => handleExpenseReceiptFile(e.target.files[0]));
+    $('exp-gallery-input').addEventListener('change', (e) => handleExpenseReceiptFile(e.target.files[0]));
+
+    $('expense-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const qty = parseFloat($('exp-qty').value);
+        const unitPrice = parseFloat($('exp-unit-price').value);
+        if (!qty || qty <= 0 || !unitPrice || unitPrice <= 0) {
+          throw new Error('กรุณากรอกจำนวนและราคาต่อหน่วยให้ถูกต้องค่ะ');
+        }
+        const unitCents = Math.round(unitPrice * 100);
+        const totalCents = Math.round(qty * unitCents);
+        const rec = {
+          id: 'EXP-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now()),
+          date: $('exp-date').value || bangkokDate(),
+          datetime: bangkokDateTime(),
+          category: $('exp-category').value,
+          description: $('exp-desc').value.trim(),
+          supplier: $('exp-supplier').value.trim(),
+          quantity: qty,
+          unit: $('exp-unit').value.trim(),
+          unitCents,
+          totalCents,
+          methodKey: $('exp-method').value,
+          method: $('exp-method').value === 'cash' ? 'เงินสด' : 'เงินโอน',
+          document: $('exp-doc').value.trim(),
+          note: $('exp-note').value.trim(),
+          receiptData: currentReceiptData,
+          synced: false
+        };
+
+        expenses.unshift(rec);
+        persist();
+
+        $('exp-desc').value = '';
+        $('exp-supplier').value = '';
+        $('exp-qty').value = '1';
+        $('exp-unit-price').value = '';
+        $('exp-doc').value = '';
+        $('exp-note').value = '';
+        $('exp-camera-input').value = '';
+        $('exp-gallery-input').value = '';
+        $('exp-receipt-preview').hidden = true;
+        $('exp-receipt-meta').hidden = true;
+        currentReceiptData = null;
+        paintExpenseTotal();
+
+        showNotice('exp-message', `✓ บันทึกค่าใช้จ่ายสำเร็จ ${money(rec.totalCents)}\n(${rec.category} · ${rec.description})`, 'success');
+        syncPendingToCloud();
+      } catch (err) {
+        showNotice('exp-message', err.message, 'error');
+      }
+    });
+
+    // ==========================================
+    // TAB 3: BACKOFFICE & REPORTS
+    // ==========================================
+    function setReportRange(range) {
+      const today = bangkokDate();
+      const d = new Date();
+      if (range === 'today') {
+        $('rep-from').value = today;
+        $('rep-to').value = today;
+      } else if (range === 'yesterday') {
+        d.setDate(d.getDate() - 1);
+        const y = bangkokDate(d);
+        $('rep-from').value = y;
+        $('rep-to').value = y;
+      } else if (range === '7days') {
+        d.setDate(d.getDate() - 6);
+        $('rep-from').value = bangkokDate(d);
+        $('rep-to').value = today;
+      } else if (range === 'month') {
+        $('rep-from').value = today.slice(0, 7) + '-01';
+        $('rep-to').value = today;
+      } else {
+        $('rep-from').value = '2025-01-01';
+        $('rep-to').value = today;
+      }
+      renderReport();
+    }
+
+    document.querySelectorAll('.date-preset').forEach((btn) => {
+      btn.addEventListener('click', () => setReportRange(btn.dataset.range));
+    });
+    ['rep-from', 'rep-to'].forEach((id) => $(id).addEventListener('change', renderReport));
+
+    function openImageViewer(title, src) {
+      $('img-modal-title').textContent = title;
+      $('img-modal-view').src = src;
+      $('img-modal').hidden = false;
+    }
+
+    function renderReport() {
+      const from = $('rep-from').value || '0000-00-00';
+      const to = $('rep-to').value || '9999-12-31';
+
+      const filteredSales = sales.filter((s) => s.date >= from && s.date <= to);
+      const filteredExpenses = expenses.filter((e) => e.date >= from && e.date <= to);
+
+      let salesCents = 0, cashCents = 0, qrCents = 0, porkCount = 0, riceCount = 0;
+      filteredSales.forEach((s) => {
+        salesCents += s.totalCents;
+        porkCount += Number(s.pork || 0);
+        riceCount += Number(s.rice || 0);
+        if (s.method === 'cash' || s.methodLabel === 'เงินสด') cashCents += s.totalCents;
+        else qrCents += s.totalCents;
+      });
+
+      let expCents = 0;
+      const catTotals = {};
+      filteredExpenses.forEach((e) => {
+        expCents += e.totalCents;
+        catTotals[e.category] = (catTotals[e.category] || 0) + e.totalCents;
+      });
+
+      const profitCents = salesCents - expCents;
+
+      $('kpi-sales').textContent = moneyShort(salesCents);
+      $('kpi-sales-sub').textContent = `${filteredSales.length} บิล · หมู ${porkCount} ไม้ / ข้าว ${riceCount} ห่อ`;
+      $('kpi-expenses').textContent = moneyShort(expCents);
+      $('kpi-expenses-sub').textContent = `${filteredExpenses.length} รายการซื้อของ`;
+      $('kpi-profit').textContent = (profitCents >= 0 ? '+' : '') + moneyShort(profitCents);
+      $('kpi-profit').style.color = profitCents >= 0 ? 'var(--brand)' : 'var(--danger)';
+      $('kpi-cash-qr').textContent = `สด ${moneyShort(cashCents)} / QR ${moneyShort(qrCents)}`;
+
+      const unsynced = sales.filter((s) => !s.synced).length + expenses.filter((e) => !e.synced).length;
+      $('kpi-pending-count').textContent = unsynced > 0 ? `รอซิงก์ขึ้น Sheet ${unsynced} รายการ` : 'ข้อมูลพร้อมใช้งาน';
+
+      // Render Categories
+      const catContainer = $('rep-category-list');
+      catContainer.replaceChildren();
+      const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+      if (!catEntries.length) {
+        catContainer.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px;font-size:13px;">ยังไม่มีค่าใช้จ่ายในช่วงเวลานี้</div>';
+      } else {
+        catEntries.forEach(([cat, cents]) => {
+          const row = document.createElement('div');
+          row.className = 'record-item';
+          row.innerHTML = `<span><b>${cat}</b></span><strong>${money(cents)}</strong>`;
+          catContainer.appendChild(row);
+        });
+      }
+
+      // Render Sales List
+      const salesContainer = $('rep-sales-list');
+      salesContainer.replaceChildren();
+      if (!filteredSales.length) {
+        salesContainer.innerHTML = '<div style="color:var(--muted);text-align:center;padding:14px;font-size:13px;">ยังไม่มีบิลขายในช่วงเวลานี้</div>';
+      } else {
+        filteredSales.slice(0, 60).forEach((s) => {
+          const row = document.createElement('div');
+          row.className = 'record-item';
+          const left = document.createElement('div');
+          left.innerHTML = `<div><b>หมู ${s.pork} ไม้ · ข้าว ${s.rice} ห่อ</b> <span class="badge">${s.methodLabel || s.method}</span></div><small style="color:var(--muted);">${s.datetime || s.date} · ${s.id.slice(0, 11)}</small>`;
+          const right = document.createElement('div');
+          right.style.textAlign = 'right';
+          right.innerHTML = `<strong style="display:block;color:var(--brand);">${money(s.totalCents)}</strong>`;
+          if (s.slipData || s.slipUrl) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'badge warn';
+            btn.style.border = '0';
+            btn.style.cursor = 'pointer';
+            btn.textContent = 'ดูสลิป 🖼️';
+            btn.onclick = () => {
+              if (s.slipData) openImageViewer(`สลิปบิล ${s.id.slice(0, 12)}`, s.slipData);
+              else if (s.slipUrl) window.open(s.slipUrl, '_blank');
+            };
+            right.appendChild(btn);
+          }
+          row.append(left, right);
+          salesContainer.appendChild(row);
+        });
+      }
+
+      // Render Expenses List
+      const expContainer = $('rep-expenses-list');
+      expContainer.replaceChildren();
+      if (!filteredExpenses.length) {
+        expContainer.innerHTML = '<div style="color:var(--muted);text-align:center;padding:14px;font-size:13px;">ยังไม่มีรายการซื้อของในช่วงเวลานี้</div>';
+      } else {
+        filteredExpenses.slice(0, 60).forEach((e) => {
+          const row = document.createElement('div');
+          row.className = 'record-item';
+          const left = document.createElement('div');
+          left.innerHTML = `<div><b>${e.description}</b> <span class="badge">${e.category}</span></div><small style="color:var(--muted);">${e.date} · ${e.quantity} ${e.unit}${e.supplier ? ' · ' + e.supplier : ''}</small>`;
+          const right = document.createElement('div');
+          right.style.textAlign = 'right';
+          right.innerHTML = `<strong style="display:block;color:var(--danger);">${money(e.totalCents)}</strong>`;
+          if (e.receiptData || e.receipt) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'badge warn';
+            btn.style.border = '0';
+            btn.style.cursor = 'pointer';
+            btn.textContent = 'ดูใบเสร็จ 🖼️';
+            btn.onclick = () => {
+              if (e.receiptData) openImageViewer(`ใบเสร็จ ${e.description}`, e.receiptData);
+              else if (e.receipt) window.open(e.receipt, '_blank');
+            };
+            right.appendChild(btn);
+          }
+          row.append(left, right);
+          expContainer.appendChild(row);
+        });
+      }
+    }
+
+    // Pull latest data from Google Sheet if API connected
+    $('btn-fetch-cloud').addEventListener('click', async () => {
+      try {
+        showNotice('report-notice', 'กำลังดึงข้อมูลจาก Google Sheet...', 'info');
+        const data = await callGasApi('getBackoffice', {
+          from: $('rep-from').value,
+          to: $('rep-to').value
+        });
+        if (data && Array.isArray(data.sales)) {
+          const existingIds = new Set(sales.map((s) => s.id));
+          data.sales.forEach((s) => {
+            if (!existingIds.has(s.id)) {
+              sales.push({
+                id: s.id,
+                date: s.date,
+                datetime: s.date,
+                pork: s.pork,
+                rice: s.rice,
+                totalCents: s.totalCents,
+                method: s.method === 'เงินสด' ? 'cash' : 'qr',
+                methodLabel: s.method,
+                synced: true
+              });
+            }
+          });
+        }
+        if (data && Array.isArray(data.expenses)) {
+          const existingExpIds = new Set(expenses.map((e) => e.id));
+          data.expenses.forEach((e) => {
+            if (!existingExpIds.has(e.id)) {
+              expenses.push({ ...e, synced: true });
+            }
+          });
+        }
+        persist();
+        renderReport();
+        showNotice('report-notice', '✓ ซิงก์ข้อมูลจาก Google Sheet เรียบร้อยแล้ว', 'success');
+      } catch (err) {
+        showNotice('report-notice', 'แสดงผลจากข้อมูลในเครื่อง (หากต้องการดึงจาก Sheet ให้เปิดผ่านลิงก์ Google Sheet ด้านล่าง)', 'info');
+      }
+    });
+
+    // Export CSV (UTF-8 BOM for Thai Excel)
+    $('btn-export-csv').addEventListener('click', () => {
+      const from = $('rep-from').value || '0000-00-00';
+      const to = $('rep-to').value || '9999-12-31';
+      const rows = [
+        ['ประเภท', 'เลขรายการ', 'วันที่', 'รายละเอียด', 'หมู(ไม้)', 'ข้าวเหนียว(ห่อ)', 'วิธีชำระ', 'ยอดเงิน(บาท)']
+      ];
+      sales.filter((s) => s.date >= from && s.date <= to).forEach((s) => {
+        rows.push(['ขายหน้าร้าน', s.id, s.datetime || s.date, `หมู ${s.pork} ไม้ + ข้าว ${s.rice} ห่อ`, s.pork, s.rice, s.methodLabel, (s.totalCents / 100).toFixed(2)]);
+      });
+      expenses.filter((e) => e.date >= from && e.date <= to).forEach((e) => {
+        rows.push(['ซื้อของ/รายจ่าย', e.id, e.date, `${e.category}: ${e.description} (${e.quantity} ${e.unit})`, '', '', e.method, (-e.totalCents / 100).toFixed(2)]);
+      });
+      const csv = '\uFEFF' + rows.map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mooping-pos-${from}-to-${to}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ==========================================
+    // TAB 4: SETTINGS & NAVIGATION
+    // ==========================================
+    $('set-pork-price').value = prices.pork / 100;
+    $('set-rice-price').value = prices.rice / 100;
+    $('set-gas-url').value = gasUrl;
+
+    $('btn-save-prices').addEventListener('click', () => {
+      const p = Math.round((parseFloat($('set-pork-price').value) || 5) * 100);
+      const r = Math.round((parseFloat($('set-rice-price').value) || 5) * 100);
+      prices = { pork: Math.max(100, p), rice: Math.max(100, r) };
+      persist();
+      paintPOS();
+      showNotice('settings-message', '✓ บันทึกราคาขายเรียบร้อยแล้ว', 'success');
+    });
+
+    $('btn-save-gas-url').addEventListener('click', () => {
+      gasUrl = $('set-gas-url').value.trim() || DEFAULT_GAS_URL;
+      persist();
+      showNotice('settings-message', '✓ บันทึก URL เชื่อมต่อเรียบร้อยแล้ว', 'success');
+    });
+
+    $('btn-sync-now').addEventListener('click', async () => {
+      showNotice('settings-message', 'กำลังส่งข้อมูลค้างเข้า Google Sheet...', 'info');
+      const n = await syncPendingToCloud();
+      showNotice('settings-message', n > 0 ? `✓ ซิงก์สำเร็จ ${n} รายการ` : 'ข้อมูลในเครื่องถูกบันทึกไว้ครบถ้วนแล้ว', 'success');
+    });
+
+    $('btn-copy-gas-code').addEventListener('click', async () => {
+      try {
+        const res = await fetch('./Code.gs');
+        const text = await res.text();
+        await navigator.clipboard.writeText(text);
+        showNotice('settings-message', '✓ คัดลอกโค้ด Code.gs เรียบร้อยแล้ว! นำไปวางใน ส่วนขยาย > Apps Script ของ Google Sheet ได้เลย', 'success');
+      } catch (err) {
+        window.open('./Code.gs', '_blank');
+      }
+    });
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-page').forEach((sec) => {
+        sec.classList.toggle('active', sec.id === 'tab-' + tabName);
+      });
+      document.querySelectorAll('.nav-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      if (tabName === 'report') renderReport();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.nav-btn').forEach((btn) => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    $('btn-sync-status').addEventListener('click', () => switchTab('settings'));
+
+    // Check URL query param (?tab=pos|expense|report|settings)
+    const urlTab = new URLSearchParams(location.search).get('tab');
+    if (['pos', 'expense', 'report', 'settings'].includes(urlTab)) switchTab(urlTab);
+
+    // PWA Install Prompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      $('btn-pwa-install').hidden = false;
+    });
+
+    $('btn-pwa-install').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      $('btn-pwa-install').hidden = true;
+    });
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    // Initialize
+    setReportRange('month');
+    paintPOS();
+    updateSyncBadge();
+  </script>
+</body>
+</html>

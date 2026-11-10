@@ -1,0 +1,62 @@
+{
+  "name": "หมูปิ้ง หน้าร้านยาง · ระบบคิดเงิน & หลังบ้าน (POS)",
+  "short_name": "หมูปิ้ง POS",
+  "description": "แอปคิดเงินหน้าร้านหมูปิ้งหน้าร้านยาง บันทึกยอดขาย สลิป QR ค่าใช้จ่ายซื้อของ และสรุปกำไรเชื่อม Google Sheet",
+  "start_url": "./index.html",
+  "id": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#1b4332",
+  "orientation": "portrait-primary",
+  "categories": ["business", "food", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "./assets/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "คิดเงินหน้าร้าน (POS)",
+      "short_name": "คิดเงิน",
+      "description": "เปิดหน้าขายหมูปิ้งและข้าวเหนียว",
+      "url": "./index.html?tab=pos",
+      "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "บันทึกซื้อของ / รายจ่าย",
+      "short_name": "ลงรายจ่าย",
+      "description": "บันทึกค่าวัตถุดิบและแนบใบเสร็จ",
+      "url": "./index.html?tab=expense",
+      "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "ดูรายงานสรุปยอด",
+      "short_name": "สรุปยอด",
+      "description": "ดูยอดขาย รายจ่าย และกำไรสุทธิ",
+      "url": "./index.html?tab=report",
+      "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
