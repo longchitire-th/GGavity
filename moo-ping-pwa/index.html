@@ -829,33 +829,45 @@
         </div>
       </div>
 
-      <!-- กล่อง QR / โอน + แนบสลิป (ย่อรูปอัตโนมัติ) -->
+      <!-- กล่อง QR / โอน + แนบสลิป (รองรับรูปกล้องมือถือความละเอียดสูง > 2MB–25MB อัปโหลดเข้า Google Drive) -->
       <div id="slip-panel" class="panel-card" hidden>
         <div id="qr-card-container" class="qr-preview-box">
-          <div style="font-weight:800;color:var(--brand);font-size:14px;">📲 ให้ลูกค้าสแกน QR ร้านหมูปิ้งหน้าร้านยาง</div>
-          <img src="./assets/payment-card.png" alt="QR รับเงินร้านหมูปิ้ง" id="btn-zoom-qr">
-          <button type="button" class="btn-secondary" id="btn-fullscreen-qr" style="width:100%;margin-top:4px;">🔍 ขยาย QR เต็มจอพร้อมยอดเงิน</button>
+          <div style="font-weight:800;color:var(--brand);font-size:15px;">📲 สแกนจ่ายที่นี่ · QR พร้อมเพย์ ร้านหมูปิ้งหน้าร้านยาง</div>
+          <img src="./assets/payment-card.jpg" alt="QR พร้อมเพย์ ร้านหมูปิ้งหน้าร้านยาง" id="btn-zoom-qr" style="max-width:260px;box-shadow:0 4px 14px rgba(0,0,0,0.15);">
+          <button type="button" class="btn-secondary" id="btn-fullscreen-qr" style="width:100%;margin-top:6px;">🔍 ขยายป้าย QR พร้อมเพย์เต็มจอพร้อมยอดเงิน</button>
         </div>
 
-        <div class="section-label"><span>แนบรูปสลิปการโอนเงิน (ย่อขนาดรูปอัตโนมัติ)</span></div>
+        <div class="section-label">
+          <span>📸 แนบรูปสลิปโอนเงิน (รองรับรูปใหญ่กว่า 2 MB · เก็บลง Google Drive)</span>
+        </div>
         <div class="upload-dual-grid">
           <label class="upload-action-btn camera" for="slip-camera-input">
-            <span style="font-size:20px;">📸</span>
-            <span>ถ่ายรูปสลิปจากกล้อง</span>
+            <span style="font-size:22px;">📸</span>
+            <span>ถ่ายภาพสลิปจากมือถือลูกค้า</span>
+            <small style="font-size:11px;color:var(--muted);font-weight:600;">เปิดกล้องหลังความละเอียดสูง</small>
           </label>
           <label class="upload-action-btn" for="slip-gallery-input">
-            <span style="font-size:20px;">🖼️</span>
-            <span>เลือกรูปสลิปจากอัลบั้ม</span>
+            <span style="font-size:22px;">🖼️</span>
+            <span>อัปโหลดไฟล์สลิปจากอัลบั้ม</span>
+            <small style="font-size:11px;color:var(--muted);font-weight:600;">รองรับไฟล์ใหญ่ &gt; 2 MB – 25 MB</small>
           </label>
         </div>
         <input type="file" id="slip-camera-input" accept="image/*" capture="environment" hidden>
         <input type="file" id="slip-gallery-input" accept="image/*" hidden>
-        <div id="slip-meta" style="font-size:12px;color:var(--brand);font-weight:700;text-align:center;margin-top:6px;" hidden></div>
-        <img id="slip-preview-img" alt="ตัวอย่างสลิป" style="max-height:190px;max-width:100%;display:block;margin:8px auto;border-radius:12px;border:1px solid var(--border);" hidden>
+
+        <!-- กล่องแสดงรูปสลิปโอนเงินชัดเจน -->
+        <div id="slip-preview-card" style="background:#f2f8f4;border:1.5px solid var(--brand);border-radius:14px;padding:10px;margin-top:8px;text-align:center;" hidden>
+          <div id="slip-meta" style="font-size:13px;color:var(--brand);font-weight:800;margin-bottom:6px;"></div>
+          <img id="slip-preview-img" alt="ตัวอย่างสลิปโอนเงิน" style="max-height:280px;max-width:100%;display:block;margin:0 auto;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;" title="แตะเพื่อขยายดูสลิปเต็มจอ">
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button type="button" class="btn-secondary" id="btn-zoom-current-slip" style="flex:1;min-height:38px;font-size:13px;">🔍 ขยายดูสลิปชัดๆ</button>
+            <button type="button" class="btn-secondary" id="btn-clear-current-slip" style="min-height:38px;font-size:13px;color:var(--danger);border-color:#fca5a5;">✕ ลบรูป</button>
+          </div>
+        </div>
 
         <label class="confirm-check">
           <input type="checkbox" id="chk-payment-confirmed" checked>
-          <span>ตรวจเงินเข้าบัญชีเรียบร้อยแล้ว</span>
+          <span>ตรวจสลิป / เงินเข้าบัญชีเรียบร้อยแล้ว</span>
         </label>
       </div>
 
@@ -864,6 +876,15 @@
       <button type="button" class="btn-primary" id="btn-save-sale">
         💾 บันทึกการขาย (0.00 บาท)
       </button>
+
+      <!-- รายการเงินเข้า & สลิปโอนเงินล่าสุด (แสดงในหน้าเงินเข้าทันที) -->
+      <div class="panel-card" style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <h3 style="margin:0;font-size:16px;">💰 รายการเงินเข้า & สลิปโอนเงินวันนี้</h3>
+          <a href="https://docs.google.com/spreadsheets/d/1QDDWOZh_36EHNk5lcjtzArDTrZlj-GgYZwiz7EACWs4/edit?gid=102#gid=102" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--brand);text-decoration:none;">เปิดชีต ↗</a>
+        </div>
+        <div id="pos-today-feed"></div>
+      </div>
     </section>
 
     <!-- ==========================================
@@ -1128,7 +1149,7 @@
     <div class="modal-card">
       <div style="font-size:14px;font-weight:700;color:var(--muted);">สแกนชำระเงิน · หมูปิ้ง หน้าร้านยาง</div>
       <div id="qr-modal-amount" style="font-size:38px;font-weight:900;color:var(--brand);margin:4px 0 10px;">0.00 บาท</div>
-      <img src="./assets/payment-card.png" alt="QR ชำระเงิน" style="width:100%;max-width:340px;border-radius:14px;display:block;margin:0 auto 14px;">
+      <img src="./assets/payment-card.jpg" alt="QR ชำระเงิน" style="width:100%;max-width:350px;border-radius:14px;display:block;margin:0 auto 14px;box-shadow:0 6px 20px rgba(0,0,0,0.2);">
       <button type="button" class="btn-primary" id="btn-close-qr-modal" style="min-height:48px;font-size:17px;">ปิดหน้าต่าง QR</button>
     </div>
   </div>
@@ -1138,7 +1159,8 @@
     <div class="modal-card">
       <div id="img-modal-title" style="font-size:15px;font-weight:700;margin-bottom:10px;">รูปแนบ</div>
       <img id="img-modal-view" alt="รูปแนบ" style="width:100%;max-height:65dvh;object-fit:contain;border-radius:12px;">
-      <button type="button" class="btn-primary" id="btn-close-img-modal" style="min-height:46px;font-size:16px;margin-top:12px;">ปิด</button>
+      <a id="img-modal-drive-link" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display:block;width:100%;margin-top:10px;text-decoration:none;text-align:center;" hidden>☁️ เปิดไฟล์สลิปใน Google Drive ↗</a>
+      <button type="button" class="btn-primary" id="btn-close-img-modal" style="min-height:46px;font-size:16px;margin-top:10px;">ปิด</button>
     </div>
   </div>
 
@@ -1213,40 +1235,50 @@
       updateSyncBadge();
     }
 
-    // Auto Image Compression (< 200KB JPEG so it never fails 2MB limit)
-    async function compressImage(file, maxDim = 1000, quality = 0.78) {
+    // High-Resolution Image Processor (Supports 15-50MB modern camera photos -> clear HD slip for Google Drive)
+    async function compressImage(file, maxDim = 1800, quality = 0.85) {
       return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('อ่านไฟล์รูปไม่สำเร็จ'));
-        reader.onload = () => {
-          const img = new Image();
-          img.onerror = () => reject(new Error('ไฟล์รูปภาพไม่ถูกต้อง'));
-          img.onload = async () => {
-            let w = img.width, h = img.height;
-            if (w > maxDim || h > maxDim) {
-              if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
-              else { w = Math.round((w * maxDim) / h); h = maxDim; }
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, w, h);
-            ctx.drawImage(img, 0, 0, w, h);
-            const dataUrl = canvas.toDataURL('image/jpeg', quality);
-            const base64 = dataUrl.split(',')[1];
-            const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-            let hashHex = '';
-            if (window.crypto && crypto.subtle) {
-              const digest = await crypto.subtle.digest('SHA-256', binary);
-              hashHex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
-            }
-            resolve({ dataUrl, sizeKB: Math.round(binary.length / 1024), hash: hashHex });
-          };
-          img.src = reader.result;
+        const origSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const origSizeKB = Math.round(file.size / 1024);
+        const objUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.onerror = () => {
+          URL.revokeObjectURL(objUrl);
+          reject(new Error('ไฟล์รูปภาพไม่ถูกต้อง กรุณาถ่ายหรือเลือกรูปใหม่'));
         };
-        reader.readAsDataURL(file);
+        img.onload = async () => {
+          URL.revokeObjectURL(objUrl);
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          const base64 = dataUrl.split(',')[1];
+          const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+          let hashHex = '';
+          if (window.crypto && crypto.subtle) {
+            const digest = await crypto.subtle.digest('SHA-256', binary);
+            hashHex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+          }
+          resolve({
+            dataUrl,
+            origSizeMB,
+            origSizeKB,
+            sizeKB: Math.round(binary.length / 1024),
+            width: w,
+            height: h,
+            hash: hashHex
+          });
+        };
+        img.src = objUrl;
       });
     }
 
@@ -1315,6 +1347,57 @@
       const todaySales = sales.filter((s) => s.date === today);
       const todayCents = todaySales.reduce((sum, s) => sum + s.totalCents, 0);
       $('today-mini-stat').textContent = `วันนี้ ${todaySales.length} บิล · ${moneyShort(todayCents)}`;
+      renderPosTodayFeed();
+    }
+
+    function renderPosTodayFeed() {
+      const feed = $('pos-today-feed');
+      if (!feed) return;
+      feed.replaceChildren();
+      const today = bangkokDate();
+      const list = sales.filter((s) => s.date === today).slice(0, 15);
+      if (!list.length) {
+        feed.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px;font-size:13px;">ยังไม่มีรายการเงินเข้าในวันนี้</div>';
+        return;
+      }
+      list.forEach((s) => {
+        const row = document.createElement('div');
+        row.className = 'record-item';
+        const left = document.createElement('div');
+        const itemsText = [];
+        if (s.pork > 0) itemsText.push(`หมู ${s.pork} ไม้`);
+        if (s.rice > 0) itemsText.push(`ข้าว ${s.rice} ห่อ`);
+        if (s.extraCents > 0) itemsText.push(`อื่น ๆ ${moneyShort(s.extraCents)}`);
+        const syncIcon = s.synced ? '☁️ ลงชีตแล้ว' : '⏳ รอซิงก์';
+        left.innerHTML = `<div><b>${itemsText.join(' · ') || 'บิลขาย'}</b> <span class="badge">${s.methodLabel || s.method}</span></div><small style="color:var(--muted);">${(s.datetime || '').slice(11, 16) || s.date} · ${syncIcon}${s.note ? ' · ' + s.note : ''}</small>`;
+
+        const right = document.createElement('div');
+        right.style.display = 'flex';
+        right.style.alignItems = 'center';
+        right.style.gap = '8px';
+
+        if (s.slipData || s.slipUrl) {
+          const thumbBtn = document.createElement('button');
+          thumbBtn.type = 'button';
+          thumbBtn.style.cssText = 'border:1.5px solid var(--brand);background:#f2f8f4;color:var(--brand);border-radius:10px;padding:4px 8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;';
+          if (s.slipData) {
+            thumbBtn.innerHTML = `<img src="${s.slipData}" alt="สลิป" style="width:28px;height:28px;object-fit:cover;border-radius:5px;"> <span>ดูสลิป</span>`;
+            thumbBtn.onclick = () => openImageViewer(`สลิปเงินเข้า · ${money(s.totalCents)} (${s.datetime || s.date})`, s.slipData, s.slipUrl);
+          } else {
+            thumbBtn.innerHTML = `<span>🖼️ เปิดสลิปใน Drive</span>`;
+            thumbBtn.onclick = () => window.open(s.slipUrl, '_blank');
+          }
+          right.appendChild(thumbBtn);
+        }
+
+        const amt = document.createElement('strong');
+        amt.style.cssText = 'color:var(--brand);font-size:16px;min-width:68px;text-align:right;';
+        amt.textContent = '+' + moneyShort(s.totalCents);
+        right.appendChild(amt);
+
+        row.append(left, right);
+        feed.appendChild(row);
+      });
     }
 
     function showNotice(id, text, type = 'info') {
@@ -1460,25 +1543,39 @@
     $('btn-close-qr-modal').addEventListener('click', () => { $('qr-modal').hidden = true; });
     $('btn-close-img-modal').addEventListener('click', () => { $('img-modal').hidden = true; });
 
-    // Slip Upload & Auto Compression (Camera or Gallery)
+    // Slip Upload & High-Res Processing (Camera or Gallery, supports >2MB–50MB photos -> Google Drive)
     async function handleSlipFile(file) {
       if (!file) return;
       try {
-        $('slip-meta').textContent = '⏳ กำลังย่อขนาดรูปสลิปอัตโนมัติ...';
-        $('slip-meta').hidden = false;
-        const compressed = await compressImage(file, 1000, 0.78);
+        $('slip-preview-card').hidden = false;
+        $('slip-meta').textContent = `⏳ กำลังประมวลผลรูปสลิปความละเอียดสูง (${(file.size / (1024 * 1024)).toFixed(2)} MB)...`;
+        const compressed = await compressImage(file, 1800, 0.85);
         currentSlipData = compressed.dataUrl;
         currentSlipHash = compressed.hash;
         $('slip-preview-img').src = compressed.dataUrl;
-        $('slip-preview-img').hidden = false;
-        $('slip-meta').textContent = `✓ แนบรูปสลิปเรียบร้อย (${compressed.sizeKB} KB · พร้อมบันทึก)`;
-        $('slip-meta').hidden = false;
+        const sizeLabel = file.size >= 1024 * 1024
+          ? `ไฟล์ต้นฉบับ ${compressed.origSizeMB} MB → ปรับคมชัด ${compressed.sizeKB} KB`
+          : `ขนาด ${compressed.sizeKB} KB`;
+        $('slip-meta').textContent = `✓ แสดงสลิปโอนเงินพร้อมฝากเข้า Google Drive (${sizeLabel})`;
       } catch (err) {
         showNotice('pos-message', err.message, 'error');
       }
     }
     $('slip-camera-input').addEventListener('change', (e) => handleSlipFile(e.target.files[0]));
     $('slip-gallery-input').addEventListener('change', (e) => handleSlipFile(e.target.files[0]));
+    $('slip-preview-img').addEventListener('click', () => {
+      if (currentSlipData) openImageViewer('สลิปโอนเงินลูกค้า', currentSlipData);
+    });
+    $('btn-zoom-current-slip').addEventListener('click', () => {
+      if (currentSlipData) openImageViewer('สลิปโอนเงินลูกค้า', currentSlipData);
+    });
+    $('btn-clear-current-slip').addEventListener('click', () => {
+      currentSlipData = null;
+      currentSlipHash = '';
+      $('slip-camera-input').value = '';
+      $('slip-gallery-input').value = '';
+      $('slip-preview-card').hidden = true;
+    });
 
     // Save Sale
     $('btn-save-sale').addEventListener('click', async () => {
@@ -1536,8 +1633,7 @@
         $('slip-camera-input').value = '';
         $('slip-gallery-input').value = '';
         $('chk-payment-confirmed').checked = true;
-        $('slip-preview-img').hidden = true;
-        $('slip-meta').hidden = true;
+        $('slip-preview-card').hidden = true;
         currentSlipData = null;
         currentSlipHash = '';
         method = 'cash';
@@ -1579,13 +1675,16 @@
     async function handleExpenseReceiptFile(file) {
       if (!file) return;
       try {
-        $('exp-receipt-meta').textContent = '⏳ กำลังย่อรูปสลิป/ใบเสร็จอัตโนมัติ...';
+        $('exp-receipt-meta').textContent = `⏳ กำลังประมวลผลรูปสลิป/ใบเสร็จ (${(file.size / (1024 * 1024)).toFixed(2)} MB)...`;
         $('exp-receipt-meta').hidden = false;
-        const compressed = await compressImage(file, 1000, 0.78);
+        const compressed = await compressImage(file, 1800, 0.85);
         currentReceiptData = compressed.dataUrl;
         $('exp-receipt-preview').src = compressed.dataUrl;
         $('exp-receipt-preview').hidden = false;
-        $('exp-receipt-meta').textContent = `✓ แนบรูปสลิป/ใบเสร็จเรียบร้อย (${compressed.sizeKB} KB)`;
+        const sizeLabel = file.size >= 1024 * 1024
+          ? `ไฟล์ต้นฉบับ ${compressed.origSizeMB} MB → ปรับคมชัด ${compressed.sizeKB} KB`
+          : `ขนาด ${compressed.sizeKB} KB`;
+        $('exp-receipt-meta').textContent = `✓ แนบรูปสลิป/ใบเสร็จพร้อมฝากเข้า Google Drive (${sizeLabel})`;
       } catch (err) {
         showNotice('exp-message', err.message, 'error');
       }
@@ -1678,9 +1777,16 @@
     });
     ['rep-from', 'rep-to'].forEach((id) => $(id).addEventListener('change', renderReport));
 
-    function openImageViewer(title, src) {
+    function openImageViewer(title, src, driveUrl = '') {
       $('img-modal-title').textContent = title;
       $('img-modal-view').src = src;
+      const driveBtn = $('img-modal-drive-link');
+      if (driveUrl) {
+        driveBtn.href = driveUrl;
+        driveBtn.hidden = false;
+      } else {
+        driveBtn.hidden = true;
+      }
       $('img-modal').hidden = false;
     }
 
@@ -1757,7 +1863,7 @@
             btn.style.cursor = 'pointer';
             btn.textContent = 'ดูสลิป 🖼️';
             btn.onclick = () => {
-              if (s.slipData) openImageViewer(`สลิปบิล ${s.id.slice(0, 12)}`, s.slipData);
+              if (s.slipData) openImageViewer(`สลิปบิล ${s.id.slice(0, 12)}`, s.slipData, s.slipUrl);
               else if (s.slipUrl) window.open(s.slipUrl, '_blank');
             };
             right.appendChild(btn);

@@ -214,15 +214,18 @@ function decodeImage_(dataUrl, required) {
     if (required) throw Error('กรุณาแนบรูปสลิปก่อนบันทึก');
     return { hash: '', bytes: null, mime: null };
   }
-  if (typeof dataUrl !== 'string' || dataUrl.length > 4500000 || !/^data:image\/(jpeg|png|webp);base64,/i.test(dataUrl)) {
-    throw Error('ไฟล์รูปสลิปต้องเป็น JPG/PNG ขนาดไม่เกิน 2 MB');
+  if (typeof dataUrl !== 'string' || !/^data:image\/[a-zA-Z0-9+.-]+;base64,/i.test(dataUrl)) {
+    throw Error('ไฟล์รูปสลิปไม่ถูกต้อง กรุณาเลือกรูปภาพใหม่');
+  }
+  if (dataUrl.length > 36000000) {
+    throw Error('ไฟล์รูปมีขนาดใหญ่เกิน 25 MB');
   }
   const parts = dataUrl.split(',');
   const mimeMatch = parts[0].match(/^data:(image\/[a-zA-Z0-9+.-]+);base64$/i);
   const mime = mimeMatch ? mimeMatch[1].toLowerCase() : 'image/jpeg';
   const bytes = Utilities.base64Decode(parts[1]);
-  if (!bytes.length || bytes.length > 2500000) {
-    throw Error('ขนาดไฟล์สลิปต้องไม่เกิน 2 MB');
+  if (!bytes.length) {
+    throw Error('ไม่พบข้อมูลรูปภาพสลิป');
   }
   return { hash: digest_(bytes), bytes: bytes, mime: mime };
 }

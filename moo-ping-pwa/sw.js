@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moo-ping-pos-v3';
+const CACHE_NAME = 'moo-ping-pos-v4';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const SHELL_ASSETS = [
   './assets/icon-180.png',
   './assets/icon-192.png',
   './assets/icon-512.png',
+  './assets/payment-card.jpg',
   './assets/payment-card.png'
 ];
 
