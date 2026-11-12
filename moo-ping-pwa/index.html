@@ -1117,16 +1117,33 @@
 
       <div class="panel-card">
         <h2 style="margin:0 0 8px;font-size:18px;">☁️ เชื่อมต่อ Google Sheet & Drive ของร้าน</h2>
-        <p style="font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.5;">
-          ทุกบิลและรายจ่ายจะถูกบันทึกในเครื่องทันที และส่งเข้า Google Sheet (<code>1QDDWOZh_36EHNk5lcjtzArDTrZlj-GgYZwiz7EACWs4</code>) อัตโนมัติ
-        </p>
+        <div id="gas-auth-guide" style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:14px;padding:12px;margin-bottom:12px;font-size:13px;line-height:1.55;color:#7c2d12;">
+          <b style="font-size:14px;display:block;margin-bottom:4px;">⚠️ ทำไมกดบันทึกจากเว็บ GitHub แล้วไม่เข้า Google Sheet? (วิธีแก้ใน 1 นาที)</b>
+          เนื่องจาก Google บล็อกไม่ให้เว็บภายนอก (`github.io`) ส่งข้อมูลเข้า Apps Script ที่ตั้งค่าสิทธิ์ไว้เป็น <i>"เฉพาะผู้มีบัญชี Google"</i> (HTTP 401)<br>
+          <b>วิธีเปิดสิทธิ์ให้ข้อมูลและรูปสลิปวิ่งเข้าชีตอัตโนมัติ 100%:</b>
+          <ol style="margin:6px 0 8px 18px;padding:0;">
+            <li>กดปุ่ม <b>"📋 1. คัดลอกโค้ด Code.gs ล่าสุด"</b> ด้านล่าง</li>
+            <li>เปิดไฟล์ <a href="https://docs.google.com/spreadsheets/d/1QDDWOZh_36EHNk5lcjtzArDTrZlj-GgYZwiz7EACWs4/edit?gid=102#gid=102" target="_blank" rel="noopener" style="color:#b91c1c;font-weight:800;">Google Sheet ของร้าน ↗</a> $\rightarrow$ เมนู <b>ส่วนขยาย (Extensions)</b> $\rightarrow$ <b>Apps Script</b></li>
+            <li>วางโค้ดทับทั้งหมด แล้วกด 💾 <b>บันทึก (Save)</b></li>
+            <li>กดปุ่มสีน้ำเงินมุมขวาบน <b>ทำให้ใช้งานได้ (Deploy)</b> $\rightarrow$ <b>การทำให้ใช้งานได้ใหม่ (New deployment)</b></li>
+            <li>ตั้งค่า 2 ช่องนี้สำคัญมาก:<br>
+              • <b>ดำเนินการในฐานะ (Execute as):</b> เลือก <b>ฉัน (Me)</b><br>
+              • <b>ผู้ที่มีสิทธิ์เข้าถึง (Who has access):</b> ต้องเลือก <b>ทุกคน (Anyone)</b> <i>(ห้ามเลือก Anyone with Google Account)</i>
+            </li>
+            <li>กด Deploy แล้วคัดลอก <b>URL ของเว็บแอป</b> มาวางในช่องด้านล่างนี้ แล้วกด <b>"บันทึก URL & ทดสอบเชื่อมต่อ"</b></li>
+          </ol>
+          <button type="button" class="btn-primary" id="btn-copy-gas-code" style="min-height:42px;font-size:14px;margin-top:2px;">
+            📋 1. คัดลอกโค้ด Google Apps Script (Code.gs) ล่าสุด
+          </button>
+        </div>
+
         <div class="form-group">
-          <label for="set-gas-url">URL เว็บแอป Google Apps Script</label>
-          <input type="url" id="set-gas-url" class="form-control" style="font-size:13px;">
+          <label for="set-gas-url">URL เว็บแอป Google Apps Script (ที่ตั้งสิทธิ์ Anyone แล้ว)</label>
+          <input type="url" id="set-gas-url" class="form-control" style="font-size:13px;" placeholder="https://script.google.com/macros/s/.../exec">
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" class="btn-secondary" id="btn-save-gas-url" style="flex:1;">บันทึก URL</button>
-          <button type="button" class="btn-secondary" id="btn-sync-now" style="flex:1;background:var(--brand);color:#fff;border-color:var(--brand);">🔄 ซิงก์บิลค้างขึ้น Sheet</button>
+          <button type="button" class="btn-secondary" id="btn-save-gas-url" style="flex:1;">💾 บันทึก URL & ทดสอบเชื่อมต่อ</button>
+          <button type="button" class="btn-secondary" id="btn-sync-now" style="flex:1;background:var(--brand);color:#fff;border-color:var(--brand);">🔄 ซิงก์บิลค้างขึ้น Sheet ทันที</button>
         </div>
         <div id="settings-message" class="alert-box" hidden></div>
 
@@ -1135,9 +1152,6 @@
           <a href="https://docs.google.com/spreadsheets/d/1QDDWOZh_36EHNk5lcjtzArDTrZlj-GgYZwiz7EACWs4/edit?gid=102#gid=102" target="_blank" rel="noopener" class="btn-secondary" style="text-align:center;text-decoration:none;display:block;">
             📗 เปิดตาราง Google Sheet ของร้าน (gid=102) ↗
           </a>
-          <button type="button" class="btn-secondary" id="btn-copy-gas-code" style="width:100%;">
-            📋 คัดลอกโค้ด Google Apps Script (Code.gs) สำหรับติดตั้งแต่ละชีต
-          </button>
         </div>
       </div>
     </section>
@@ -1407,15 +1421,32 @@
       el.hidden = !text;
     }
 
+    let lastSyncError = '';
+
     // Cloud Sync to Google Apps Script (doPost JSON API)
     async function callGasApi(action, payload) {
-      const res = await fetch(gasUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, payload })
-      });
-      const json = await res.json();
+      let res;
+      try {
+        res = await fetch(gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, payload })
+        });
+      } catch (netErr) {
+        throw new Error('Google Apps Script บล็อกการเชื่อมต่อ (HTTP 401/CORS) — กรุณาไปที่แท็บ "⚙️ ตั้งค่า/ชีต" เพื่อปรับสิทธิ์ Apps Script เป็น "ทุกคน (Anyone)"');
+      }
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('Google Apps Script ปฏิเสธสิทธิ์ (HTTP 401) — กรุณาตั้งค่าการ Deploy ช่องผู้มีสิทธิ์เข้าถึงเป็น "ทุกคน (Anyone)"');
+      }
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error('Apps Script ยังไม่ได้เปิดสิทธิ์ "ทุกคน (Anyone)" หรือยังไม่ได้อัปเดตโค้ด Code.gs ล่าสุด');
+      }
       if (!json.ok) throw new Error(json.error || 'เชื่อมต่อ Google Sheet ไม่สำเร็จ');
+      lastSyncError = '';
       return json.data;
     }
 
@@ -1427,10 +1458,10 @@
       const txt = $('sync-text');
       if (totalPending > 0) {
         dot.className = 'dot warn';
-        txt.textContent = `รอซิงก์ ${totalPending}`;
+        txt.textContent = `รอลงชีต ${totalPending} (แตะเพื่อแก้)`;
       } else {
         dot.className = 'dot';
-        txt.textContent = 'พร้อมขาย';
+        txt.textContent = 'เชื่อมชีตปกติ';
       }
     }
 
@@ -1458,8 +1489,11 @@
             s.synced = true;
             if (res.slipUrl) s.slipUrl = res.slipUrl;
             syncedCount++;
+          } else {
+            lastSyncError = res.error || 'ข้อมูลถูกปฏิเสธจากชีต';
           }
         } catch (err) {
+          lastSyncError = err.message;
           console.log('Cloud sync deferred:', err.message);
           break;
         }
@@ -1476,6 +1510,7 @@
             quantity: e.quantity,
             unit: e.unit,
             unitCents: e.unitCents,
+            totalCents: e.totalCents,
             method: e.methodKey,
             document: e.document,
             note: e.note,
@@ -1483,14 +1518,19 @@
           });
           if (!res.rejected) {
             e.synced = true;
+            if (res.receiptUrl) e.receipt = res.receiptUrl;
             syncedCount++;
+          } else {
+            lastSyncError = res.error || 'รายจ่ายถูกปฏิเสธจากชีต';
           }
         } catch (err) {
+          lastSyncError = err.message;
           console.log('Expense cloud sync deferred:', err.message);
           break;
         }
       }
       persist();
+      renderPosTodayFeed();
       return syncedCount;
     }
 
@@ -1640,10 +1680,15 @@
         paintPOS();
 
         const changeMsg = record.changeCents > 0 ? ` · เงินทอน ${money(record.changeCents)}` : '';
-        showNotice('pos-message', `✓ บันทึกบิลสำเร็จ ${money(record.totalCents)}${changeMsg}\nเลขบิล: ${record.id}`, 'success');
+        showNotice('pos-message', `⏳ บันทึกในเครื่องแล้ว (${money(record.totalCents)}${changeMsg}) · กำลังส่งเข้า Google Sheet...`, 'info');
 
-        // Background Sync
-        syncPendingToCloud();
+        // Sync to Google Sheet & notify immediately
+        const synced = await syncPendingToCloud();
+        if (record.synced) {
+          showNotice('pos-message', `✓ บันทึกลง Google Sheet สำเร็จ! ${money(record.totalCents)}${changeMsg}\nเลขบิล: ${record.id}`, 'success');
+        } else {
+          showNotice('pos-message', `⚠️ บันทึกไว้ในเครื่องแล้ว แต่ยังเข้า Google Sheet ไม่ได้เพราะ:\n${lastSyncError || 'ยังไม่ได้เปิดสิทธิ์ Anyone ใน Apps Script'}\n(กดที่แท็บ "⚙️ ตั้งค่า/ชีต" ด้านล่างเพื่อดูวิธีเปิดสิทธิ์ 1 นาที แล้วกดซิงก์บิลค้างได้เลย ข้อมูลไม่หายค่ะ)`, 'error');
+        }
       } catch (err) {
         showNotice('pos-message', err.message, 'error');
       }
@@ -1737,8 +1782,13 @@
         currentReceiptData = null;
         paintExpenseTotal();
 
-        showNotice('exp-message', `✓ บันทึกค่าใช้จ่ายสำเร็จ ${money(rec.totalCents)}\n(${rec.category} · ${rec.description})`, 'success');
-        syncPendingToCloud();
+        showNotice('exp-message', `⏳ บันทึกในเครื่องแล้ว (${money(rec.totalCents)}) · กำลังส่งเข้า Google Sheet...`, 'info');
+        await syncPendingToCloud();
+        if (rec.synced) {
+          showNotice('exp-message', `✓ บันทึกค่าใช้จ่ายลง Google Sheet สำเร็จ! ${money(rec.totalCents)}\n(${rec.category} · ${rec.description})`, 'success');
+        } else {
+          showNotice('exp-message', `⚠️ บันทึกไว้ในเครื่องแล้ว แต่ยังเข้า Google Sheet ไม่ได้เพราะ:\n${lastSyncError || 'ยังไม่ได้เปิดสิทธิ์ Anyone ใน Apps Script'}\n(ไปที่แท็บ "⚙️ ตั้งค่า/ชีต" เพื่อเปิดสิทธิ์แล้วกดซิงก์บิลค้างได้เลยค่ะ)`, 'error');
+        }
       } catch (err) {
         showNotice('exp-message', err.message, 'error');
       }
@@ -1987,16 +2037,33 @@
       showNotice('settings-message', '✓ บันทึกราคาขายเรียบร้อยแล้ว', 'success');
     });
 
-    $('btn-save-gas-url').addEventListener('click', () => {
+    $('btn-save-gas-url').addEventListener('click', async () => {
       gasUrl = $('set-gas-url').value.trim() || DEFAULT_GAS_URL;
       persist();
-      showNotice('settings-message', '✓ บันทึก URL เชื่อมต่อเรียบร้อยแล้ว', 'success');
+      showNotice('settings-message', '⏳ กำลังทดสอบเชื่อมต่อกับ Google Sheet...', 'info');
+      try {
+        await callGasApi('getShop', {});
+        const n = await syncPendingToCloud();
+        showNotice('settings-message', `✓ เชื่อมต่อ Google Sheet สำเร็จ! ${n > 0 ? `(ซิงก์บิลค้างขึ้นชีตแล้ว ${n} รายการ)` : 'พร้อมบันทึกข้อมูลเข้าชีตอัตโนมัติ'}`, 'success');
+      } catch (err) {
+        showNotice('settings-message', `❌ ทดสอบเชื่อมต่อไม่ผ่าน: ${err.message}`, 'error');
+      }
     });
 
     $('btn-sync-now').addEventListener('click', async () => {
-      showNotice('settings-message', 'กำลังส่งข้อมูลค้างเข้า Google Sheet...', 'info');
+      showNotice('settings-message', '⏳ กำลังส่งข้อมูลค้างเข้า Google Sheet...', 'info');
+      const pendingBefore = sales.filter((s) => !s.synced).length + expenses.filter((e) => !e.synced).length;
+      if (pendingBefore === 0) {
+        showNotice('settings-message', '✓ ข้อมูลทั้งหมดถูกส่งเข้า Google Sheet ครบถ้วนแล้ว', 'success');
+        return;
+      }
       const n = await syncPendingToCloud();
-      showNotice('settings-message', n > 0 ? `✓ ซิงก์สำเร็จ ${n} รายการ` : 'ข้อมูลในเครื่องถูกบันทึกไว้ครบถ้วนแล้ว', 'success');
+      const pendingAfter = sales.filter((s) => !s.synced).length + expenses.filter((e) => !e.synced).length;
+      if (pendingAfter === 0) {
+        showNotice('settings-message', `✓ ซิงก์ข้อมูลเข้า Google Sheet สำเร็จครบ ${n} รายการ!`, 'success');
+      } else {
+        showNotice('settings-message', `❌ ซิงก์ไม่สำเร็จ (ค้าง ${pendingAfter} รายการ): ${lastSyncError || 'กรุณาตั้งค่าการ Deploy ของ Apps Script เป็น "ทุกคน (Anyone)" ตามขั้นตอนด้านบน'}`, 'error');
+      }
     });
 
     $('btn-copy-gas-code').addEventListener('click', async () => {

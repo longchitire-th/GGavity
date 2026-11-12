@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moo-ping-pos-v4';
+const CACHE_NAME = 'moo-ping-pos-v5';
 const SHELL_ASSETS = [
   './',
   './index.html',
